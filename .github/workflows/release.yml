@@ -171,6 +171,21 @@ jobs:
           COMMIT="${{ github.sha }}"
           jq --arg commit "$COMMIT" '. + {"_commit": $commit}' package.json > tmp.json && mv tmp.json package.json
 
+      - name: Publish platform-specific packages
+        if: steps.check.outputs.skip != 'true'
+        run: |
+          for platform in packages/*; do
+            if [ -d "$platform" ]; then
+              echo "Publishing $platform..."
+              cd "$platform"
+              npm publish --access public --provenance
+              cd ../..
+            fi
+          done
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: true
+
       - name: Publish to npm
         if: steps.check.outputs.skip != 'true'
         run: npm publish --access public --provenance
