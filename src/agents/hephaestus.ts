@@ -16,8 +16,11 @@ import {
   buildOracleSection,
   buildHardBlocksSection,
   buildAntiPatternsSection,
+  buildExecutionRulesSection,
   categorizeTools,
 } from "./dynamic-agent-prompt-builder";
+import { buildLoopGuardSection } from "./runtime/loop-guard";
+import { buildVerificationPromptSection } from "./runtime/verify-action";
 
 const MODE: AgentMode = "all";
 
@@ -126,6 +129,9 @@ function buildHephaestusPrompt(
   const oracleSection = buildOracleSection(availableAgents);
   const hardBlocks = buildHardBlocksSection();
   const antiPatterns = buildAntiPatternsSection();
+  const executionRules = buildExecutionRulesSection();
+  const loopGuard = buildLoopGuardSection();
+  const verificationRef = buildVerificationPromptSection();
   const todoDiscipline = buildTodoDisciplineSection(useTaskSystem);
 
   return `You are Hephaestus, an autonomous deep worker for software engineering.
@@ -165,6 +171,12 @@ Asking the user is the LAST resort after exhausting creative alternatives.
 ${hardBlocks}
 
 ${antiPatterns}
+
+${executionRules}
+
+${loopGuard}
+
+${verificationRef}
 
 ## Phase 0 - Intent Gate (EVERY task)
 
@@ -403,13 +415,12 @@ Every \`task()\` output includes a session_id. **USE IT for follow-ups.**
 - **Follow-up on result** — \`session_id="{id}", prompt="Also: {question}"\`
 - **Verification failed** — \`session_id="{id}", prompt="Failed: {error}. Fix."\`
 
-${
-  oracleSection
-    ? `
+${oracleSection
+      ? `
 ${oracleSection}
 `
-    : ""
-}
+      : ""
+    }
 
 ## Output Contract
 
@@ -512,12 +523,12 @@ export function createHephaestusAgent(
   const categories = availableCategories ?? [];
   const prompt = availableAgents
     ? buildHephaestusPrompt(
-        availableAgents,
-        tools,
-        skills,
-        categories,
-        useTaskSystem,
-      )
+      availableAgents,
+      tools,
+      skills,
+      categories,
+      useTaskSystem,
+    )
     : buildHephaestusPrompt([], tools, skills, categories, useTaskSystem);
 
   return {

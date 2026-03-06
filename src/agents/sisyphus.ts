@@ -36,7 +36,10 @@ import {
   buildDeepParallelSection,
   buildNonClaudePlannerSection,
   categorizeTools,
+  buildExecutionRulesSection,
 } from "./dynamic-agent-prompt-builder";
+import { buildLoopGuardSection } from "./runtime/loop-guard";
+import { buildVerificationPromptSection } from "./runtime/verify-action";
 
 function buildTaskManagementSection(useTaskSystem: boolean): string {
   if (useTaskSystem) {
@@ -172,6 +175,9 @@ function buildDynamicSisyphusPrompt(
   const oracleSection = buildOracleSection(availableAgents);
   const hardBlocks = buildHardBlocksSection();
   const antiPatterns = buildAntiPatternsSection();
+  const executionRules = buildExecutionRulesSection();
+  const loopGuard = buildLoopGuardSection();
+  const verificationRef = buildVerificationPromptSection();
   const deepParallelSection = buildDeepParallelSection(model, availableCategories);
   const nonClaudePlannerSection = buildNonClaudePlannerSection(model);
   const taskManagementSection = buildTaskManagementSection(useTaskSystem);
@@ -539,6 +545,12 @@ If the user's approach seems problematic:
 ${hardBlocks}
 
 ${antiPatterns}
+
+${executionRules}
+
+${loopGuard}
+
+${verificationRef}
 
 ## Soft Guidelines
 

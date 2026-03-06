@@ -105,7 +105,7 @@ export class YGKATransport {
             if (done) break;
 
             const chunk = decoder.decode(value);
-            const lines = chuank.split('\n');
+            const lines = chunk.split('\n');
 
             for (const line of lines) {
                 if (line.startsWith('data: ')) {
