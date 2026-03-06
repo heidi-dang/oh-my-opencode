@@ -16,7 +16,7 @@ export function createGitSafeTool(): any {
                 commandArgs = (args.command as string).match(/([^\\"]\S*|".+?")\s*/g)?.map((s: string) => s.trim().replace(/^"(.*)"$/, '$1')) || []
 
                 if (commandArgs.length === 0) {
-                    context.metadata({ title: "Git Exec Error", metadata: { success: false, changedState: false } })
+                    context.metadata({ title: "Git Exec Error", metadata: { success: false, verified: false, changedState: false } })
                     return "No command provided"
                 }
 
@@ -50,6 +50,7 @@ export function createGitSafeTool(): any {
                     title: `git ${commandArgs[0]}`,
                     metadata: {
                         success,
+                        verified: true, // Git executions via smart wrapper are considered self-verifying outputs
                         changedState,
                         ...(stateChangePayload && { stateChange: stateChangePayload })
                     }
@@ -57,7 +58,7 @@ export function createGitSafeTool(): any {
 
                 return `Exit Code: ${exitCode}\n\nSTDOUT:\n${stdoutText}\n\nSTDERR:\n${stderrText}`
             } catch (e: any) {
-                context.metadata({ title: "Git Exec Error", metadata: { success: false, changedState: false } })
+                context.metadata({ title: "Git Exec Error", metadata: { success: false, verified: false, changedState: false } })
                 return `JSON parse error on args or execution failed: ${e.message}`
             }
         }

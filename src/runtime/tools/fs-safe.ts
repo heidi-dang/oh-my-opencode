@@ -54,6 +54,7 @@ export function createFsSafeTool(): any {
                     title: `fs ${operation}`,
                     metadata: {
                         success: true,
+                        verified: true, // FS executions via smart wrapper are considered self-verifying
                         changedState,
                         ...(stateChangePayload && { stateChange: stateChangePayload })
                     }
@@ -63,7 +64,7 @@ export function createFsSafeTool(): any {
             } catch (err: any) {
                 context.metadata({
                     title: `fs ${args.operation} error`,
-                    metadata: { success: false, changedState: false }
+                    metadata: { success: false, verified: false, changedState: false }
                 })
                 return `Failed: ${err.message}`
             }

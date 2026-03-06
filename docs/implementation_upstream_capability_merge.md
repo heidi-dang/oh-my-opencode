@@ -19,6 +19,13 @@ Port advanced prompting and verification logic from `official/dev` to Heidi whil
 - [x] **Capability Purge**: Removed the active builder pattern (`dynamic-agent-prompt-builder.ts`) from Sisyphus and Hephaestus, migrating all logic to Heidi's native `prompts/orchestration.ts` and `types.ts`.
 - [x] **Audit Architecture**: Purged prototype scaffolding (`agent-runner.ts`, `tool-runner.ts`, `context-builder.ts`) and updated the reliability doctor checks.
 
+### Phase 3: Live Wiring & Truth Model Finalization
+- [ ] **Active Tool Wiring**: Inject `DETERMINISTIC_TOOLS` (e.g., `query_ledger`, `complete_task`, `verify_action`, `git_safe`, `fs_safe`, `submit_plan`, `mark_step_complete`) into the active `createToolRegistry` located in `src/plugin/tool-registry.ts`.
+- [ ] **Active Hook Wiring**: Expose `execution-journal`, `tool-contract`, `runtime-enforcement`, and `plan-enforcement` hooks via `src/plugin/hooks/create-tool-guard-hooks.ts` to ensure they run in the live post-execution flow.
+- [ ] **Strict Tool Contract Consistency**: Update all deterministic tools to universally return the strict payload: `success`, `verified`, `changedState`, `stdout`, and conditionally `stateChange`, `sessionID`, `timestamp`. This includes `complete_task`.
+- [ ] **Filter Enforcement**: Ensure `complete_task` follows the same contract, and remains locked to returning only verified, successful, current-session entries.
+- [ ] **Orphan Scaffolding Removal**: Sweep and purge remaining references to the deleted prototype modules (`agent-runner`, `tool-runner`, `context-builder`) from the codebase.
+
 ## Verification Plan
 
 ### Automated Checks
