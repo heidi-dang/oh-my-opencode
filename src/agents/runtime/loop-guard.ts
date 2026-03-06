@@ -1,62 +1,48 @@
-/**
- * Anti-loop protection for agent orchestration.
- *
- * Prevents infinite recursion, excessive agent spawning,
- * and runaway tool usage by imposing hard limits.
- * These limits are injected into orchestrator agent prompts
- * as mandatory constraints.
- */
-
-export interface LoopGuardConfig {
-    /** Maximum depth of nested agent delegations (agent calling agent calling agent...) */
-    maxAgentDepth: number
-    /** Maximum total agent invocations across entire task */
-    maxAgentCalls: number
-    /** Maximum total tool calls before mandatory progress check */
-    maxToolCalls: number
-}
-
-export const DEFAULT_LOOP_GUARD: LoopGuardConfig = {
-    maxAgentDepth: 4,
-    maxAgentCalls: 12,
-    maxToolCalls: 30,
-}
+import { createHash } from "crypto"
+import { compiler } from "../../runtime/plan-compiler"
 
 /**
- * Builds a prompt section that enforces anti-loop constraints.
- * Injected into orchestrator agents (Sisyphus, Atlas, Hephaestus).
+ * Loop Guard
+ * 
+ * Prevents infinite fail-retry cycles and deep recursion.
+ * Uses semantic fingerprinting to detect loops even if state slightly shifts.
  */
-export function buildLoopGuardSection(config: LoopGuardConfig = DEFAULT_LOOP_GUARD): string {
-    return `## Anti-Loop Protection (MANDATORY)
 
-<loop_guard>
-**Hard limits to prevent infinite recursion and runaway execution:**
+const MAX_AGENT_DEPTH = 4
+const MAX_AGENT_CALLS = 12
+const MAX_TOOL_CALLS = 30
 
-- **Max agent delegation depth**: ${config.maxAgentDepth} levels (agent → agent → agent → agent = MAX)
-- **Max total agent calls per task**: ${config.maxAgentCalls} (across all delegation chains)
-- **Max tool calls without progress**: ${config.maxToolCalls} (must show measurable progress)
+export const buildLoopGuardSection = (depth: number, agentCalls: number, toolCalls: number) => {
+    if (depth > MAX_AGENT_DEPTH || agentCalls > MAX_AGENT_CALLS || toolCalls > MAX_TOOL_CALLS) {
+        throw new Error(`[Loop Guard] Execution limits exceeded (Depth: ${depth}/${MAX_AGENT_DEPTH}, AgentCalls: ${agentCalls}/${MAX_AGENT_CALLS}, ToolCalls: ${toolCalls}/${MAX_TOOL_CALLS}). Aborting.`);
+    }
 
-**When ANY limit is reached:**
-1. STOP all further delegation/tool calls immediately
-2. Summarize progress made so far
-3. List what remains incomplete
-4. Return partial result to user with clear status
+    return `## Loop Guard Status
+- Current Depth: ${depth}/${MAX_AGENT_DEPTH}
+- Agent Calls: ${agentCalls}/${MAX_AGENT_CALLS}
+- Tool Calls: ${toolCalls}/${MAX_TOOL_CALLS}`
+}
 
-**Progress is defined as:**
-- File successfully modified (verified by lsp_diagnostics)
-- Test passing that previously failed
-- Build succeeding that previously failed
-- Verified command output showing changed state
+export function detectLoop(history: any[], currentGoal: string, actionType: string) {
+    if (history.length < 3) return false
 
-**NOT progress:**
-- Re-reading the same files
-- Re-running the same failed command
-- Delegating the same task to another agent
-- Searching for the same pattern with different queries
+    const activeStepId = compiler.getActiveStep()?.id || "no-active-step"
 
-**Anti-loop rules:**
-- If the same tool call appears 3+ times with identical arguments → STOP. You are looping.
-- If 2+ agents return the same error for the same task → STOP. Escalate to user.
-- If delegation depth reaches ${config.maxAgentDepth} → STOP. Solve at current level or report.
-</loop_guard>`
+    // Hash includes Plan Step + Goal + ActionType
+    const currentFingerprint = createHash("sha256")
+        .update(`${activeStepId}:${currentGoal}:${actionType}`)
+        .digest("hex")
+
+    const lastHashes = history.slice(-3).map(h => {
+        return createHash("sha256")
+            .update(`${h.stepId || 'unknown'}:${h.goal || ''}:${h.actionType || ''}`)
+            .digest("hex")
+    })
+
+    const isLoop = lastHashes.every(h => h === currentFingerprint)
+    if (isLoop) {
+        throw new Error(`[Loop Guard] Semantic loop detected for action ${actionType} at step ${activeStepId}. Execution halted.`)
+    }
+
+    return false
 }

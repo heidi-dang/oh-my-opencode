@@ -176,7 +176,7 @@ function buildDynamicSisyphusPrompt(
   const hardBlocks = buildHardBlocksSection();
   const antiPatterns = buildAntiPatternsSection();
   const executionRules = buildExecutionRulesSection();
-  const loopGuard = buildLoopGuardSection();
+  const loopGuard = buildLoopGuardSection(0, 0, 0);
   const verificationRef = buildVerificationPromptSection();
   const deepParallelSection = buildDeepParallelSection(model, availableCategories);
   const nonClaudePlannerSection = buildNonClaudePlannerSection(model);

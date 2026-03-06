@@ -130,7 +130,7 @@ function buildHephaestusPrompt(
   const hardBlocks = buildHardBlocksSection();
   const antiPatterns = buildAntiPatternsSection();
   const executionRules = buildExecutionRulesSection();
-  const loopGuard = buildLoopGuardSection();
+  const loopGuard = buildLoopGuardSection(0, 0, 0);
   const verificationRef = buildVerificationPromptSection();
   const todoDiscipline = buildTodoDisciplineSection(useTaskSystem);
 

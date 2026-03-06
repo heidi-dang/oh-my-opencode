@@ -1,6 +1,5 @@
 import { AgentLogger } from "./agent-logger"
-// Note: In OhMyOpencode, tooling is handled via the hook system.
-// This prototype represents the strict execution contract requested by the Token-Efficient Architecture.
+import { getToolFromRegistry } from "../../runtime/tools/registry"
 
 export interface AgentAction {
     type: "tool" | "delegate" | "report"
@@ -23,21 +22,21 @@ export const ToolRunner = {
 
         AgentLogger.logToolCall(action.tool, action.args || {})
 
-        // Route to strict implementations
-        if (action.tool === "git_safe" || action.tool === "fs_safe") {
-            // In a real implementation we would dynamically invoke the tool() wrapper
-            // Currently handled natively via @opencode-ai/sdk tool routing
-            const simulatedResult = {
-                tool: action.tool,
-                success: true,
-                changedState: true,
-                stdout: "Operation executed (prototype implementation)",
-                stderr: ""
-            }
-            AgentLogger.logToolResult(true, simulatedResult.stdout)
-            return simulatedResult
-        }
+        // Enforce the centralized tool registry
+        try {
+            const toolInstance = getToolFromRegistry(action.tool);
 
-        throw new Error(`[Tool Runner] Unknown or unauthorized tool: ${action.tool}`)
+            // Execute via the tool instance
+            const result = await toolInstance.execute(action.args || {}, {
+                // Minimal shim for tool context
+                metadata: (meta: any) => AgentLogger.logToolResult(meta.success || meta.verified, JSON.stringify(meta))
+            });
+
+            return result;
+        } catch (e: any) {
+            AgentLogger.logAbort(`Tool execution rejected: ${e.message}`);
+            throw e;
+        }
     }
 }
+
