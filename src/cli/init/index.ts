@@ -51,7 +51,7 @@ function loadDefaultConfig(): string {
 /** Embedded fallback — matches assets/default-oh-my-opencode.json exactly */
 const EMBEDDED_DEFAULT_CONFIG = {
     $schema:
-        "https://raw.githubusercontent.com/heidi-dang/oh-my-opencode/dev/assets/oh-my-opencode.schema.json",
+        "https://raw.githubusercontent.com/heidi-dang/oh-my-opencode/refs/heads/dev/assets/oh-my-opencode.schema.json",
     agents: {
         sisyphus: {
             model: "xai/grok-4-1-fast",
