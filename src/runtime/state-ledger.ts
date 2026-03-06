@@ -30,6 +30,7 @@ export interface LedgerEntry {
 export class StateLedger {
     private static instance: StateLedger
     private entries: LedgerEntry[] = []
+    private lastFlowStartTime: number = 0
 
     private constructor() { }
 
@@ -38,6 +39,14 @@ export class StateLedger {
             StateLedger.instance = new StateLedger()
         }
         return StateLedger.instance
+    }
+
+    /**
+     * Mark the absolute start of a new completion flow.
+     * All entries recorded before this timestamp will be ignored by has().
+     */
+    public startNewFlow(): void {
+        this.lastFlowStartTime = Date.now()
     }
 
     /**
@@ -67,13 +76,15 @@ export class StateLedger {
     }
 
     /**
-     * Verify if a specific state change has actually occurred in this session.
+     * Verify if a specific state change has actually occurred in the current flow.
      */
     public has(type: LedgerEntryType, keyOrCondition: string | ((entry: LedgerEntry) => boolean)): boolean {
+        const flowEntries = this.entries.filter(e => e.timestamp >= this.lastFlowStartTime)
+
         if (typeof keyOrCondition === "string") {
-            return this.entries.some(e => e.type === type && e.key === keyOrCondition)
+            return flowEntries.some(e => e.type === type && e.key === keyOrCondition)
         }
-        return this.entries.some(e => e.type === type && keyOrCondition(e))
+        return flowEntries.some(e => e.type === type && keyOrCondition(e))
     }
 
     /**
@@ -98,6 +109,7 @@ export class StateLedger {
      */
     public clear(): void {
         this.entries = []
+        this.lastFlowStartTime = 0
     }
 }
 
