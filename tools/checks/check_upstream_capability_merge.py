@@ -72,10 +72,10 @@ def run_upstream_merge_doctor():
         if not check_prompt_contains(af, atlas_checks):
             all_pass = False
             
-    # 4. Forbidden elements — registry-controlled prompt architecture (Note: dynamic-agent-prompt-builder is
-    # retained as a PASSIVE prompt library only; it is NOT a runtime control point in this PR)
-    # If it ever becomes active runtime control, add it back here.
-    forbidden = []
+    # 4. Forbidden elements (Dynamic prompt builders / bypassers)
+    forbidden = [
+        "src/agents/dynamic-agent-prompt-builder.ts"
+    ]
     for f in forbidden:
         if not check_file_missing(f):
             all_pass = False

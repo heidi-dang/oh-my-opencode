@@ -9,7 +9,7 @@ import type {
   AvailableTool,
   AvailableSkill,
   AvailableCategory,
-} from "../dynamic-agent-prompt-builder";
+} from "../types";
 import {
   buildKeyTriggersSection,
   buildToolSelectionTable,
@@ -21,7 +21,7 @@ import {
   buildDeepParallelSection,
   buildNonClaudePlannerSection,
   categorizeTools,
-} from "../dynamic-agent-prompt-builder";
+} from "../prompts";
 
 export function buildTaskManagementSection(useTaskSystem: boolean): string {
   if (useTaskSystem) {
