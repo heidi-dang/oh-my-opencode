@@ -164,6 +164,7 @@ jobs:
           bun build src/cli/index.ts --outdir dist/cli --target bun --format esm --external @ast-grep/napi
           bunx tsc --emitDeclarationOnly
           bun run build:schema
+          bun run build:binaries
 
       - name: Embed provenance metadata
         if: steps.check.outputs.skip != 'true'
