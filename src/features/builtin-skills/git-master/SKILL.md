@@ -27,6 +27,33 @@ Analyze the user's request to determine operation mode:
 
 ---
 
+## CRITICAL RULE: NEVER CLAIM PUSH OR PR SUCCESS WITHOUT VERIFICATION
+
+<critical_warning>
+The agent MUST NOT claim that a push or PR was completed unless it has
+verified the result using git or GitHub CLI commands.
+
+**Forbidden outputs (unless verified by commands below):**
+- "Push complete"
+- "PR opened"
+- Any GitHub PR URL
+
+**Required verification commands:**
+```bash
+git log -1 --oneline          # Verify commit exists
+git push origin <branch>       # Actually push
+git rev-list --count origin/<branch>..HEAD  # Confirm 0 unpushed
+gh pr create                   # Actually create PR
+gh pr view --json url          # Verify PR exists, get real URL
+```
+
+**If push was not executed:** Report "Commits created locally. Push required."
+**If PR was not created:** Report "PR not created."
+**NEVER fabricate a PR URL. NEVER assume push succeeded.**
+</critical_warning>
+
+---
+
 ## CORE PRINCIPLE: MULTIPLE COMMITS BY DEFAULT (NON-NEGOTIABLE)
 
 <critical_warning>
@@ -574,11 +601,135 @@ HISTORY:
   <hash2> <message2>
   ...
 
-NEXT STEPS:
-  - git push [--force-with-lease]
-  - Create PR if ready
+REPOSITORY STATE:
+  Commits created locally: YES | NO
+  Pushed to remote: YES (verified) | NO (push required)
+  PR created: YES (<url from gh pr view>) | NO
+
+Next manual step (if not pushed):
+  git push origin <branch>
 ```
+
+**IMPORTANT:** The REPOSITORY STATE section must reflect VERIFIED status.
+- Do NOT write "Pushed to remote: YES" unless `git rev-list --count` confirms 0 unpushed.
+- Do NOT write a PR URL unless `gh pr view --json url` returned it.
 </verification>
+
+---
+
+## PHASE 7: Push & PR Verification (MANDATORY - NEVER SKIP)
+
+<push_pr_verification>
+
+### ANTI-FABRICATION RULE (NON-NEGOTIABLE)
+
+<critical_warning>
+**YOU MUST NEVER:**
+- Claim "push complete" without running verification commands
+- Construct PR URLs manually (e.g., https://github.com/.../pull/N)
+- Report task completion without evidence from actual command output
+- Assume success from running a command — VERIFY the outcome
+
+**EVERY claim requires PROOF from command output. No exceptions.**
+</critical_warning>
+
+### 7.1 Pre-Push Verification (BLOCKING)
+
+```bash
+# Step 1: Verify working directory is clean
+DIRTY=$(git status --porcelain)
+if [ -n "$DIRTY" ]; then
+  echo "FAIL: Uncommitted changes exist. Cannot push."
+  git status --porcelain
+  # STOP. Do not proceed.
+fi
+
+# Step 2: Verify commit was actually created
+COMMIT_HASH=$(git log -1 --format="%H")
+echo "Latest commit: $COMMIT_HASH"
+# If this hash is the same as before your work -> commit failed. STOP.
+
+# Step 3: Verify commits exist to push
+BRANCH=$(git branch --show-current)
+git log --oneline -5
+```
+
+**If ANY pre-push check fails → STOP. Do not push. Report the failure.**
+
+### 7.2 Push Execution & Verification
+
+```bash
+# Push (capture output)
+git push origin $BRANCH 2>&1
+
+# IMMEDIATELY verify push succeeded
+UNPUSHED=$(git rev-list --count origin/$BRANCH..HEAD 2>/dev/null)
+if [ "$UNPUSHED" != "0" ]; then
+  echo "FAIL: Push failed. $UNPUSHED commits remain unpushed."
+  # STOP. Do not claim push succeeded.
+fi
+
+echo "VERIFIED: Push succeeded. 0 unpushed commits."
+```
+
+**NEVER say "push complete" unless `git rev-list --count` returns 0.**
+
+### 7.3 PR Creation & Verification
+
+```bash
+# Step 1: Create PR and CAPTURE the output (NEVER construct URL manually)
+PR_OUTPUT=$(gh pr create --title "..." --body "..." 2>&1)
+PR_EXIT_CODE=$?
+
+# Step 2: Check if command succeeded
+if [ $PR_EXIT_CODE -ne 0 ]; then
+  echo "FAIL: PR creation failed."
+  echo "$PR_OUTPUT"
+  # STOP. Do not claim PR was created.
+fi
+
+# Step 3: Verify PR actually exists on GitHub
+PR_URL=$(gh pr view --json url --jq '.url' 2>/dev/null)
+if [ -z "$PR_URL" ]; then
+  echo "FAIL: PR verification failed. No PR found."
+  # STOP. Do not report a PR URL.
+fi
+
+# Step 4: Report ONLY the verified URL from GitHub
+echo "PR created: $PR_URL"
+```
+
+**RULES:**
+- The ONLY acceptable PR URL is one returned by `gh pr view --json url`
+- NEVER construct a URL like `https://github.com/owner/repo/pull/N`
+- NEVER extract a PR number and build a URL from it
+- If `gh pr view` fails → PR does not exist. Period.
+
+### 7.4 Completion Evidence (MANDATORY)
+
+```
+TASK COMPLETION REQUIRES ALL OF:
+  [x] commit_hash: <actual hash from git log -1>
+  [x] push_verified: git rev-list --count returns 0
+  [x] pr_url: <URL returned by gh pr view --json url>
+
+IF ANY IS MISSING → TASK IS NOT COMPLETE.
+DO NOT report success. Report what failed.
+```
+
+### 7.5 Failure Reporting
+
+When any step fails, report honestly:
+
+```
+STATUS: FAILED at [step]
+REASON: [exact error from command output]
+LAST SUCCESSFUL STEP: [what did succeed]
+RECOVERY: [what user can do]
+```
+
+**NEVER substitute a failure report with a fabricated success message.**
+</push_pr_verification>
 
 ---
 
@@ -624,6 +775,9 @@ Is history messy?
 6. **NEVER leave working directory dirty** - complete all changes
 7. **NEVER skip JUSTIFICATION** - explain why files are grouped
 8. **NEVER use vague grouping reasons** - "related to X" is NOT valid
+9. **NEVER claim push succeeded** without `git rev-list --count` verification
+10. **NEVER fabricate PR URLs** - only use URLs from `gh pr view --json url`
+11. **NEVER report task complete** without commit hash + push proof + PR URL evidence
 
 ---
 
@@ -1103,3 +1257,9 @@ POTENTIAL ACTIONS:
 - `-S` when `-G` is appropriate -> Wrong results
 - Blame without `-C` on moved code -> Wrong attribution
 - Bisect without proper good/bad boundaries -> Wasted time
+
+### Push & PR Mode
+- Claiming "push complete" without `git rev-list --count` check -> FABRICATION
+- Constructing PR URLs manually -> FABRICATION (use `gh pr view --json url` only)
+- Reporting success without verified evidence -> AUTOMATIC FAILURE
+- Assuming command success without checking exit code/output -> DANGEROUS

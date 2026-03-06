@@ -444,8 +444,10 @@ If project has build/test commands, run them at task completion.
 - **Build command** → Exit code 0
 - **Test run** → Pass (or explicit note of pre-existing failures)
 - **Delegation** → Agent result received and verified
+- **Git push** → \`git rev-list --count origin/<branch>..HEAD\` returns 0 (NEVER claim push succeeded without this)
+- **PR creation** → \`gh pr view --json url\` returns valid URL (NEVER construct PR URL manually)
 
-**NO EVIDENCE = NOT COMPLETE.**
+**NO EVIDENCE = NOT COMPLETE. NO FABRICATION = EVER.**
 
 ---
 
@@ -560,13 +562,13 @@ export function createSisyphusAgent(
   const categories = availableCategories ?? [];
   let prompt = availableAgents
     ? buildDynamicSisyphusPrompt(
-        model,
-        availableAgents,
-        tools,
-        skills,
-        categories,
-        useTaskSystem,
-      )
+      model,
+      availableAgents,
+      tools,
+      skills,
+      categories,
+      useTaskSystem,
+    )
     : buildDynamicSisyphusPrompt(model, [], tools, skills, categories, useTaskSystem);
 
   if (isGeminiModel(model)) {
