@@ -37,7 +37,7 @@ export async function masterLogin(options: MasterLoginOptions): Promise<number> 
 
     while (Date.now() - startTime < timeout) {
         const cookies = await context.cookies();
-        const sessionCookie = cookies.find(c => c.name === "__Secure-next-auth.session-token");
+        const sessionCookie = cookies.find((c: any) => c.name === "__Secure-next-auth.session-token");
 
         if (sessionCookie) {
             sessionToken = sessionCookie.value;
