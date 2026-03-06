@@ -1,6 +1,8 @@
 // bin/platform.test.ts
 import { describe, expect, test } from "bun:test";
-import { getPlatformPackage, getBinaryPath } from "./platform.js";
+import { getBinaryPath, getPlatformPackage, getPlatformPackageCandidates } from "./platform.js";
+
+const SCOPE = "@heidi-dang/";
 
 describe("getPlatformPackage", () => {
   // #region Darwin platforms
@@ -11,8 +13,8 @@ describe("getPlatformPackage", () => {
     // #when getting platform package
     const result = getPlatformPackage(input);
 
-    // #then returns correct package name
-    expect(result).toBe("oh-my-opencode-darwin-arm64");
+    // #then returns correct scoped package name
+    expect(result).toBe(`${SCOPE}oh-my-opencode-darwin-arm64`);
   });
 
   test("returns darwin-x64 for macOS Intel", () => {
@@ -22,8 +24,8 @@ describe("getPlatformPackage", () => {
     // #when getting platform package
     const result = getPlatformPackage(input);
 
-    // #then returns correct package name
-    expect(result).toBe("oh-my-opencode-darwin-x64");
+    // #then returns correct scoped package name
+    expect(result).toBe(`${SCOPE}oh-my-opencode-darwin-x64`);
   });
   // #endregion
 
@@ -35,8 +37,8 @@ describe("getPlatformPackage", () => {
     // #when getting platform package
     const result = getPlatformPackage(input);
 
-    // #then returns correct package name
-    expect(result).toBe("oh-my-opencode-linux-x64");
+    // #then returns correct scoped package name
+    expect(result).toBe(`${SCOPE}oh-my-opencode-linux-x64`);
   });
 
   test("returns linux-arm64 for Linux ARM64 with glibc", () => {
@@ -46,8 +48,8 @@ describe("getPlatformPackage", () => {
     // #when getting platform package
     const result = getPlatformPackage(input);
 
-    // #then returns correct package name
-    expect(result).toBe("oh-my-opencode-linux-arm64");
+    // #then returns correct scoped package name
+    expect(result).toBe(`${SCOPE}oh-my-opencode-linux-arm64`);
   });
   // #endregion
 
@@ -59,8 +61,8 @@ describe("getPlatformPackage", () => {
     // #when getting platform package
     const result = getPlatformPackage(input);
 
-    // #then returns correct package name with musl suffix
-    expect(result).toBe("oh-my-opencode-linux-x64-musl");
+    // #then returns correct scoped package name with musl suffix
+    expect(result).toBe(`${SCOPE}oh-my-opencode-linux-x64-musl`);
   });
 
   test("returns linux-arm64-musl for Alpine ARM64", () => {
@@ -70,8 +72,8 @@ describe("getPlatformPackage", () => {
     // #when getting platform package
     const result = getPlatformPackage(input);
 
-    // #then returns correct package name with musl suffix
-    expect(result).toBe("oh-my-opencode-linux-arm64-musl");
+    // #then returns correct scoped package name with musl suffix
+    expect(result).toBe(`${SCOPE}oh-my-opencode-linux-arm64-musl`);
   });
   // #endregion
 
@@ -83,8 +85,8 @@ describe("getPlatformPackage", () => {
     // #when getting platform package
     const result = getPlatformPackage(input);
 
-    // #then returns correct package name with 'windows' not 'win32'
-    expect(result).toBe("oh-my-opencode-windows-x64");
+    // #then returns correct scoped package name with 'windows' not 'win32'
+    expect(result).toBe(`${SCOPE}oh-my-opencode-windows-x64`);
   });
   // #endregion
 
@@ -111,38 +113,93 @@ describe("getPlatformPackage", () => {
 
 describe("getBinaryPath", () => {
   test("returns path without .exe for Unix platforms", () => {
-    // #given Unix platform package
-    const pkg = "oh-my-opencode-darwin-arm64";
+    // #given Unix platform package (scoped)
+    const pkg = `${SCOPE}oh-my-opencode-darwin-arm64`;
     const platform = "darwin";
 
     // #when getting binary path
     const result = getBinaryPath(pkg, platform);
 
     // #then returns path without extension
-    expect(result).toBe("oh-my-opencode-darwin-arm64/bin/oh-my-opencode");
+    expect(result).toBe(`${SCOPE}oh-my-opencode-darwin-arm64/bin/oh-my-opencode`);
   });
 
   test("returns path with .exe for Windows", () => {
-    // #given Windows platform package
-    const pkg = "oh-my-opencode-windows-x64";
+    // #given Windows platform package (scoped)
+    const pkg = `${SCOPE}oh-my-opencode-windows-x64`;
     const platform = "win32";
 
     // #when getting binary path
     const result = getBinaryPath(pkg, platform);
 
     // #then returns path with .exe extension
-    expect(result).toBe("oh-my-opencode-windows-x64/bin/oh-my-opencode.exe");
+    expect(result).toBe(`${SCOPE}oh-my-opencode-windows-x64/bin/oh-my-opencode.exe`);
   });
 
   test("returns path without .exe for Linux", () => {
-    // #given Linux platform package
-    const pkg = "oh-my-opencode-linux-x64";
+    // #given Linux platform package (scoped)
+    const pkg = `${SCOPE}oh-my-opencode-linux-x64`;
     const platform = "linux";
 
     // #when getting binary path
     const result = getBinaryPath(pkg, platform);
 
     // #then returns path without extension
-    expect(result).toBe("oh-my-opencode-linux-x64/bin/oh-my-opencode");
+    expect(result).toBe(`${SCOPE}oh-my-opencode-linux-x64/bin/oh-my-opencode`);
+  });
+});
+
+describe("getPlatformPackageCandidates", () => {
+  test("returns x64 and baseline candidates for Linux glibc", () => {
+    // #given Linux x64 with glibc
+    const input = { platform: "linux", arch: "x64", libcFamily: "glibc" };
+
+    // #when getting package candidates
+    const result = getPlatformPackageCandidates(input);
+
+    // #then returns scoped modern first then baseline fallback
+    expect(result).toEqual([
+      `${SCOPE}oh-my-opencode-linux-x64`,
+      `${SCOPE}oh-my-opencode-linux-x64-baseline`,
+    ]);
+  });
+
+  test("returns x64 musl and baseline candidates for Linux musl", () => {
+    // #given Linux x64 with musl
+    const input = { platform: "linux", arch: "x64", libcFamily: "musl" };
+
+    // #when getting package candidates
+    const result = getPlatformPackageCandidates(input);
+
+    // #then returns scoped musl modern first then musl baseline fallback
+    expect(result).toEqual([
+      `${SCOPE}oh-my-opencode-linux-x64-musl`,
+      `${SCOPE}oh-my-opencode-linux-x64-musl-baseline`,
+    ]);
+  });
+
+  test("returns baseline first when preferBaseline is true", () => {
+    // #given Windows x64 and baseline preference
+    const input = { platform: "win32", arch: "x64", preferBaseline: true };
+
+    // #when getting package candidates
+    const result = getPlatformPackageCandidates(input);
+
+    // #then scoped baseline package is preferred first
+    expect(result).toEqual([
+      `${SCOPE}oh-my-opencode-windows-x64-baseline`,
+      `${SCOPE}oh-my-opencode-windows-x64`,
+    ]);
+  });
+
+  test("returns only one candidate for ARM64", () => {
+    // #given non-x64 platform
+    const input = { platform: "linux", arch: "arm64", libcFamily: "glibc" };
+
+    // #when getting package candidates
+    const result = getPlatformPackageCandidates(input);
+
+    // #then scoped baseline fallback is not included
+    expect(result).toEqual([`${SCOPE}oh-my-opencode-linux-arm64`]);
   });
 });

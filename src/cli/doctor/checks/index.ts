@@ -1,37 +1,48 @@
 import type { CheckDefinition } from "../types"
-import { getOpenCodeCheckDefinition } from "./opencode"
-import { getPluginCheckDefinition } from "./plugin"
-import { getConfigCheckDefinition } from "./config"
-import { getModelResolutionCheckDefinition } from "./model-resolution"
-import { getAuthCheckDefinitions } from "./auth"
-import { getDependencyCheckDefinitions } from "./dependencies"
-import { getGhCliCheckDefinition } from "./gh"
-import { getLspCheckDefinition } from "./lsp"
-import { getMcpCheckDefinitions } from "./mcp"
-import { getVersionCheckDefinition } from "./version"
+import { CHECK_IDS, CHECK_NAMES } from "../constants"
+import { checkSystem, gatherSystemInfo } from "./system"
+import { checkConfig } from "./config"
+import { checkTools, gatherToolsSummary } from "./tools"
+import { checkModels } from "./model-resolution"
+import { checkFork } from "./fork"
+import { checkDefaultConfig } from "./default-config"
 
-export * from "./opencode"
-export * from "./plugin"
-export * from "./config"
-export * from "./model-resolution"
-export * from "./auth"
-export * from "./dependencies"
-export * from "./gh"
-export * from "./lsp"
-export * from "./mcp"
-export * from "./version"
+export type { CheckDefinition }
+export * from "./model-resolution-types"
+export { gatherSystemInfo, gatherToolsSummary }
 
 export function getAllCheckDefinitions(): CheckDefinition[] {
   return [
-    getOpenCodeCheckDefinition(),
-    getPluginCheckDefinition(),
-    getConfigCheckDefinition(),
-    getModelResolutionCheckDefinition(),
-    ...getAuthCheckDefinitions(),
-    ...getDependencyCheckDefinitions(),
-    getGhCliCheckDefinition(),
-    getLspCheckDefinition(),
-    ...getMcpCheckDefinitions(),
-    getVersionCheckDefinition(),
+    {
+      id: CHECK_IDS.SYSTEM,
+      name: CHECK_NAMES[CHECK_IDS.SYSTEM],
+      check: checkSystem,
+      critical: true,
+    },
+    {
+      id: CHECK_IDS.CONFIG,
+      name: CHECK_NAMES[CHECK_IDS.CONFIG],
+      check: checkConfig,
+    },
+    {
+      id: CHECK_IDS.TOOLS,
+      name: CHECK_NAMES[CHECK_IDS.TOOLS],
+      check: checkTools,
+    },
+    {
+      id: CHECK_IDS.MODELS,
+      name: CHECK_NAMES[CHECK_IDS.MODELS],
+      check: checkModels,
+    },
+    {
+      id: CHECK_IDS.FORK,
+      name: CHECK_NAMES[CHECK_IDS.FORK],
+      check: checkFork,
+    },
+    {
+      id: CHECK_IDS.DEFAULT_CONFIG,
+      name: CHECK_NAMES[CHECK_IDS.DEFAULT_CONFIG],
+      check: checkDefaultConfig,
+    },
   ]
 }

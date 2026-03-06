@@ -12,6 +12,7 @@ function createConfig(overrides: Partial<InstallConfig> = {}): InstallConfig {
     hasCopilot: false,
     hasOpencodeZen: false,
     hasZaiCodingPlan: false,
+    hasKimiForCoding: false,
     ...overrides,
   }
 }
@@ -353,34 +354,132 @@ describe("generateModelConfig", () => {
       // #then explore should use gpt-5-nano (fallback)
       expect(result.agents?.explore?.model).toBe("opencode/gpt-5-nano")
     })
+
+    test("explore uses gpt-5-mini when only Copilot available", () => {
+      // #given only Copilot is available
+      const config = createConfig({ hasCopilot: true })
+
+      // #when generateModelConfig is called
+      const result = generateModelConfig(config)
+
+      // #then explore should use gpt-5-mini (Copilot fallback)
+      expect(result.agents?.explore?.model).toBe("github-copilot/gpt-5-mini")
+    })
   })
 
   describe("Sisyphus agent special cases", () => {
-    test("Sisyphus uses sisyphus-high capability when isMax20 is true", () => {
-      // #given Claude is available with Max 20 plan
+    test("Sisyphus is created when at least one fallback provider is available (Claude)", () => {
+      // #given
       const config = createConfig({ hasClaude: true, isMax20: true })
 
-      // #when generateModelConfig is called
+      // #when
       const result = generateModelConfig(config)
 
-      // #then Sisyphus should use opus (sisyphus-high)
-      expect(result.agents?.sisyphus?.model).toBe("anthropic/claude-opus-4-5")
+      // #then
+      expect(result.agents?.sisyphus?.model).toBe("anthropic/claude-opus-4-6")
     })
 
-    test("Sisyphus uses sisyphus-low capability when isMax20 is false", () => {
-      // #given Claude is available without Max 20 plan
-      const config = createConfig({ hasClaude: true, isMax20: false })
+    test("Sisyphus is created when multiple fallback providers are available", () => {
+      // #given
+      const config = createConfig({
+        hasClaude: true,
+        hasKimiForCoding: true,
+        hasOpencodeZen: true,
+        hasZaiCodingPlan: true,
+        isMax20: true,
+      })
 
-      // #when generateModelConfig is called
+      // #when
       const result = generateModelConfig(config)
 
-      // #then Sisyphus should use sonnet (sisyphus-low)
-      expect(result.agents?.sisyphus?.model).toBe("anthropic/claude-sonnet-4-5")
+      // #then
+      expect(result.agents?.sisyphus?.model).toBe("anthropic/claude-opus-4-6")
+    })
+
+    test("Sisyphus is omitted when no fallback provider is available (OpenAI not in chain)", () => {
+      // #given
+      const config = createConfig({ hasOpenAI: true })
+
+      // #when
+      const result = generateModelConfig(config)
+
+      // #then
+      expect(result.agents?.sisyphus).toBeUndefined()
+    })
+  })
+
+  describe("Hephaestus agent special cases", () => {
+    test("Hephaestus is created when OpenAI is available (openai provider connected)", () => {
+      // #given
+      const config = createConfig({ hasOpenAI: true })
+
+      // #when
+      const result = generateModelConfig(config)
+
+      // #then
+      expect(result.agents?.hephaestus?.model).toBe("openai/gpt-5.3-codex")
+      expect(result.agents?.hephaestus?.variant).toBe("medium")
+    })
+
+    test("Hephaestus is NOT created when only Copilot is available (gpt-5.3-codex unavailable on github-copilot)", () => {
+      // #given
+      const config = createConfig({ hasCopilot: true })
+
+      // #when
+      const result = generateModelConfig(config)
+
+      // #then - hephaestus is omitted because gpt-5.3-codex is not available on github-copilot
+      expect(result.agents?.hephaestus).toBeUndefined()
+    })
+
+    test("Hephaestus is created when OpenCode Zen is available (opencode provider connected)", () => {
+      // #given
+      const config = createConfig({ hasOpencodeZen: true })
+
+      // #when
+      const result = generateModelConfig(config)
+
+      // #then
+      expect(result.agents?.hephaestus?.model).toBe("opencode/gpt-5.3-codex")
+      expect(result.agents?.hephaestus?.variant).toBe("medium")
+    })
+
+    test("Hephaestus is omitted when only Claude is available (no required provider connected)", () => {
+      // #given
+      const config = createConfig({ hasClaude: true })
+
+      // #when
+      const result = generateModelConfig(config)
+
+      // #then
+      expect(result.agents?.hephaestus).toBeUndefined()
+    })
+
+    test("Hephaestus is omitted when only Gemini is available (no required provider connected)", () => {
+      // #given
+      const config = createConfig({ hasGemini: true })
+
+      // #when
+      const result = generateModelConfig(config)
+
+      // #then
+      expect(result.agents?.hephaestus).toBeUndefined()
+    })
+
+    test("Hephaestus is omitted when only ZAI is available (no required provider connected)", () => {
+      // #given
+      const config = createConfig({ hasZaiCodingPlan: true })
+
+      // #when
+      const result = generateModelConfig(config)
+
+      // #then
+      expect(result.agents?.hephaestus).toBeUndefined()
     })
   })
 
   describe("librarian agent special cases", () => {
-    test("librarian uses ZAI when ZAI is available regardless of other providers", () => {
+    test("librarian uses ZAI model when ZAI is available regardless of other providers", () => {
       // #given ZAI and Claude are available
       const config = createConfig({
         hasClaude: true,
@@ -394,14 +493,14 @@ describe("generateModelConfig", () => {
       expect(result.agents?.librarian?.model).toBe("zai-coding-plan/glm-4.7")
     })
 
-    test("librarian uses claude-sonnet when ZAI not available but Claude is", () => {
+    test("librarian falls back to generic chain result when no librarian provider matches", () => {
       // #given only Claude is available (no ZAI)
       const config = createConfig({ hasClaude: true })
 
       // #when generateModelConfig is called
       const result = generateModelConfig(config)
 
-      // #then librarian should use claude-sonnet-4-5 (third in fallback chain after ZAI and opencode/glm)
+      // #then librarian should use generic chain result when chain providers are unavailable
       expect(result.agents?.librarian?.model).toBe("anthropic/claude-sonnet-4-5")
     })
   })
@@ -416,7 +515,7 @@ describe("generateModelConfig", () => {
 
       // #then should include correct schema URL
       expect(result.$schema).toBe(
-        "https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-opencode.schema.json"
+        "https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/dev/assets/oh-my-opencode.schema.json"
       )
     })
   })
