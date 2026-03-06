@@ -55,6 +55,7 @@ export const HookNameSchema = z.enum([
   "runtime-enforcement",
   "plan-enforcement",
   "semantic-loop-guard",
+  "xai-usage-patch",
 ])
 
 export type HookName = z.infer<typeof HookNameSchema>

@@ -25,6 +25,7 @@ import {
   createQuestionLabelTruncatorHook,
   createPreemptiveCompactionHook,
   createRuntimeFallbackHook,
+  createXaiUsagePatchHook,
 } from "../../hooks"
 import { createAnthropicEffortHook } from "../../hooks/anthropic-effort"
 import {
@@ -60,6 +61,7 @@ export type SessionHooks = {
   taskResumeInfo: ReturnType<typeof createTaskResumeInfoHook> | null
   anthropicEffort: ReturnType<typeof createAnthropicEffortHook> | null
   runtimeFallback: ReturnType<typeof createRuntimeFallbackHook> | null
+  xaiUsagePatch: ReturnType<typeof createXaiUsagePatchHook> | null
 }
 
 export function createSessionHooks(args: {
@@ -75,19 +77,19 @@ export function createSessionHooks(args: {
 
   const contextWindowMonitor = isHookEnabled("context-window-monitor")
     ? safeHook("context-window-monitor", () =>
-        createContextWindowMonitorHook(ctx, modelCacheState))
+      createContextWindowMonitorHook(ctx, modelCacheState))
     : null
 
   const preemptiveCompaction =
     isHookEnabled("preemptive-compaction") &&
-    pluginConfig.experimental?.preemptive_compaction
+      pluginConfig.experimental?.preemptive_compaction
       ? safeHook("preemptive-compaction", () =>
-          createPreemptiveCompactionHook(ctx, pluginConfig, modelCacheState))
+        createPreemptiveCompactionHook(ctx, pluginConfig, modelCacheState))
       : null
 
   const sessionRecovery = isHookEnabled("session-recovery")
     ? safeHook("session-recovery", () =>
-        createSessionRecoveryHook(ctx, { experimental: pluginConfig.experimental }))
+      createSessionRecoveryHook(ctx, { experimental: pluginConfig.experimental }))
     : null
 
   let sessionNotification: ReturnType<typeof createSessionNotification> | null = null
@@ -141,7 +143,7 @@ export function createSessionHooks(args: {
         body: { title: newTitle },
         query: { directory: ctx.directory },
       })
-      .catch(() => {})
+      .catch(() => { })
 
     existing.lastKey = key
     fallbackTitleState.set(input.sessionID, existing)
@@ -167,7 +169,7 @@ export function createSessionHooks(args: {
                 duration: duration ?? 5000,
               },
             })
-            .catch(() => {})
+            .catch(() => { })
         },
         onApplied: enableFallbackTitle ? updateFallbackTitle : undefined,
       }))
@@ -175,16 +177,16 @@ export function createSessionHooks(args: {
 
   const anthropicContextWindowLimitRecovery = isHookEnabled("anthropic-context-window-limit-recovery")
     ? safeHook("anthropic-context-window-limit-recovery", () =>
-        createAnthropicContextWindowLimitRecoveryHook(ctx, { experimental: pluginConfig.experimental, pluginConfig }))
+      createAnthropicContextWindowLimitRecoveryHook(ctx, { experimental: pluginConfig.experimental, pluginConfig }))
     : null
 
   const autoUpdateChecker = isHookEnabled("auto-update-checker")
     ? safeHook("auto-update-checker", () =>
-        createAutoUpdateCheckerHook(ctx, {
-          showStartupToast: isHookEnabled("startup-toast"),
-          isSisyphusEnabled: pluginConfig.sisyphus_agent?.disabled !== true,
-          autoUpdate: pluginConfig.auto_update ?? true,
-        }))
+      createAutoUpdateCheckerHook(ctx, {
+        showStartupToast: isHookEnabled("startup-toast"),
+        isSisyphusEnabled: pluginConfig.sisyphus_agent?.disabled !== true,
+        autoUpdate: pluginConfig.auto_update ?? true,
+      }))
     : null
 
   const agentUsageReminder = isHookEnabled("agent-usage-reminder")
@@ -201,10 +203,10 @@ export function createSessionHooks(args: {
 
   const ralphLoop = isHookEnabled("ralph-loop")
     ? safeHook("ralph-loop", () =>
-        createRalphLoopHook(ctx, {
-          config: pluginConfig.ralph_loop,
-          checkSessionExists: async (sessionId) => await sessionExists(sessionId),
-        }))
+      createRalphLoopHook(ctx, {
+        config: pluginConfig.ralph_loop,
+        checkSessionExists: async (sessionId) => await sessionExists(sessionId),
+      }))
     : null
 
   const editErrorRecovery = isHookEnabled("edit-error-recovery")
@@ -256,11 +258,14 @@ export function createSessionHooks(args: {
 
   const runtimeFallback = isHookEnabled("runtime-fallback")
     ? safeHook("runtime-fallback", () =>
-        createRuntimeFallbackHook(ctx, {
-          config: runtimeFallbackConfig,
-          pluginConfig,
-        }))
+      createRuntimeFallbackHook(ctx, {
+        config: runtimeFallbackConfig,
+        pluginConfig,
+      }))
     : null
+
+  const xaiUsagePatch = safeHook("xai-usage-patch", () => createXaiUsagePatchHook())
+
   return {
     contextWindowMonitor,
     preemptiveCompaction,
@@ -285,5 +290,6 @@ export function createSessionHooks(args: {
     taskResumeInfo,
     anthropicEffort,
     runtimeFallback,
+    xaiUsagePatch,
   }
 }
