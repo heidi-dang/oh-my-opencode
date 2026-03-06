@@ -2,7 +2,42 @@ import { writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import * as os from "node:os";
 import color from "picocolors";
+import { createRequire } from "node:module";
+
 // playwright is imported dynamically inside the function to avoid top-level resolution errors in the binary
+
+async function resolvePlaywright(): Promise<any> {
+    // 1. Try normal dynamic import (works in dev and some environments)
+    try {
+        return await import("playwright");
+    } catch (e) {
+        // Fall through
+    }
+
+    // 2. Try to resolve relative to the physical binary location
+    // The native binary is typically at: node_modules/@heidi-dang/oh-my-opencode-PLATFORM/bin/oh-my-opencode
+    // We want to look for node_modules/playwright in parent directories
+    const binaryDir = dirname(process.execPath);
+    let currentDir = binaryDir;
+
+    for (let i = 0; i < 6; i++) {
+        const potentialPath = join(currentDir, "node_modules", "playwright");
+        if (existsSync(potentialPath)) {
+            try {
+                // Use createRequire to bypass Bun's virtual filesystem if necessary
+                const require = createRequire(join(currentDir, "index.js"));
+                return require("playwright");
+            } catch (e) {
+                // Continue searching
+            }
+        }
+        const parent = dirname(currentDir);
+        if (parent === currentDir) break;
+        currentDir = parent;
+    }
+
+    throw new Error("Cannot find package 'playwright'. Please ensure it's installed via 'npm install -g @heidi-dang/oh-my-opencode'.");
+}
 
 export interface MasterLoginOptions {
     force: boolean;
@@ -17,11 +52,22 @@ export async function masterLogin(options: MasterLoginOptions): Promise<number> 
         return 0;
     }
 
+    let playwrightModule: any;
+    try {
+        playwrightModule = await resolvePlaywright();
+    } catch (err) {
+        console.error(color.red("\n[error] Playwright not found."));
+        console.log(color.dim("This command requires Playwright to automate the login process."));
+        console.log(color.dim("Please try running: npm install -g @heidi-dang/oh-my-opencode"));
+        console.log(color.dim(`Diagnostic: looked for 'playwright' in ${dirname(process.execPath)} and parents.`));
+        return 1;
+    }
+
     console.log(color.cyan("🚀 Launching browser for ChatGPT login..."));
     console.log(color.dim("Please log in to chat.openai.com in the window that appears."));
     console.log(color.dim("Once logged in, return here. I will automatically detect the session."));
-    // @ts-ignore
-    const { chromium } = await import("playwright");
+
+    const { chromium } = playwrightModule;
     const browser = await chromium.launch({ headless: false });
     const context = await browser.newContext();
     const page = await context.newPage();
