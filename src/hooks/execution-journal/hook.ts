@@ -12,7 +12,7 @@ import { ledger, type LedgerEntryType } from "../../runtime/state-ledger"
 export function createExecutionJournalHook(ctx: PluginInput) {
     return {
         "tool.execute.after": async (
-            input: { tool: string; sessionID: string; callID: string; args: any },
+            input: { tool: string; sessionID: string; callID: string },
             output: { title: string; output: string; metadata: any }
         ) => {
             // 1. Log to the Execution Journal
@@ -21,7 +21,7 @@ export function createExecutionJournalHook(ctx: PluginInput) {
                 agent: "tracked-agent", // Set dynamically if possible, handled generically here
                 intent: "execute_tool",
                 tool: input.tool,
-                args: input.args,
+                args: output.metadata?.args,
                 stdout: output.output,
                 verificationState: output.metadata?.changedState
             })
@@ -45,7 +45,8 @@ export function createExecutionJournalHook(ctx: PluginInput) {
             } else {
                 // Fallback heuristics for raw bash operations (if not yet disabled)
                 if (input.tool === "interactive_bash" || input.tool === "bash") {
-                    const command = input.args?.command || ""
+                    const args = output.metadata?.args as any
+                    const command = args?.command || ""
 
                     if (typeof command === "string") {
                         if (command.includes("git push") && output.output.includes("Everything up-to-date") === false) {

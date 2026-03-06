@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest"
+import { describe, it, expect } from "bun:test"
 import { createXaiUsagePatchHook } from "./hook"
 
 describe("xai-usage-patch", () => {
@@ -81,6 +81,7 @@ describe("xai-usage-patch", () => {
             }
         }
 
-        await expect(hook.event({ event } as any)).resolves.not.toThrow()
+        // Just calling it should not throw
+        await hook.event({ event } as any)
     })
 })

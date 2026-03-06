@@ -13,8 +13,10 @@ export function createToolContractHook(_ctx: PluginInput) {
     return {
         "tool.execute.after": async (
             input: { tool: string; sessionID: string; callID: string },
-            output: { args: any; result: string; metadata?: any }
+            output: { title: string; output: string; metadata: any }
         ) => {
+            const result = output.output
+            const args = output.metadata?.args
             // Apply strict contract enforcement to our core safety tools
             const safetyCritical = ["git_safe", "fs_safe", "verify_action", "complete_task"]
             if (safetyCritical.includes(input.tool)) {
@@ -27,7 +29,7 @@ export function createToolContractHook(_ctx: PluginInput) {
 
                 // 2. Strict Deterministic Rejection
                 if (meta.success === false) {
-                    throw new Error(`[Tool Contract Enforcer] Tool execution explicitly failed in ${input.tool}. You MUST revise your plan. Error: ${output.result}`)
+                    throw new Error(`[Tool Contract Enforcer] Tool execution explicitly failed in ${input.tool}. You MUST revise your plan. Error: ${result}`)
                 }
 
                 // 3. Verification Enforcement
