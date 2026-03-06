@@ -1,6 +1,7 @@
 import crypto from "crypto"
 import type { PluginInput } from "@opencode-ai/plugin"
 import { ledger } from "../../runtime/state-ledger"
+import { compiler } from "../../runtime/plan-compiler"
 
 /**
  * Semantic Loop Guard

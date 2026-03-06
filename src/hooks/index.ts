@@ -55,4 +55,6 @@ export { createExecutionJournalHook } from "./execution-journal"
 export { createSemanticLoopGuardHook } from "./semantic-loop-guard"
 export { createRuntimeEnforcementHook } from "./runtime-enforcement"
 export { createPlanEnforcementHook } from "./plan-enforcement"
+export { createToolContractHook } from "./tool-contract"
+
 

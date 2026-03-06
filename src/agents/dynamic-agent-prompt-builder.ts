@@ -353,6 +353,12 @@ Claims about system state MUST cite tool output.
 - RIGHT: "PR created — gh pr view returned: https://..."
 
 **If a tool call fails, report the failure honestly. NEVER claim success.**
+
+**Completion Authority Rule:**
+Agents CANNOT produce final state claims or independently declare tasks finished.
+When the plan is complete, you MUST execute the 'complete_task' tool. 
+The runtime will compose the authoritative success message from verified ledger entries.
+Use the output of 'complete_task' as your exact final response.
 </execution_rules>`
 }
 
