@@ -11,7 +11,7 @@ import { createPluginInterface } from "./plugin-interface"
 import { loadPluginConfig } from "./plugin-config"
 import { createModelCacheState } from "./plugin-state"
 import { createFirstMessageVariantGate } from "./shared/first-message-variant"
-import { injectServerAuthIntoClient, log } from "./shared"
+import { injectServerAuthIntoClient, log, injectYGKAInterceptor } from "./shared"
 import { startTmuxCheck } from "./tools"
 
 const OhMyOpenCodePlugin: Plugin = async (ctx) => {
@@ -22,6 +22,7 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
   })
 
   injectServerAuthIntoClient(ctx.client)
+  injectYGKAInterceptor(ctx.client)
   startTmuxCheck()
 
   const pluginConfig = loadPluginConfig(ctx.directory, ctx)

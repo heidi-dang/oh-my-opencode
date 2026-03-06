@@ -5,6 +5,7 @@ import { run } from "./run"
 import { getLocalVersion } from "./get-local-version"
 import { doctor } from "./doctor"
 import { createMcpOAuthCommand } from "./mcp-oauth"
+import { masterLogin } from "./master-login"
 import type { InstallArgs } from "./types"
 import type { RunOptions } from "./run"
 import type { GetLocalVersionOptions } from "./get-local-version/types"
@@ -196,6 +197,15 @@ program
   .description("Show version information")
   .action(() => {
     console.log(`oh-my-opencode v${VERSION}`)
+  })
+
+program
+  .command("master-login")
+  .description("Login to ChatGPT and capture session for Master agent (YGKA)")
+  .option("--force", "Overwrite existing session configuration")
+  .action(async (options) => {
+    const exitCode = await masterLogin({ force: options.force ?? false })
+    process.exit(exitCode)
   })
 
 program.addCommand(createMcpOAuthCommand())
