@@ -20,10 +20,10 @@ export function getPlatformPackage({ platform, arch, libcFamily }) {
       suffix = "-musl";
     }
   }
-  
+
   // Map platform names: win32 -> windows (for package name)
   const os = platform === "win32" ? "windows" : platform;
-  return `oh-my-opencode-${os}-${arch}${suffix}`;
+  return `@heidi-dang/oh-my-opencode-${os}-${arch}${suffix}`;
 }
 
 /** @param {{ platform: string, arch: string, libcFamily?: string | null, preferBaseline?: boolean }} options */
@@ -45,11 +45,11 @@ function getBaselinePlatformPackage({ platform, arch, libcFamily }) {
   }
 
   if (platform === "darwin") {
-    return "oh-my-opencode-darwin-x64-baseline";
+    return "@heidi-dang/oh-my-opencode-darwin-x64-baseline";
   }
 
   if (platform === "win32") {
-    return "oh-my-opencode-windows-x64-baseline";
+    return "@heidi-dang/oh-my-opencode-windows-x64-baseline";
   }
 
   if (platform === "linux") {
@@ -61,10 +61,10 @@ function getBaselinePlatformPackage({ platform, arch, libcFamily }) {
     }
 
     if (libcFamily === "musl") {
-      return "oh-my-opencode-linux-x64-musl-baseline";
+      return "@heidi-dang/oh-my-opencode-linux-x64-musl-baseline";
     }
 
-    return "oh-my-opencode-linux-x64-baseline";
+    return "@heidi-dang/oh-my-opencode-linux-x64-baseline";
   }
 
   return null;

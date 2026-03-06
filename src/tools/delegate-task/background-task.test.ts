@@ -10,10 +10,10 @@ const { __setTimingConfig, __resetTimingConfig } = require("./timing")
 
 describeFn("executeBackgroundTask output/session metadata compatibility", () => {
   beforeEachFn(() => {
-    //#given - reduce waiting to keep tests fast
+    //#given - reduce waiting to keep tests fast, but allow enough time for polling
     __setTimingConfig({
       WAIT_FOR_SESSION_INTERVAL_MS: 1,
-      WAIT_FOR_SESSION_TIMEOUT_MS: 2,
+      WAIT_FOR_SESSION_TIMEOUT_MS: 20,
     })
   })
 

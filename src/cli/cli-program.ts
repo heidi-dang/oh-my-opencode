@@ -1,5 +1,6 @@
 import { Command } from "commander"
 import { install } from "./install"
+import { initCommand } from "./init"
 import { run } from "./run"
 import { getLocalVersion } from "./get-local-version"
 import { doctor } from "./doctor"
@@ -64,9 +65,29 @@ Model Providers (Priority: Native > Copilot > OpenCode Zen > Z.ai > Kimi):
   })
 
 program
-   .command("run <message>")
-   .allowUnknownOption()
-   .passThroughOptions()
+  .command("init")
+  .description("Write the Heidi performance default config to the global oh-my-opencode config path")
+  .option("--force", "Overwrite existing config file")
+  .addHelpText("after", `
+Writes:
+  Linux/macOS: ~/.config/opencode/oh-my-opencode.json
+  Windows:     %APPDATA%\\opencode\\oh-my-opencode.json
+
+Safety: does nothing if file exists, unless --force.
+
+Examples:
+  $ oh-my-opencode init           # write if missing
+  $ oh-my-opencode init --force   # overwrite
+`)
+  .action(async (options) => {
+    const exitCode = await initCommand({ force: options.force ?? false })
+    process.exit(exitCode)
+  })
+
+program
+  .command("run <message>")
+  .allowUnknownOption()
+  .passThroughOptions()
   .description("Run opencode with todo/background task completion enforcement")
   .option("-a, --agent <name>", "Agent to use (default: from CLI/env/config, fallback: Sisyphus)")
   .option("-d, --directory <path>", "Working directory")
