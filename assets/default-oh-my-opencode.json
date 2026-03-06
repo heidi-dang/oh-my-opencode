@@ -1,0 +1,59 @@
+{
+    "$schema": "https://raw.githubusercontent.com/heidi-dang/oh-my-opencode/dev/assets/oh-my-opencode.schema.json",
+    "agents": {
+        "sisyphus": {
+            "model": "xai/grok-4-1-fast",
+            "ultrawork": {
+                "model": "xai/grok-4-1-fast",
+                "variant": "max"
+            }
+        },
+        "librarian": {
+            "model": "xai/grok-4-1-fast-non-reasoning"
+        },
+        "explore": {
+            "model": "xai/grok-4-1-fast-non-reasoning"
+        },
+        "oracle": {
+            "model": "xai/grok-4-1-fast",
+            "variant": "high"
+        },
+        "prometheus": {
+            "prompt_append": "Prefer fast agents; only trigger ultrawork when necessary. Parallelize but avoid duplicate work."
+        }
+    },
+    "categories": {
+        "quick": {
+            "model": "opencode-go/minimax-m2.5"
+        },
+        "unspecified-low": {
+            "model": "xai/grok-4-1-fast-non-reasoning"
+        },
+        "unspecified-high": {
+            "model": "xai/grok-4-1-fast",
+            "variant": "high"
+        },
+        "visual-engineering": {
+            "model": "google/gemini-3-pro-preview",
+            "variant": "high"
+        },
+        "writing": {
+            "model": "xai/grok-4-1-fast-non-reasoning"
+        }
+    },
+    "background_task": {
+        "providerConcurrency": {
+            "xai": 8,
+            "opencode-go": 6,
+            "opencode": 2,
+            "google": 1,
+            "openai": 1,
+            "anthropic": 1
+        },
+        "modelConcurrency": {
+            "xai/grok-4-1-fast-non-reasoning": 8,
+            "xai/grok-4-1-fast": 2,
+            "opencode-go/minimax-m2.5": 6
+        }
+    }
+}

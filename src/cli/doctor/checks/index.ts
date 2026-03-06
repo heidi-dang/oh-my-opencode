@@ -4,6 +4,8 @@ import { checkSystem, gatherSystemInfo } from "./system"
 import { checkConfig } from "./config"
 import { checkTools, gatherToolsSummary } from "./tools"
 import { checkModels } from "./model-resolution"
+import { checkFork } from "./fork"
+import { checkDefaultConfig } from "./default-config"
 
 export type { CheckDefinition }
 export * from "./model-resolution-types"
@@ -31,6 +33,16 @@ export function getAllCheckDefinitions(): CheckDefinition[] {
       id: CHECK_IDS.MODELS,
       name: CHECK_NAMES[CHECK_IDS.MODELS],
       check: checkModels,
+    },
+    {
+      id: CHECK_IDS.FORK,
+      name: CHECK_NAMES[CHECK_IDS.FORK],
+      check: checkFork,
+    },
+    {
+      id: CHECK_IDS.DEFAULT_CONFIG,
+      name: CHECK_NAMES[CHECK_IDS.DEFAULT_CONFIG],
+      check: checkDefaultConfig,
     },
   ]
 }

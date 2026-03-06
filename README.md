@@ -82,23 +82,53 @@ Install OmO. Type `ultrawork`. Done.
 
 ## Installation
 
-### For Humans
+> **This is the `heidi-dang/oh-my-opencode` fork.** Published as `@heidi-dang/oh-my-opencode`.
+> Upstream: [code-yeongyu/oh-my-opencode](https://github.com/code-yeongyu/oh-my-opencode)
 
-Copy and paste this prompt to your LLM agent (Claude Code, AmpCode, Cursor, etc.):
+### Quick Install (npm)
 
+```bash
+npm install -g @heidi-dang/oh-my-opencode
 ```
-Install and configure oh-my-opencode by following the instructions here:
-https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/refs/heads/dev/docs/guide/installation.md
+
+Then add to your OpenCode config (`~/.config/opencode/config.jsonc`):
+
+```jsonc
+{
+  "plugin": ["@heidi-dang/oh-my-opencode"]
+}
 ```
 
-Or read the [Installation Guide](docs/guide/installation.md), but seriously, let an agent do it. Humans fat-finger configs.
+Then write the Heidi performance default config (Grok 4.1 Fast + Minimax):
+
+```bash
+oh-my-opencode init
+```
+
+This writes `~/.config/opencode/oh-my-opencode.json` if it doesn't exist yet.\
+Use `oh-my-opencode init --force` to overwrite an existing config.
+
+### Manual Install (no curl | bash)
+
+```bash
+# 1. Clone and build
+git clone https://github.com/heidi-dang/oh-my-opencode
+cd oh-my-opencode
+bun install && bun run build
+
+# 2. Register in opencode config (~/.config/opencode/config.jsonc)
+# Add: "plugin": ["file:///path/to/oh-my-opencode"]
+
+# 3. Write default config
+oh-my-opencode init
+```
 
 ### For LLM Agents
 
 Fetch the installation guide and follow it:
 
 ```bash
-curl -s https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/refs/heads/dev/docs/guide/installation.md
+curl -s https://raw.githubusercontent.com/heidi-dang/oh-my-opencode/refs/heads/dev/docs/guide/installation.md
 ```
 
 ---

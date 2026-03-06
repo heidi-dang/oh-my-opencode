@@ -1,7 +1,9 @@
 import { createBuiltinAgents } from "../agents";
 import { createSisyphusJuniorAgentWithOverrides } from "../agents/sisyphus-junior";
+import { resolveJuniorInheritance } from "../agents/builtin-agents/junior-inheritance";
 import type { OhMyOpenCodeConfig } from "../config";
-import { log, migrateAgentConfig } from "../shared";
+import { log, migrateAgentConfig, fetchAvailableModels } from "../shared";
+import { validateModelPolicy } from "../shared/model-policy";
 import { AGENT_NAME_MAP } from "../shared/migration";
 import { getAgentDisplayName } from "../shared/agent-display-names";
 import {
@@ -57,8 +59,8 @@ export async function applyAgentConfig(params: {
     }),
     includeClaudeSkillsForAwareness ? discoverUserClaudeSkills() : Promise.resolve([]),
     includeClaudeSkillsForAwareness
-       ? discoverProjectClaudeSkills(params.ctx.directory)
-       : Promise.resolve([]),
+      ? discoverProjectClaudeSkills(params.ctx.directory)
+      : Promise.resolve([]),
     discoverOpencodeGlobalSkills(),
     discoverOpencodeProjectSkills(params.ctx.directory),
   ]);
@@ -138,8 +140,24 @@ export async function applyAgentConfig(params: {
       sisyphus: builtinAgents.sisyphus,
     };
 
+    // Resolve *-junior inheritance: sisyphus-junior inherits sisyphus model unless explicitly overridden
+    const sisyphusJuniorOverride = resolveJuniorInheritance(
+      "sisyphus-junior",
+      params.pluginConfig.agents ?? {},
+    );
+
+    // Fail-closed model policy: validate explicit model overrides against available model cache
+    if ((sisyphusJuniorOverride as { model?: string } | undefined)?.model) {
+      const availableModels = await fetchAvailableModels()
+      validateModelPolicy(
+        "sisyphus-junior",
+        (sisyphusJuniorOverride as { model: string }).model,
+        availableModels,
+      )
+    }
+
     agentConfig["sisyphus-junior"] = createSisyphusJuniorAgentWithOverrides(
-      params.pluginConfig.agents?.["sisyphus-junior"],
+      sisyphusJuniorOverride,
       undefined,
       useTaskSystem,
     );
@@ -173,18 +191,18 @@ export async function applyAgentConfig(params: {
 
     const filteredConfigAgents = configAgent
       ? Object.fromEntries(
-          Object.entries(configAgent)
-            .filter(([key]) => {
-              if (key === "build") return false;
-              if (key === "plan" && shouldDemotePlan) return false;
-              if (key in builtinAgents) return false;
-              return true;
-            })
-            .map(([key, value]) => [
-              key,
-              value ? migrateAgentConfig(value as Record<string, unknown>) : value,
-            ]),
-        )
+        Object.entries(configAgent)
+          .filter(([key]) => {
+            if (key === "build") return false;
+            if (key === "plan" && shouldDemotePlan) return false;
+            if (key in builtinAgents) return false;
+            return true;
+          })
+          .map(([key, value]) => [
+            key,
+            value ? migrateAgentConfig(value as Record<string, unknown>) : value,
+          ]),
+      )
       : {};
 
     const migratedBuild = configAgent?.build
@@ -193,9 +211,9 @@ export async function applyAgentConfig(params: {
 
     const planDemoteConfig = shouldDemotePlan
       ? buildPlanDemoteConfig(
-          agentConfig["prometheus"] as Record<string, unknown> | undefined,
-          params.pluginConfig.agents?.plan as Record<string, unknown> | undefined,
-        )
+        agentConfig["prometheus"] as Record<string, unknown> | undefined,
+        params.pluginConfig.agents?.plan as Record<string, unknown> | undefined,
+      )
       : undefined;
 
     params.config.agent = {
