@@ -1,6 +1,6 @@
 {
   "name": "@heidi-dang/oh-my-opencode-linux-arm64-musl",
-  "version": "3.12.3",
+  "version": "3.12.4",
   "description": "Platform-specific binary for oh-my-opencode (linux-arm64-musl)",
   "license": "MIT",
   "repository": {
