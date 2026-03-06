@@ -1,4 +1,4 @@
-import type { AvailableSkill } from "../dynamic-agent-prompt-builder"
+import type { AvailableSkill } from "../types";
 import type { BrowserAutomationProvider } from "../../config/schema"
 import type { LoadedSkill, SkillScope } from "../../features/opencode-skill-loader/types"
 import { createBuiltinSkills } from "../../features/builtin-skills"

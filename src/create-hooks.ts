@@ -1,4 +1,4 @@
-import type { AvailableSkill } from "./agents/dynamic-agent-prompt-builder"
+import type { AvailableSkill } from "./agents/types"
 import type { HookName, OhMyOpenCodeConfig } from "./config"
 import type { LoadedSkill } from "./features/opencode-skill-loader/types"
 import type { BackgroundManager } from "./features/background-agent"

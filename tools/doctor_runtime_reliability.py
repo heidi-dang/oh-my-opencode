@@ -16,7 +16,7 @@ def run_doctor():
         "src/agents/runtime/agent-runner.ts",
         "src/agents/runtime/tool-runner.ts",
         "src/agents/runtime/loop-guard.ts",
-        "src/agents/runtime/state-ledger.ts",
+        "src/runtime/state-ledger.ts",
         "src/agents/runtime/context-builder.ts",
         "src/agents/runtime/action-validator.ts",
         "src/hooks/tool-contract/hook.ts",

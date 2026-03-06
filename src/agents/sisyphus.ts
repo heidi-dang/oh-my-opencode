@@ -22,7 +22,7 @@ import type {
   AvailableTool,
   AvailableSkill,
   AvailableCategory,
-} from "./dynamic-agent-prompt-builder";
+} from "./types";
 import {
   buildKeyTriggersSection,
   buildToolSelectionTable,
@@ -37,7 +37,7 @@ import {
   buildNonClaudePlannerSection,
   categorizeTools,
   buildExecutionRulesSection,
-} from "./dynamic-agent-prompt-builder";
+} from "./prompts";
 import { buildLoopGuardSection } from "./runtime/loop-guard";
 import { buildVerificationPromptSection } from "./runtime/verify-action";
 

@@ -2,7 +2,7 @@ import type { ToolDefinition } from "@opencode-ai/plugin"
 
 import type {
   AvailableCategory,
-} from "../agents/dynamic-agent-prompt-builder"
+} from "../agents/types"
 import type { OhMyOpenCodeConfig } from "../config"
 import type { PluginContext, ToolsRecord } from "./types"
 

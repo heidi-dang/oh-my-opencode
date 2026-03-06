@@ -7,7 +7,7 @@ import type {
   AvailableTool,
   AvailableSkill,
   AvailableCategory,
-} from "../dynamic-agent-prompt-builder";
+} from "../types";
 import {
   buildKeyTriggersSection,
   buildToolSelectionTable,
@@ -17,7 +17,7 @@ import {
   buildDelegationTable,
   buildOracleSection,
   categorizeTools,
-} from "../dynamic-agent-prompt-builder";
+} from "../prompts";
 const MODE: AgentMode = "all";
 
 function buildTodoDisciplineSection(useTaskSystem: boolean): string {

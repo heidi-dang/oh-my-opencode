@@ -8,7 +8,7 @@ import { buildSystemContent } from "./prompt-builder"
 import type {
   AvailableCategory,
   AvailableSkill,
-} from "../../agents/dynamic-agent-prompt-builder"
+} from "../../agents/types"
 import {
   resolveSkillContent,
   resolveParentContext,

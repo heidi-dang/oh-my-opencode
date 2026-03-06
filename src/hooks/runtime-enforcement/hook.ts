@@ -1,6 +1,5 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import type { Message, Part } from "@opencode-ai/sdk"
-import { stateLedger } from "../../agents/runtime/state-ledger"
 
 /**
  * Runtime Enforcement Gate
@@ -10,20 +9,19 @@ import { stateLedger } from "../../agents/runtime/state-ledger"
  */
 
 const SUSPICIOUS_PHRASES = [
-    { phrase: "pr created", type: "git_safe" },
-    { phrase: "pull request created", type: "git_safe" },
-    { phrase: "pr opened", type: "git_safe" },
-    { phrase: "pull request opened", type: "git_safe" },
-    { phrase: "push complete", type: "git_safe" },
-    { phrase: "pushed successfully", type: "git_safe" },
-    { phrase: "successfully pushed", type: "git_safe" },
-    { phrase: "commit created", type: "git_safe" },
-    { phrase: "committed successfully", type: "git_safe" },
-    { phrase: "successfully committed", type: "git_safe" },
-    { phrase: "task completed", type: "complete_task" },
-    { phrase: "task complete", type: "complete_task" },
-    { phrase: "work finished", type: "complete_task" },
-    { phrase: "success", type: "complete_task" }
+    { phrase: "pr created", tool: "git_safe" },
+    { phrase: "pull request created", tool: "git_safe" },
+    { phrase: "pr opened", tool: "git_safe" },
+    { phrase: "pull request opened", tool: "git_safe" },
+    { phrase: "push complete", tool: "git_safe" },
+    { phrase: "pushed successfully", tool: "git_safe" },
+    { phrase: "successfully pushed", tool: "git_safe" },
+    { phrase: "commit created", tool: "git_safe" },
+    { phrase: "committed successfully", tool: "git_safe" },
+    { phrase: "successfully committed", tool: "git_safe" },
+    { phrase: "task completed", tool: "complete_task" },
+    { phrase: "task complete", tool: "complete_task" },
+    { phrase: "work finished", tool: "complete_task" }
 ]
 
 export function createRuntimeEnforcementHook(_ctx: PluginInput) {
@@ -43,15 +41,31 @@ export function createRuntimeEnforcementHook(_ctx: PluginInput) {
 
             for (const check of SUSPICIOUS_PHRASES) {
                 if (combinedText.includes(check.phrase)) {
-                    // Check if the ledger has a successful record for this tool type
-                    const entries = stateLedger.getEntries()
-                    const actuallyExecuted = entries.some(e => e.type === check.type && e.success && e.verified)
+                    let actuallyExecuted = false;
+
+                    // Check if the current message calls the tool
+                    if (lastAssistant.parts.some((p: any) => p.type === "toolInvocation" && p.toolName === check.tool)) {
+                        actuallyExecuted = true;
+                    } else {
+                        // Check backwards for the tool call in the current completion flow
+                        for (let i = output.messages.length - 1; i >= 0; i--) {
+                            const msg = output.messages[i];
+                            if (msg.info.role === "user" && msg.parts.some((p: any) => p.type === "text" && !p.text?.toString().startsWith("[tool result]"))) {
+                                // Reached an actual user instruction, stop looking backwards. This isolates the check to the *current completion flow*.
+                                break;
+                            }
+                            if (msg.info.role === "assistant" && msg.parts.some((p: any) => p.type === "toolInvocation" && p.toolName === check.tool)) {
+                                actuallyExecuted = true;
+                                break;
+                            }
+                        }
+                    }
 
                     if (!actuallyExecuted) {
                         throw new Error(
                             `[Runtime Enforcement Guard] State claim REJECTED. ` +
-                            `\nAgent text contained "${check.phrase}" but the State Ledger has no verified record of ${check.type}. ` +
-                            `You MUST execute the corresponding tool and use 'complete_task' for final reports.`
+                            `\nAgent text contained "${check.phrase}" but ${check.tool} was not executed in the current completion flow. ` +
+                            `You MUST execute the corresponding tool instead of just claiming completion.`
                         )
                     }
                 }
@@ -59,4 +73,3 @@ export function createRuntimeEnforcementHook(_ctx: PluginInput) {
         }
     }
 }
-

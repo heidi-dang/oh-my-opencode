@@ -6,7 +6,7 @@ import type {
   AvailableTool,
   AvailableSkill,
   AvailableCategory,
-} from "../dynamic-agent-prompt-builder";
+} from "../types";
 import {
   buildKeyTriggersSection,
   buildToolSelectionTable,
@@ -15,7 +15,7 @@ import {
   buildCategorySkillsDelegationGuide,
   buildDelegationTable,
   buildOracleSection,
-} from "../dynamic-agent-prompt-builder";
+} from "../prompts";
 
 function buildTodoDisciplineSection(useTaskSystem: boolean): string {
   if (useTaskSystem) {

@@ -56,10 +56,10 @@ def run_upstream_merge_doctor():
         if not check_prompt_contains(af, atlas_checks):
             all_pass = False
             
-    # 4. Forbidden elements — registry-controlled prompt architecture (Note: dynamic-agent-prompt-builder is
-    # retained as a PASSIVE prompt library only; it is NOT a runtime control point in this PR)
-    # If it ever becomes active runtime control, add it back here.
-    forbidden = []
+    # 4. Forbidden elements (Dynamic prompt builders / bypassers)
+    forbidden = [
+        "src/agents/dynamic-agent-prompt-builder.ts"
+    ]
     for f in forbidden:
         if not check_file_missing(f):
             all_pass = False
@@ -75,9 +75,9 @@ def run_upstream_merge_doctor():
 
     # 6. Verification of Runtime Enforcement Hook (output contract enforcement guard)
     # Note: Semantic Loop Detection guard is deferred to a separate runtime-only PR.
-    # Checking that the runtime-enforcement hook is wired with state-ledger (Heidi baseline).
+    # Checking that the runtime-enforcement hook restricts claims to the current completion flow.
     loop_guard_checks = [
-        "state-ledger",
+        "current completion flow",
     ]
     if not check_prompt_contains("src/hooks/runtime-enforcement/hook.ts", loop_guard_checks):
         all_pass = False

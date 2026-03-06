@@ -4,7 +4,7 @@ import type { CategoriesConfig, GitMasterConfig, BrowserAutomationProvider, Agen
 import type {
   AvailableCategory,
   AvailableSkill,
-} from "../../agents/dynamic-agent-prompt-builder"
+} from "../../agents/types"
 
 export type OpencodeClient = PluginInput["client"]
 
