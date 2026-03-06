@@ -285,82 +285,9 @@ Briefly announce "Consulting Oracle for [reason]" before invocation.
 </Oracle_Usage>`
 }
 
-export function buildHardBlocksSection(): string {
-  const blocks = [
-    "- Type error suppression (`as any`, `@ts-ignore`) — **Never**",
-    "- Commit without explicit request — **Never**",
-    "- Speculate about unread code — **Never**",
-    "- Leave code in broken state after failures — **Never**",
-    "- `background_cancel(all=true)` — **Never.** Always cancel individually by taskId.",
-    "- Delivering final answer before collecting Oracle result — **Never.**",
-    "- Simulate system actions (git, filesystem, network) without tools — **Never.**",
-    "- Execute side-effect operations outside of an active Plan Compiler step — **Never.**",
-    "- Claim push/PR/deploy succeeded without verification command output — **Never.**",
-    "- Construct URLs manually (PR, issue, deploy) instead of reading from tool output — **Never.**",
-  ]
-
-  return `## Hard Blocks (NEVER violate)
-
-${blocks.join("\n")}`
-}
-
-export function buildAntiPatternsSection(): string {
-  const patterns = [
-    "- **Type Safety**: `as any`, `@ts-ignore`, `@ts-expect-error`",
-    "- **Error Handling**: Empty catch blocks `catch(e) {}`",
-    "- **Testing**: Deleting failing tests to \"pass\"",
-    "- **Search**: Firing agents for single-line typos or obvious syntax errors",
-    "- **Debugging**: Shotgun debugging, random changes",
-    "- **Background Tasks**: Polling `background_output` on running tasks — end response and wait for notification",
-    "- **Oracle**: Delivering answer without collecting Oracle results",
-    "- **Fabrication**: Claiming push/PR/build succeeded without tool output evidence",
-    "- **Simulation**: Reasoning about system state without running verification commands",
-  ]
-
-  return `## Anti-Patterns (BLOCKING violations)
-
-${patterns.join("\n")}`
-}
-
-export function buildExecutionRulesSection(): string {
-  return `## Execution Rules (NON-NEGOTIABLE)
-
-<execution_rules>
-**The agent MUST NEVER simulate system actions.**
-
-Operations affecting the following MUST be executed via tools:
-- Filesystem (read, write, delete)
-- Git (commit, push, branch, rebase)
-- Network (API calls, package install)
-- Package managers (npm, pip, cargo)
-- External CLIs (gh, docker, etc.)
-
-**Required workflow for ALL side-effect operations (Deterministic Execution):**
-1. Read current state.
-2. Submit a DAG plan using the 'submit_plan' tool.
-3. Wait for the Plan Compiler to assign you the ACTIVE FORCED STEP.
-4. Execute ONLY the active step via the corresponding tool (e.g. fs-safe, git-safe).
-5. Verify result from output locally.
-6. Call 'mark_step_complete' to advance the compiler to the next step.
-
-**Tool output grounding rule:**
-Claims about system state MUST cite tool output.
-- WRONG: "The file has been updated" (no evidence)
-- RIGHT: "write_file returned success for path/to/file.ts"
-- WRONG: "Push complete" (no verification)
-- RIGHT: "Push verified — git rev-list --count returned 0"
-- WRONG: "PR created at https://github.com/..." (fabricated URL)
-- RIGHT: "PR created — gh pr view returned: https://..."
-
-**If a tool call fails, report the failure honestly. NEVER claim success.**
-
-**Completion Authority Rule:**
-Agents CANNOT produce final state claims or independently declare tasks finished.
-When the plan is complete, you MUST execute the 'complete_task' tool. 
-The runtime will compose the authoritative success message from verified ledger entries.
-Use the output of 'complete_task' as your exact final response.
-</execution_rules>`
-}
+export { buildHardBlocksSection } from "./prompts/hard-blocks"
+export { buildAntiPatternsSection } from "./prompts/anti-patterns"
+export { buildExecutionRulesSection } from "./prompts/execution-rules"
 
 export function buildNonClaudePlannerSection(model: string): string {
   const isNonClaude = !model.toLowerCase().includes('claude')
