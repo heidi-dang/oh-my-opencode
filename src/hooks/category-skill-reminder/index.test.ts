@@ -1,7 +1,7 @@
 import { describe, expect, test, beforeEach, afterEach, spyOn } from "bun:test"
 import { createCategorySkillReminderHook } from "./index"
 import { updateSessionAgent, clearSessionAgent, _resetForTesting } from "../../features/claude-code-session-state"
-import type { AvailableSkill } from "../../agents/dynamic-agent-prompt-builder"
+import type { AvailableSkill } from "../../agents/types"
 import * as sharedModule from "../../shared"
 
 describe("category-skill-reminder hook", () => {

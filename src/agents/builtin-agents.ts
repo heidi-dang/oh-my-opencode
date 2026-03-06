@@ -13,7 +13,7 @@ import { createMetisAgent, metisPromptMetadata } from "./metis"
 import { createAtlasAgent, atlasPromptMetadata } from "./atlas"
 import { createMomusAgent, momusPromptMetadata } from "./momus"
 import { createHephaestusAgent } from "./hephaestus"
-import type { AvailableCategory } from "./dynamic-agent-prompt-builder"
+import type { AvailableCategory } from "./types";
 import {
   fetchAvailableModels,
   readConnectedProvidersCache,

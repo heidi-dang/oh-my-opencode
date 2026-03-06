@@ -9,7 +9,7 @@ import {
   type AvailableSkill,
   type AvailableCategory,
   type AvailableAgent,
-} from "./dynamic-agent-prompt-builder"
+} from "./prompts";
 
 describe("buildCategorySkillsDelegationGuide", () => {
   const categories: AvailableCategory[] = [

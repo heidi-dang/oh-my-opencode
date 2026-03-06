@@ -18,7 +18,7 @@ export function createVerifyTool(): any {
             const config = VERIFICATION_COMMANDS[actionKey]
 
             if (!config || !config.command) {
-                toolContext.metadata({ title: "Verify Error", metadata: { verified: false } })
+                toolContext.metadata({ title: "Verify Error", metadata: { success: false, verified: false, changedState: false } })
                 return `Unknown verification action or missing command: ${args.action}`
             }
 
@@ -57,7 +57,9 @@ export function createVerifyTool(): any {
                 toolContext.metadata({
                     title: `Verify: ${config.name}`,
                     metadata: {
+                        success: true, // Outputting verification result means the verification tool succeeded
                         verified: isSuccess,
+                        changedState: false, // Verification itself never alters state
                         ...(!isSuccess && { error: config.failureMessage })
                     }
                 })
@@ -66,7 +68,7 @@ export function createVerifyTool(): any {
                     ? `Verification SUCCESS. (Output: ${stdoutText.trim()})`
                     : `Verification FAILED. ${config.failureMessage} (Output: ${stdoutText.trim()})`
             } catch (e: any) {
-                toolContext.metadata({ title: `Verify Error`, metadata: { verified: false } })
+                toolContext.metadata({ title: `Verify Error`, metadata: { success: false, verified: false, changedState: false } })
                 return `Execution failed: ${e.message}`
             }
         }

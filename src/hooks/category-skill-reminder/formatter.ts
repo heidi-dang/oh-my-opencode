@@ -1,4 +1,4 @@
-import type { AvailableSkill } from "../../agents/dynamic-agent-prompt-builder"
+import type { AvailableSkill } from "../../agents/types"
 
 function formatSkillNames(skills: AvailableSkill[], limit: number): string {
   if (skills.length === 0) return "(none)"

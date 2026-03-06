@@ -2,7 +2,7 @@ import type { AgentConfig } from "@opencode-ai/sdk"
 import type { BuiltinAgentName, AgentOverrides, AgentPromptMetadata } from "../types"
 import type { CategoryConfig, GitMasterConfig } from "../../config/schema"
 import type { BrowserAutomationProvider } from "../../config/schema"
-import type { AvailableAgent } from "../dynamic-agent-prompt-builder"
+import type { AvailableAgent } from "../types";
 import { AGENT_MODEL_REQUIREMENTS, isModelAvailable } from "../../shared"
 import { buildAgent, isFactory } from "../agent-builder"
 import { applyOverrides } from "./agent-overrides"

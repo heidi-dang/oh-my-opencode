@@ -6,7 +6,7 @@
  */
 
 import type { CategoryConfig } from "../../config/schema"
-import type { AvailableAgent, AvailableSkill } from "../dynamic-agent-prompt-builder"
+import type { AvailableAgent, AvailableSkill } from "../types";
 import { CATEGORY_DESCRIPTIONS } from "../../tools/delegate-task/constants"
 import { mergeCategories } from "../../shared/merge-categories"
 import { truncateDescription } from "../../shared/truncate-description"

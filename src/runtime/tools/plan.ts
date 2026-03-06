@@ -19,7 +19,7 @@ export function createSubmitPlanTool(): any {
 
             toolContext.metadata({
                 title: "Plan Submitted",
-                metadata: { planLength: args.steps.length }
+                metadata: { success: true, verified: true, changedState: false, planLength: args.steps.length }
             })
 
             const active = compiler.getActiveStep()
@@ -37,6 +37,11 @@ export function createMarkStepCompleteTool(): any {
         },
         execute: async (args, toolContext) => {
             compiler.markStepComplete(args.id)
+
+            toolContext.metadata({
+                title: `Step ${args.id} Complete`,
+                metadata: { success: true, verified: true, changedState: false, stepId: args.id }
+            })
 
             const active = compiler.getActiveStep()
             if (!active) {

@@ -66,6 +66,29 @@ export interface AgentPromptMetadata {
   keyTrigger?: string
 }
 
+export interface AvailableAgent {
+  name: string
+  description: string
+  metadata: AgentPromptMetadata
+}
+
+export interface AvailableTool {
+  name: string
+  category: "lsp" | "ast" | "search" | "session" | "command" | "other"
+}
+
+export interface AvailableSkill {
+  name: string
+  description: string
+  location: "user" | "project" | "plugin"
+}
+
+export interface AvailableCategory {
+  name: string
+  description: string
+  model?: string
+}
+
 function extractModelName(model: string): string {
   return model.includes("/") ? model.split("/").pop() ?? model : model
 }
@@ -86,6 +109,16 @@ export function isGeminiModel(model: string): boolean {
 
   const modelName = extractModelName(model).toLowerCase()
   return modelName.startsWith("gemini-")
+}
+
+export function isGpt5_4Model(model: string): boolean {
+  const modelName = extractModelName(model).toLowerCase()
+  return modelName.includes("gpt-4") && modelName.includes("-5") || modelName.includes("gpt-5.4")
+}
+
+export function isGpt5_3CodexModel(model: string): boolean {
+  const modelName = extractModelName(model).toLowerCase()
+  return (modelName.includes("gpt-5") || modelName.includes("gpt-4o")) && modelName.includes("codex")
 }
 
 export type BuiltinAgentName =

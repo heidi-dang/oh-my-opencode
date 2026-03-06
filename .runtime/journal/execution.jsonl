@@ -1,0 +1,8 @@
+{"timestamp":"2026-03-06T18:29:12.017Z","sessionID":"ses_123","agent":"tracked-agent","intent":"execute_tool","tool":"git_safe","args":{"command":"commit -m 'test'"},"stdout":"Committed changes","verificationState":true}
+{"timestamp":"2026-03-06T18:29:12.071Z","sessionID":"ses_123","agent":"tracked-agent","intent":"execute_tool","tool":"git_safe","stdout":"Failed"}
+{"timestamp":"2026-03-06T18:31:15.051Z","sessionID":"ses_123","agent":"tracked-agent","intent":"execute_tool","tool":"git_safe","args":{"command":"commit -m 'test'"},"stdout":"Committed changes","verificationState":true}
+{"timestamp":"2026-03-06T18:31:15.102Z","sessionID":"ses_123","agent":"tracked-agent","intent":"execute_tool","tool":"git_safe","stdout":"Failed"}
+{"timestamp":"2026-03-06T18:31:50.391Z","sessionID":"ses_123","agent":"tracked-agent","intent":"execute_tool","tool":"git_safe","args":{"command":"commit -m 'test'"},"stdout":"Committed changes","verificationState":true}
+{"timestamp":"2026-03-06T18:31:50.445Z","sessionID":"ses_123","agent":"tracked-agent","intent":"execute_tool","tool":"git_safe","stdout":"Failed"}
+{"timestamp":"2026-03-06T18:38:48.165Z","sessionID":"ses_correct","agent":"tracked-agent","intent":"execute_tool","tool":"fs_safe","args":{"path":"foo.txt"},"stdout":"Success","verificationState":true}
+{"timestamp":"2026-03-06T18:39:21.786Z","sessionID":"ses_correct","agent":"tracked-agent","intent":"execute_tool","tool":"fs_safe","args":{"path":"foo.txt"},"stdout":"Success","verificationState":true}

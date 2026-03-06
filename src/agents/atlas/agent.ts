@@ -13,8 +13,8 @@
 import type { AgentConfig } from "@opencode-ai/sdk"
 import type { AgentMode, AgentPromptMetadata } from "../types"
 import { isGptModel, isGeminiModel } from "../types"
-import type { AvailableAgent, AvailableSkill, AvailableCategory } from "../dynamic-agent-prompt-builder"
-import { buildCategorySkillsDelegationGuide } from "../dynamic-agent-prompt-builder"
+import type { AvailableAgent, AvailableSkill, AvailableCategory } from "../types";
+import { buildCategorySkillsDelegationGuide } from "../prompts";
 import type { CategoryConfig } from "../../config/schema"
 import { mergeCategories } from "../../shared/merge-categories"
 

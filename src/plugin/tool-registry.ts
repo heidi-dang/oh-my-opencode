@@ -2,7 +2,7 @@ import type { ToolDefinition } from "@opencode-ai/plugin"
 
 import type {
   AvailableCategory,
-} from "../agents/dynamic-agent-prompt-builder"
+} from "../agents/types"
 import type { OhMyOpenCodeConfig } from "../config"
 import type { PluginContext, ToolsRecord } from "./types"
 
@@ -29,6 +29,7 @@ import {
 import { getMainSessionID } from "../features/claude-code-session-state"
 import { filterDisabledTools } from "../shared/disabled-tools"
 import { log } from "../shared"
+import { DETERMINISTIC_TOOLS } from "../runtime/tools/registry"
 
 import type { Managers } from "../create-managers"
 import type { SkillContext } from "./skill-context"
@@ -110,11 +111,11 @@ export function createToolRegistry(args: {
   const taskSystemEnabled = pluginConfig.experimental?.task_system ?? false
   const taskToolsRecord: Record<string, ToolDefinition> = taskSystemEnabled
     ? {
-        task_create: createTaskCreateTool(pluginConfig, ctx),
-        task_get: createTaskGetTool(pluginConfig),
-        task_list: createTaskList(pluginConfig),
-        task_update: createTaskUpdateTool(pluginConfig, ctx),
-      }
+      task_create: createTaskCreateTool(pluginConfig, ctx),
+      task_get: createTaskGetTool(pluginConfig),
+      task_list: createTaskList(pluginConfig),
+      task_update: createTaskUpdateTool(pluginConfig, ctx),
+    }
     : {}
 
   const hashlineEnabled = pluginConfig.hashline_edit ?? false
@@ -137,6 +138,13 @@ export function createToolRegistry(args: {
     interactive_bash,
     ...taskToolsRecord,
     ...hashlineToolsRecord,
+    git_safe: DETERMINISTIC_TOOLS["git_safe"](),
+    fs_safe: DETERMINISTIC_TOOLS["fs_safe"](),
+    verify_action: DETERMINISTIC_TOOLS["verify_action"](),
+    submit_plan: DETERMINISTIC_TOOLS["submit_plan"](),
+    mark_step_complete: DETERMINISTIC_TOOLS["mark_step_complete"](),
+    query_ledger: DETERMINISTIC_TOOLS["query_ledger"](),
+    complete_task: DETERMINISTIC_TOOLS["complete_task"](),
   }
 
   const filteredTools = filterDisabledTools(allTools, pluginConfig.disabled_tools)

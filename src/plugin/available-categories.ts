@@ -1,4 +1,4 @@
-import type { AvailableCategory } from "../agents/dynamic-agent-prompt-builder"
+import type { AvailableCategory } from "../agents/types"
 import type { OhMyOpenCodeConfig } from "../config"
 import { CATEGORY_DESCRIPTIONS } from "../tools/delegate-task/constants"
 import { mergeCategories } from "../shared/merge-categories"

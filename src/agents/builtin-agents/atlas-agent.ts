@@ -1,7 +1,7 @@
 import type { AgentConfig } from "@opencode-ai/sdk"
 import type { AgentOverrides } from "../types"
 import type { CategoriesConfig, CategoryConfig } from "../../config/schema"
-import type { AvailableAgent, AvailableSkill } from "../dynamic-agent-prompt-builder"
+import type { AvailableAgent, AvailableSkill } from "../types";
 import { AGENT_MODEL_REQUIREMENTS } from "../../shared"
 import { applyOverrides } from "./agent-overrides"
 import { applyModelResolution } from "./model-resolution"

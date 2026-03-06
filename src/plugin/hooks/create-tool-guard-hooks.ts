@@ -14,6 +14,11 @@ import {
   createHashlineReadEnhancerHook,
   createReadImageResizerHook,
   createJsonErrorRecoveryHook,
+  createExecutionJournalHook,
+  createToolContractHook,
+  createRuntimeEnforcementHook,
+  createPlanEnforcementHook,
+  createSemanticLoopGuardHook,
 } from "../../hooks"
 import {
   getOpenCodeVersion,
@@ -35,6 +40,11 @@ export type ToolGuardHooks = {
   hashlineReadEnhancer: ReturnType<typeof createHashlineReadEnhancerHook> | null
   jsonErrorRecovery: ReturnType<typeof createJsonErrorRecoveryHook> | null
   readImageResizer: ReturnType<typeof createReadImageResizerHook> | null
+  executionJournal: ReturnType<typeof createExecutionJournalHook> | null
+  toolContract: ReturnType<typeof createToolContractHook> | null
+  runtimeEnforcement: ReturnType<typeof createRuntimeEnforcementHook> | null
+  planEnforcement: ReturnType<typeof createPlanEnforcementHook> | null
+  semanticLoopGuard: ReturnType<typeof createSemanticLoopGuardHook> | null
 }
 
 export function createToolGuardHooks(args: {
@@ -54,10 +64,10 @@ export function createToolGuardHooks(args: {
 
   const toolOutputTruncator = isHookEnabled("tool-output-truncator")
     ? safeHook("tool-output-truncator", () =>
-        createToolOutputTruncatorHook(ctx, {
-          modelCacheState,
-          experimental: pluginConfig.experimental,
-        }))
+      createToolOutputTruncatorHook(ctx, {
+        modelCacheState,
+        experimental: pluginConfig.experimental,
+      }))
     : null
 
   let directoryAgentsInjector: ReturnType<typeof createDirectoryAgentsInjectorHook> | null = null
@@ -78,7 +88,7 @@ export function createToolGuardHooks(args: {
 
   const directoryReadmeInjector = isHookEnabled("directory-readme-injector")
     ? safeHook("directory-readme-injector", () =>
-        createDirectoryReadmeInjectorHook(ctx, modelCacheState))
+      createDirectoryReadmeInjectorHook(ctx, modelCacheState))
     : null
 
   const emptyTaskResponseDetector = isHookEnabled("empty-task-response-detector")
@@ -87,12 +97,12 @@ export function createToolGuardHooks(args: {
 
   const rulesInjector = isHookEnabled("rules-injector")
     ? safeHook("rules-injector", () =>
-        createRulesInjectorHook(ctx, modelCacheState))
+      createRulesInjectorHook(ctx, modelCacheState))
     : null
 
   const tasksTodowriteDisabler = isHookEnabled("tasks-todowrite-disabler")
     ? safeHook("tasks-todowrite-disabler", () =>
-        createTasksTodowriteDisablerHook({ experimental: pluginConfig.experimental }))
+      createTasksTodowriteDisablerHook({ experimental: pluginConfig.experimental }))
     : null
 
   const writeExistingFileGuard = isHookEnabled("write-existing-file-guard")
@@ -111,6 +121,12 @@ export function createToolGuardHooks(args: {
     ? safeHook("read-image-resizer", () => createReadImageResizerHook(ctx))
     : null
 
+  const executionJournal = safeHook("execution-journal", () => createExecutionJournalHook(ctx))
+  const toolContract = safeHook("tool-contract", () => createToolContractHook(ctx))
+  const runtimeEnforcement = safeHook("runtime-enforcement", () => createRuntimeEnforcementHook(ctx))
+  const planEnforcement = safeHook("plan-enforcement", () => createPlanEnforcementHook(ctx))
+  const semanticLoopGuard = safeHook("semantic-loop-guard", () => createSemanticLoopGuardHook(ctx))
+
   return {
     commentChecker,
     toolOutputTruncator,
@@ -123,5 +139,10 @@ export function createToolGuardHooks(args: {
     hashlineReadEnhancer,
     jsonErrorRecovery,
     readImageResizer,
+    executionJournal,
+    toolContract,
+    runtimeEnforcement,
+    planEnforcement,
+    semanticLoopGuard,
   }
 }

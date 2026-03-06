@@ -1,7 +1,7 @@
 import type { AgentConfig } from "@opencode-ai/sdk"
 import type { AgentOverrides } from "../types"
 import type { CategoryConfig } from "../../config/schema"
-import type { AvailableAgent, AvailableCategory, AvailableSkill } from "../dynamic-agent-prompt-builder"
+import type { AvailableAgent, AvailableCategory, AvailableSkill } from "../types";
 import { AGENT_MODEL_REQUIREMENTS, isAnyProviderConnected } from "../../shared"
 import { createHephaestusAgent } from "../hephaestus"
 import { applyEnvironmentContext } from "./environment-context"
