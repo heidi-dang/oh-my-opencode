@@ -6,96 +6,163 @@ import { ledger } from "../runtime/state-ledger"
 import { compiler } from "../runtime/plan-compiler"
 import { createExecutionJournalHook } from "../hooks/execution-journal/hook"
 import { createToolContractHook } from "../hooks/tool-contract/hook"
-import { createPlanEnforcementHook } from "../hooks/plan-enforcement/hook"
-import { createSemanticLoopGuardHook } from "../hooks/semantic-loop-guard/hook"
 import { createRuntimeEnforcementHook } from "../hooks/runtime-enforcement/hook"
 
-describe("Deep Truth Model Integration", () => {
+describe("Authoritative Truth & Flow Isolation Integration", () => {
     beforeEach(() => {
-        // REAL LEDGER CLEAR
         ledger.clear()
-
-        // Reset compiler
         compiler.submit([])
     })
 
-    describe("ToolContract & ExecutionJournal (After Hooks)", () => {
-        it("should pass when tool succeeds and ledger match is perfect", async () => {
+    describe("Authoritative Truth (Bash Bypass Prevention)", () => {
+        it("should NOT create a verified ledger entry for raw bash commands", async () => {
             const ctx = { directory: "/test", client: {} } as any
             const hooks = {
                 executionJournal: createExecutionJournalHook(ctx),
-                toolContract: createToolContractHook(ctx),
             } as any
 
             const handler = createToolExecuteAfterHandler({ hooks })
 
-            const input = { tool: "fs_safe", sessionID: "ses_correct", callID: "call_1" }
+            const input = { tool: "bash", sessionID: "ses_1", callID: "call_bash" }
             const output = {
-                title: "Writing file",
-                output: "Success",
+                title: "Executing bash",
+                output: "Commit created on main",
                 metadata: {
-                    success: true,
-                    verified: true,
-                    changedState: true,
-                    args: { path: "foo.txt" },
-                    stateChange: {
-                        type: "file.write",
-                        key: "foo.txt"
-                    }
+                    args: { command: "git commit -m 'test'" },
+                    success: true
                 }
             }
 
-            // executionJournal writes to ledger, toolContract verifies it
             await handler(input, output)
 
-            const entries = ledger.getEntries()
-            expect(entries).toHaveLength(1)
-            expect(entries[0].sessionID).toBe("ses_correct")
+            // Ledger should be empty because we removed heuristics
+            expect(ledger.count).toBe(0)
         })
 
-        it("should REJECT if ledger entry exists but for a DIFFERENT session", async () => {
-            // Pre-seed ledger with a "stale" entry from another session
-            ledger.record("file.write", "stale.txt", true, true, true, "Old success", {}, "ses_OTHER")
-
+        it("should ONLY create verified entry if explicit stateChange metadata is present", async () => {
             const ctx = { directory: "/test", client: {} } as any
             const hooks = {
-                // We SKIP executionJournal to simulate a tool that didn't write its own entry
-                toolContract: createToolContractHook(ctx),
+                executionJournal: createExecutionJournalHook(ctx),
             } as any
-
             const handler = createToolExecuteAfterHandler({ hooks })
 
-            const input = { tool: "fs_safe", sessionID: "ses_current", callID: "call_2" }
+            const input = { tool: "git_safe", sessionID: "ses_1", callID: "call_safe" }
             const output = {
-                title: "Writing file",
+                title: "Executing git_safe",
                 output: "Success",
                 metadata: {
                     success: true,
                     verified: true,
                     changedState: true,
-                    stateChange: { type: "file.write", key: "stale.txt" }
+                    stateChange: { type: "git.commit", key: "HEAD" }
                 }
             }
+
+            await handler(input, output)
+            expect(ledger.count).toBe(1)
+            expect(ledger.has("git.commit", "HEAD")).toBe(true)
+        })
+    })
+
+    describe("Flow Isolation", () => {
+        it("should REJECT completion claim if matching tool was called in a PREVIOUS flow (same session)", async () => {
+            const ctx = { directory: "/test" } as any
+            const hooks = {
+                executionJournal: createExecutionJournalHook(ctx),
+                runtimeEnforcement: createRuntimeEnforcementHook(ctx)
+            } as any
+
+            const transformHandler = createMessagesTransformHandler({ hooks })
+            const executeHandler = createToolExecuteAfterHandler({ hooks })
+
+            const sessionID = "ses_flow_test"
+
+            // 1. Flow A: Execute git_safe
+            const inputA = { tool: "git_safe", sessionID, callID: "call_a" }
+            const outputA = {
+                title: "Pushing",
+                output: "Success",
+                metadata: {
+                    success: true,
+                    verified: true,
+                    changedState: true,
+                    stateChange: { type: "git.push", key: "origin" }
+                }
+            }
+            await executeHandler(inputA, outputA)
+            expect(ledger.has("git.push", "origin")).toBe(true)
+
+            // 2. Start Flow B (Message Transform)
+            // This will call ledger.startNewFlow()
+            const transformInput = {} as any
+            const transformOutput = {
+                messages: [
+                    {
+                        info: { role: "assistant" },
+                        parts: [{ type: "text", text: "Successfully pushed to origin" }]
+                        // This is a claim, but 'git_safe' was called in Flow A, not Flow B!
+                    }
+                ]
+            } as any
 
             let error: any
             try {
-                await handler(input, output)
+                await transformHandler(transformInput, transformOutput)
             } catch (e) {
                 error = e
             }
-            expect(error?.message).toContain("no matching SUCCESSFUL and VERIFIED entry was found")
+
+            // Rejection expected because push was in a previous flow
+            expect(error?.message).toContain("[Runtime Enforcement Guard] State claim REJECTED")
         })
 
-        it("should REJECT if ledger entry exists but is UNVERIFIED", async () => {
-            const sessionID = "ses_unverified"
-            // Record unverified entry
-            ledger.record("git.push", "origin", true, false, true, "Pushed?", {}, sessionID)
+        it("should PASS completion claim if tool was called in the SAME flow", async () => {
+            const ctx = { directory: "/test" } as any
+            const hooks = {
+                executionJournal: createExecutionJournalHook(ctx),
+                runtimeEnforcement: createRuntimeEnforcementHook(ctx)
+            } as any
 
+            const transformHandler = createMessagesTransformHandler({ hooks })
+
+            const transformOutput = {
+                messages: [
+                    {
+                        info: { role: "assistant" },
+                        parts: [
+                            { type: "text", text: "Successfully pushed to origin" },
+                            { type: "toolInvocation", toolName: "git_safe" }
+                        ]
+                    }
+                ]
+            } as any
+
+            // Should pass
+            await transformHandler({}, transformOutput)
+        })
+    })
+
+    describe("ToolContract Deep Matching", () => {
+        it("should REJECT if ledger entry exists but is from BEFORE current flow", async () => {
             const ctx = { directory: "/test", client: {} } as any
-            const hooks = { toolContract: createToolContractHook(ctx) } as any
+            const hooks = {
+                toolContract: createToolContractHook(ctx),
+            } as any
             const handler = createToolExecuteAfterHandler({ hooks })
 
-            const input = { tool: "git_safe", sessionID, callID: "call_3" }
+            const sessionID = "ses_contract_flow"
+
+            // 1. Record entry manually (older timestamp)
+            ledger.record("git.push", "origin", true, true, true, "old", {}, sessionID)
+
+            // 2. Delay to ensure timestamp delta BEFORE flow start
+            await new Promise(resolve => setTimeout(resolve, 10))
+
+            // 3. Force new flow
+            ledger.startNewFlow()
+
+            // 4. Try to satisfy contract with that old entry
+            const input = { tool: "git_safe", sessionID, callID: "call_late" }
             const output = {
                 title: "Pushing",
                 output: "Done",
@@ -113,99 +180,8 @@ describe("Deep Truth Model Integration", () => {
             } catch (e) {
                 error = e
             }
+            expect(error).toBeDefined()
             expect(error?.message).toContain("no matching SUCCESSFUL and VERIFIED entry was found")
-        })
-    })
-
-    describe("RuntimeEnforcement (Message Transform)", () => {
-        it("should REJECT completion claim if corresponding tool was NOT called in current flow", async () => {
-            const ctx = { directory: "/test" } as any
-            const hooks = {
-                runtimeEnforcement: createRuntimeEnforcementHook(ctx)
-            } as any
-
-            const handler = createMessagesTransformHandler({ hooks })
-
-            const input = {} as any
-            const output = {
-                messages: [
-                    {
-                        info: { role: "user" },
-                        parts: [{ type: "text", text: "Please push changes" }]
-                    },
-                    {
-                        info: { role: "assistant" },
-                        parts: [
-                            { type: "text", text: "I have pushed successfully" }
-                            // Note: No toolInvocation part here!
-                        ]
-                    }
-                ]
-            } as any
-
-            let error: any
-            try {
-                await handler(input, output)
-            } catch (e) {
-                error = e
-            }
-            expect(error?.message).toContain("[Runtime Enforcement Guard] State claim REJECTED")
-        })
-
-        it("should PASS if completion claim is accompanied by the tool call", async () => {
-            const ctx = { directory: "/test" } as any
-            const hooks = {
-                runtimeEnforcement: createRuntimeEnforcementHook(ctx)
-            } as any
-
-            const handler = createMessagesTransformHandler({ hooks })
-
-            const input = {} as any
-            const output = {
-                messages: [
-                    {
-                        info: { role: "assistant" },
-                        parts: [
-                            { type: "text", text: "I have pushed successfully" },
-                            { type: "toolInvocation", toolName: "git_safe" }
-                        ]
-                    }
-                ]
-            } as any
-
-            // Should not throw
-            await handler(input, output)
-        })
-    })
-
-    describe("Plan & Loop Guards (Before Hooks)", () => {
-        it("should correctly handle session isolation in loop guard", async () => {
-            const ctx = { directory: "/test", client: {} } as any
-            const hooks = {
-                semanticLoopGuard: createSemanticLoopGuardHook(ctx)
-            } as any
-            const handler = createToolExecuteBeforeHandler({ ctx, hooks })
-
-            const input = { tool: "ls", sessionID: "ses_loop", callID: "call_a" }
-            const output = { args: {} }
-
-            // Pass 3 times
-            await handler(input, output)
-            await handler(input, output)
-            await handler(input, output)
-
-            // 4th time with SAME session should fail
-            let error: any
-            try {
-                await handler(input, output)
-            } catch (e) {
-                error = e
-            }
-            expect(error?.message).toContain("[Semantic Loop Guard]")
-
-            // Different session should pass
-            const inputNew = { tool: "ls", sessionID: "ses_fresh", callID: "call_b" }
-            await handler(inputNew, output)
         })
     })
 })

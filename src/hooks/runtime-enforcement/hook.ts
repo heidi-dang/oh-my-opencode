@@ -1,5 +1,6 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import type { Message, Part } from "@opencode-ai/sdk"
+import { ledger } from "../../runtime/state-ledger"
 
 /**
  * Runtime Enforcement Gate
@@ -30,6 +31,10 @@ export function createRuntimeEnforcementHook(_ctx: PluginInput) {
             _input: any,
             output: { messages: { info: Message; parts: Part[] }[] }
         ) => {
+            // Mark the start of a new completion flow verification.
+            // This ensures entries from previous turns/flows in the same session are ignored.
+            ledger.startNewFlow()
+
             const assistantMessages = output.messages.filter(m => m.info.role === "assistant")
             if (assistantMessages.length === 0) return
 
