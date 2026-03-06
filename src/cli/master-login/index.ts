@@ -2,7 +2,8 @@ import { writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import * as os from "node:os";
 import color from "picocolors";
-import { chromium } from "playwright";
+// @ts-ignore
+const playWrightModule = import("playwright");
 
 export interface MasterLoginOptions {
     force: boolean;
@@ -20,7 +21,7 @@ export async function masterLogin(options: MasterLoginOptions): Promise<number> 
     console.log(color.cyan("🚀 Launching browser for ChatGPT login..."));
     console.log(color.dim("Please log in to chat.openai.com in the window that appears."));
     console.log(color.dim("Once logged in, return here. I will automatically detect the session."));
-
+    const { chromium } = await playWrightModule;
     const browser = await chromium.launch({ headless: false });
     const context = await browser.newContext();
     const page = await context.newPage();
