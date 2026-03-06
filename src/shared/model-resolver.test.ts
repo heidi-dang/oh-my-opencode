@@ -226,6 +226,45 @@ describe("resolveModelWithFallback", () => {
       expect(result!.source).toBe("override")
     })
 
+    test("explicit Hephaestus config with xai/grok-4-1-fast must resolve to Grok", () => {
+      // given
+      const input: ExtendedModelResolutionInput = {
+        userModel: "xai/grok-4-1-fast",
+        fallbackChain: [
+          { providers: ["openai", "venice", "opencode"], model: "gpt-5.3-codex", variant: "medium" },
+          { providers: ["github-copilot"], model: "gpt-5.2", variant: "medium" },
+        ],
+        availableModels: new Set(["xai/grok-4-1-fast", "openai/gpt-5.3-codex"]),
+        systemDefaultModel: "google/gemini-3.1-pro",
+      }
+
+      // when
+      const result = resolveModelWithFallback(input)
+
+      // then
+      expect(result!.model).toBe("xai/grok-4-1-fast")
+      expect(result!.source).toBe("override")
+    })
+
+    test("fallback to GPT should happen only when Hephaestus is unconfigured and fallback rules require it", () => {
+      // given (userModel is undefined, so unconfigured)
+      const input: ExtendedModelResolutionInput = {
+        userModel: undefined,
+        fallbackChain: [
+          { providers: ["openai", "venice", "opencode"], model: "gpt-5.3-codex", variant: "medium" },
+        ],
+        availableModels: new Set(["openai/gpt-5.3-codex", "xai/grok-4-1-fast"]),
+        systemDefaultModel: "google/gemini-3.1-pro",
+      }
+
+      // when
+      const result = resolveModelWithFallback(input)
+
+      // then
+      expect(result!.model).toBe("openai/gpt-5.3-codex")
+      expect(result!.source).toBe("provider-fallback")
+    })
+
     test("whitespace-only userModel is treated as not provided", () => {
       // given
       const input: ExtendedModelResolutionInput = {

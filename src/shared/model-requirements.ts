@@ -25,8 +25,8 @@ export const AGENT_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {
     fallbackChain: [
       { providers: ["openai", "venice", "opencode"], model: "gpt-5.3-codex", variant: "medium" },
       { providers: ["github-copilot"], model: "gpt-5.2", variant: "medium" },
+      { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-opus-4-6", variant: "max" },
     ],
-    requiresProvider: ["openai", "github-copilot", "venice", "opencode"],
   },
   oracle: {
     fallbackChain: [
@@ -35,13 +35,13 @@ export const AGENT_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {
       { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-opus-4-6", variant: "max" },
     ],
   },
-   librarian: {
-     fallbackChain: [
-       { providers: ["google", "github-copilot", "opencode"], model: "gemini-3-flash" },
-       { providers: ["opencode"], model: "minimax-m2.5-free" },
-       { providers: ["opencode"], model: "big-pickle" },
-     ],
-   },
+  librarian: {
+    fallbackChain: [
+      { providers: ["google", "github-copilot", "opencode"], model: "gemini-3-flash" },
+      { providers: ["opencode"], model: "minimax-m2.5-free" },
+      { providers: ["opencode"], model: "big-pickle" },
+    ],
+  },
   explore: {
     fallbackChain: [
       { providers: ["github-copilot"], model: "grok-code-fast-1" },

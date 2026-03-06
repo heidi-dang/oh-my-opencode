@@ -176,17 +176,6 @@ describe("AGENT_MODEL_REQUIREMENTS", () => {
     expect(primary.providers[0]).toBe("anthropic")
   })
 
-  test("hephaestus supports openai, github-copilot, venice, and opencode providers", () => {
-    // #given - hephaestus agent requirement
-    const hephaestus = AGENT_MODEL_REQUIREMENTS["hephaestus"]
-
-    // #when - accessing hephaestus requirement
-    // #then - requiresProvider includes openai, github-copilot, venice, and opencode
-    expect(hephaestus).toBeDefined()
-    expect(hephaestus.requiresProvider).toEqual(["openai", "github-copilot", "venice", "opencode"])
-    expect(hephaestus.requiresModel).toBeUndefined()
-  })
-
   test("all 10 builtin agents have valid fallbackChain arrays", () => {
     // #given - list of 10 agent names
     const expectedAgents = [
@@ -470,22 +459,22 @@ describe("ModelRequirement type", () => {
     }
   })
 
-   test("all fallbackChain entries have non-empty providers array", () => {
-     // given - all agent and category requirements
-     const allRequirements = [
-       ...Object.values(AGENT_MODEL_REQUIREMENTS),
-       ...Object.values(CATEGORY_MODEL_REQUIREMENTS),
-     ]
+  test("all fallbackChain entries have non-empty providers array", () => {
+    // given - all agent and category requirements
+    const allRequirements = [
+      ...Object.values(AGENT_MODEL_REQUIREMENTS),
+      ...Object.values(CATEGORY_MODEL_REQUIREMENTS),
+    ]
 
-     // when - checking each entry in fallbackChain
-     // then - all have non-empty providers array
-     for (const req of allRequirements) {
-       for (const entry of req.fallbackChain) {
-         expect(entry.providers).toBeArray()
-         expect(entry.providers.length).toBeGreaterThan(0)
-       }
-     }
-   })
+    // when - checking each entry in fallbackChain
+    // then - all have non-empty providers array
+    for (const req of allRequirements) {
+      for (const entry of req.fallbackChain) {
+        expect(entry.providers).toBeArray()
+        expect(entry.providers.length).toBeGreaterThan(0)
+      }
+    }
+  })
 })
 
 describe("requiresModel field in categories", () => {

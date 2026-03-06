@@ -25,6 +25,22 @@ def check_file_missing(path):
     print(f"[PASS] Forbidden file correctly absent: {path}")
     return True
 
+def check_prompt_absence(file_path, search_strings):
+    if not os.path.exists(file_path):
+        return True
+    
+    with open(file_path, 'r') as f:
+        content = f.read()
+        
+    all_absent = True
+    for s in search_strings:
+        if s in content:
+            print(f"[FAIL] {file_path} CONTAINS FORBIDDEN STRING: '{s}'")
+            all_absent = False
+        else:
+            print(f"[PASS] {file_path} correctly lacks '{s[:40]}...'")
+    return all_absent
+
 def run_upstream_merge_doctor():
     print("Selective Upstream Merge - Capability Doctor\n")
     
@@ -74,12 +90,23 @@ def run_upstream_merge_doctor():
         all_pass = False
 
     # 6. Verification of Runtime Enforcement Hook (output contract enforcement guard)
-    # Note: Semantic Loop Detection guard is deferred to a separate runtime-only PR.
-    # Checking that the runtime-enforcement hook restricts claims to the current completion flow.
     loop_guard_checks = [
         "current completion flow",
     ]
     if not check_prompt_contains("src/hooks/runtime-enforcement/hook.ts", loop_guard_checks):
+        all_pass = False
+
+    # 7. Hephaestus GPT Exclusivity Purge (Phase 2 capability fix)
+    hook_file = "src/hooks/no-hephaestus-non-gpt/hook.ts"
+    if not check_prompt_absence(hook_file, ["exclusive to GPT", "trash without GPT"]):
+        all_pass = False
+
+    shared_req_file = "src/shared/model-requirements.ts"
+    if not check_prompt_absence(shared_req_file, ["requiresProvider: [\"openai\", \"github-copilot\", \"venice\", \"opencode\"]"]):
+        all_pass = False
+
+    cli_req_file = "src/cli/model-fallback-requirements.ts"
+    if not check_prompt_absence(cli_req_file, ["requiresProvider: [\"openai\", \"opencode\"]"]):
         all_pass = False
 
     if all_pass:
