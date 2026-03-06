@@ -6,8 +6,8 @@ import type {
   AvailableTool,
   AvailableSkill,
   AvailableCategory,
-} from "../types";
-import { categorizeTools } from "../prompts";
+} from "../dynamic-agent-prompt-builder";
+import { categorizeTools } from "../dynamic-agent-prompt-builder";
 
 import { buildHephaestusPrompt as buildGptPrompt } from "./gpt";
 import { buildHephaestusPrompt as buildGpt53CodexPrompt } from "./gpt-5-3-codex";

@@ -6,7 +6,7 @@ import type {
   AvailableTool,
   AvailableSkill,
   AvailableCategory,
-} from "../types";
+} from "../dynamic-agent-prompt-builder";
 import {
   buildKeyTriggersSection,
   buildToolSelectionTable,
@@ -15,7 +15,7 @@ import {
   buildCategorySkillsDelegationGuide,
   buildDelegationTable,
   buildOracleSection,
-} from "../prompts";
+} from "../dynamic-agent-prompt-builder";
 
 function buildTodoDisciplineSection(useTaskSystem: boolean): string {
   if (useTaskSystem) {
@@ -326,13 +326,12 @@ Every \`task()\` output includes a session_id. USE IT for follow-ups.
 - Follow-up on result — \`session_id="{id}", prompt="Also: {question}"\`
 - Verification failed — \`session_id="{id}", prompt="Failed: {error}. Fix."\`
 
-${
-  oracleSection
-    ? `
+${oracleSection
+      ? `
 ${oracleSection}
 `
-    : ""
-}
+      : ""
+    }
 
 ## Output Contract
 

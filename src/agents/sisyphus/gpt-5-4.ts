@@ -17,7 +17,7 @@ import type {
   AvailableTool,
   AvailableSkill,
   AvailableCategory,
-} from "../types";
+} from "../dynamic-agent-prompt-builder";
 import {
   buildKeyTriggersSection,
   buildToolSelectionTable,
@@ -28,7 +28,7 @@ import {
   buildOracleSection,
   buildNonClaudePlannerSection,
   categorizeTools,
-} from "../prompts";
+} from "../dynamic-agent-prompt-builder";
 
 function buildGpt54TaskManagementSection(useTaskSystem: boolean): string {
   if (useTaskSystem) {
