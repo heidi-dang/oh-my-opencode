@@ -70,7 +70,7 @@ export async function masterLogin(options: MasterLoginOptions): Promise<number> 
                 return null;
             }
         });
-        accessToken = sessionResponse?.accessToken;
+        accessToken = (sessionResponse as any)?.accessToken;
     } catch (e) {
         // Ignore if we can't get access token yet, session token is enough
     }
