@@ -11,18 +11,21 @@ Port advanced prompting and verification logic from `official/dev` to Heidi whil
 - [x] **Gemini Fix**: Corrected syntax in `atlas/gemini.ts`.
 - [x] **Verification**: Created `check_upstream_capability_merge.py` and integrated into `doctor.py`.
 
-### Phase 1: Specialty Agents & Ralph-loop [DONE]
-- [x] **Hephaestus Autonomy**: Ported "Deep Agent" and "Intent Gate" logic to `hephaestus/gpt-5-4.ts`.
-- [x] **Ralph-loop**: Integrated runtime loop detection in `runtime-enforcement/hook.ts`.
-- [x] **State Tracking**: Updated `state-ledger` and `tool-runner` to support loop detection.
-- [x] **Audit**: Updated doctor checks to verify P1 features.
+### Phase 1: Specialty Agents & Truth Model Hardening [DONE]
+- [x] **Truth Model**: Unified `state-ledger` to securely track `success`, `verified`, and `changedState` tied to the current execution flow.
+- [x] **Runtime Enforcement**: Tightened `hook.ts` to scan only the active completion flow for deterministic tool evidence rather than relying on weak keywords or stale ledger history.
+- [x] **Completion & Query**: `complete_task` and `query_ledger` filtered strictly to verified, successful state changes from the active session flow.
+- [x] **Contract Enforcement**: Enforced strict boolean typing for state metadata in the tool-contract hook, intrinsically linking claimed state changes to the verified ledger.
+- [x] **Capability Purge**: Removed the active builder pattern (`dynamic-agent-prompt-builder.ts`) from Sisyphus and Hephaestus, migrating all logic to Heidi's native `prompts/orchestration.ts` and `types.ts`.
+- [x] **Audit Architecture**: Purged prototype scaffolding (`agent-runner.ts`, `tool-runner.ts`, `context-builder.ts`) and updated the reliability doctor checks.
 
 ## Verification Plan
 
 ### Automated Checks
-- `python3 tools/doctor.py` (Custom capability check)
-- `bun test tests/runtime/test_deterministic_execution.test.ts` (Reliability regression)
+- `python3 tools/doctor.py` (Custom capability check + Reliability check)
+- `bun test src/hooks/runtime-enforcement/ src/runtime/` (Deterministic state testing)
 
 ### Manual Review
-- Inspect `src/agents/atlas/gemini.ts` for clean syntax.
-- Inspect `src/hooks/runtime-enforcement/hook.ts` for loop guard logic.
+- Inspect `src/runtime/state-ledger.ts` for strict verifiable payloads.
+- Inspect `src/hooks/tool-contract/hook.ts` for deterministic rejection logic.
+- Verify `dynamic-agent-prompt-builder.ts` is fully eradicated from imports.

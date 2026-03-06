@@ -19,6 +19,11 @@ export interface LedgerEntry {
     type: LedgerEntryType
     timestamp: number
     key: string      // e.g. file path, commit hash, PR URL, package name
+    success: boolean
+    verified: boolean
+    changedState: boolean
+    stdout: string
+    sessionID?: string
     metadata?: any   // additional contextual data
 }
 
@@ -38,11 +43,25 @@ export class StateLedger {
     /**
      * Record a verified state change in the system.
      */
-    public record(type: LedgerEntryType, key: string, metadata?: any): void {
+    public record(
+        type: LedgerEntryType,
+        key: string,
+        success: boolean,
+        verified: boolean,
+        changedState: boolean,
+        stdout: string,
+        metadata?: any,
+        sessionID?: string
+    ): void {
         this.entries.push({
             type,
             timestamp: Date.now(),
             key,
+            success,
+            verified,
+            changedState,
+            stdout,
+            sessionID,
             metadata
         })
     }

@@ -13,11 +13,10 @@ def run_doctor():
     print("OhMyOpencode Reliability Runtime - System Doctor\n")
     
     required_files = [
-        "src/agents/runtime/agent-runner.ts",
-        "src/agents/runtime/tool-runner.ts",
+        "src/hooks/execution-journal/hook.ts",
+        "src/hooks/semantic-loop-guard/hook.ts",
         "src/agents/runtime/loop-guard.ts",
         "src/runtime/state-ledger.ts",
-        "src/agents/runtime/context-builder.ts",
         "src/agents/runtime/action-validator.ts",
         "src/hooks/tool-contract/hook.ts",
         "src/runtime/tools/registry.ts",

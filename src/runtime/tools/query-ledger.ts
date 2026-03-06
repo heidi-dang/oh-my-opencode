@@ -11,7 +11,13 @@ export function createQueryLedgerTool(): any {
             type: z.string().optional().describe("Optional filter by type (e.g. 'git.commit', 'file.write', 'git.push')")
         },
         execute: async (args, toolContext) => {
-            const entries = ledger.getEntries()
+            // Default to verified, successful entries from the CURRENT session flow
+            const entries = ledger.getEntries().filter(e =>
+                e.verified === true &&
+                e.success === true &&
+                (!e.sessionID || e.sessionID === toolContext.sessionID)
+            )
+
             const filtered = args.type ? entries.filter(e => e.type === args.type) : entries
 
             toolContext.metadata({
@@ -20,7 +26,7 @@ export function createQueryLedgerTool(): any {
             })
 
             if (filtered.length === 0) {
-                return "No matching verified actions found in the ledger."
+                return "No matching verified actions found in the current completion flow."
             }
 
             return JSON.stringify(filtered, null, 2)
