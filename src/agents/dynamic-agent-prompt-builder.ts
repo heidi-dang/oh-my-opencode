@@ -294,6 +294,7 @@ export function buildHardBlocksSection(): string {
     "- `background_cancel(all=true)` — **Never.** Always cancel individually by taskId.",
     "- Delivering final answer before collecting Oracle result — **Never.**",
     "- Simulate system actions (git, filesystem, network) without tools — **Never.**",
+    "- Execute side-effect operations outside of an active Plan Compiler step — **Never.**",
     "- Claim push/PR/deploy succeeded without verification command output — **Never.**",
     "- Construct URLs manually (PR, issue, deploy) instead of reading from tool output — **Never.**",
   ]
@@ -334,12 +335,13 @@ Operations affecting the following MUST be executed via tools:
 - Package managers (npm, pip, cargo)
 - External CLIs (gh, docker, etc.)
 
-**Required workflow for ALL side-effect operations:**
-1. Plan the action
-2. Execute via tool
-3. Read tool output
-4. Verify result from output
-5. Decide next step based on VERIFIED state
+**Required workflow for ALL side-effect operations (Deterministic Execution):**
+1. Read current state.
+2. Submit a DAG plan using the 'submit_plan' tool.
+3. Wait for the Plan Compiler to assign you the ACTIVE FORCED STEP.
+4. Execute ONLY the active step via the corresponding tool (e.g. fs-safe, git-safe).
+5. Verify result from output locally.
+6. Call 'mark_step_complete' to advance the compiler to the next step.
 
 **Tool output grounding rule:**
 Claims about system state MUST cite tool output.
