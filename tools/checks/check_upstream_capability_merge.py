@@ -92,6 +92,7 @@ def run_upstream_merge_doctor():
     # 6. Verification of Runtime Enforcement Hook (output contract enforcement guard)
     loop_guard_checks = [
         "current completion flow",
+        "state-ledger"
     ]
     if not check_prompt_contains("src/hooks/runtime-enforcement/hook.ts", loop_guard_checks):
         all_pass = False

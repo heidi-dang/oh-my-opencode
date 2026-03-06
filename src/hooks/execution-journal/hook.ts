@@ -42,26 +42,6 @@ export function createExecutionJournalHook(ctx: PluginInput) {
                 const verified = output.metadata?.verified !== false // Defaults to true unless explicitly unverified
 
                 ledger.record(payload.type, payload.key, success, verified, changedState, output.output, payload.details, input.sessionID)
-            } else {
-                // Fallback heuristics for raw bash operations (if not yet disabled)
-                if (input.tool === "interactive_bash" || input.tool === "bash") {
-                    const args = output.metadata?.args as any
-                    const command = args?.command || ""
-
-                    if (typeof command === "string") {
-                        if (command.includes("git push") && output.output.includes("Everything up-to-date") === false) {
-                            ledger.record("git.push", "origin", true, true, true, output.output, { command }, input.sessionID)
-                        } else if (command.includes("git commit")) {
-                            ledger.record("git.commit", "HEAD", true, true, true, output.output, { command }, input.sessionID)
-                        } else if (command.includes("gh pr create") && output.output.includes("https://github.com")) {
-                            // naive extraction for bash fallback
-                            const urlMatch = output.output.match(/https:\/\/github\.com[^\s]+/)
-                            if (urlMatch) {
-                                ledger.record("git.pr", urlMatch[0], true, true, true, output.output, { command }, input.sessionID)
-                            }
-                        }
-                    }
-                }
             }
         }
     }
