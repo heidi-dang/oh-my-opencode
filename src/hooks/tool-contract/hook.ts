@@ -52,9 +52,16 @@ export function createToolContractHook(_ctx: PluginInput) {
                     await new Promise(resolve => setTimeout(resolve, 50))
 
                     const payload = meta.stateChange
-                    const actuallyInLedger = ledger.has(payload.type, payload.key)
+                    const actuallyInLedger = ledger.has(payload.type, (e) =>
+                        e.key === payload.key &&
+                        e.sessionID === input.sessionID &&
+                        e.success === true &&
+                        e.verified === true &&
+                        e.changedState === true
+                    )
+
                     if (!actuallyInLedger) {
-                        throw new Error(`[Tool Contract Violation] Tool ${input.tool} reported state change for ${payload.type}:${payload.key}, but it was not reflected in the State Ledger before completion.`)
+                        throw new Error(`[Tool Contract Violation] Tool ${input.tool} reported state change for ${payload.type}:${payload.key}, but no matching SUCCESSFUL and VERIFIED entry was found in the State Ledger for the current session.`)
                     }
                 }
             }
