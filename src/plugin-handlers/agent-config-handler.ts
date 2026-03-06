@@ -2,8 +2,7 @@ import { createBuiltinAgents } from "../agents";
 import { createSisyphusJuniorAgentWithOverrides } from "../agents/sisyphus-junior";
 import { resolveJuniorInheritance } from "../agents/builtin-agents/junior-inheritance";
 import type { OhMyOpenCodeConfig } from "../config";
-import { log, migrateAgentConfig, fetchAvailableModels } from "../shared";
-import { validateModelPolicy } from "../shared/model-policy";
+import { log, migrateAgentConfig } from "../shared";
 import { AGENT_NAME_MAP } from "../shared/migration";
 import { getAgentDisplayName } from "../shared/agent-display-names";
 import {
@@ -145,16 +144,6 @@ export async function applyAgentConfig(params: {
       "sisyphus-junior",
       params.pluginConfig.agents ?? {},
     );
-
-    // Fail-closed model policy: validate explicit model overrides against available model cache
-    if ((sisyphusJuniorOverride as { model?: string } | undefined)?.model) {
-      const availableModels = await fetchAvailableModels()
-      validateModelPolicy(
-        "sisyphus-junior",
-        (sisyphusJuniorOverride as { model: string }).model,
-        availableModels,
-      )
-    }
 
     agentConfig["sisyphus-junior"] = createSisyphusJuniorAgentWithOverrides(
       sisyphusJuniorOverride,
