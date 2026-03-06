@@ -239,15 +239,19 @@ call_omo_agent(subagent_type="librarian", prompt="I'm looking for proven impleme
 - TOOL: Use \`[specific tool]\` for [purpose]
 
 ### QA/Acceptance Criteria Directives (MANDATORY)
-> **ZERO USER INTERVENTION PRINCIPLE**: All acceptance criteria MUST be executable by agents.
+> **ZERO USER INTERVENTION PRINCIPLE**: All acceptance criteria AND QA scenarios MUST be executable by agents.
 
 - MUST: Write acceptance criteria as executable commands (curl, bun test, playwright actions)
 - MUST: Include exact expected outputs, not vague descriptions
 - MUST: Specify verification tool for each deliverable type (playwright for UI, curl for API, etc.)
+- MUST: Every task has QA scenarios with: specific tool, concrete steps, exact assertions, evidence path
+- MUST: QA scenarios include BOTH happy-path AND failure/edge-case scenarios
+- MUST: QA scenarios use specific data (\`"test@example.com"\`, not \`"[email]"\`) and selectors (\`.login-button\`, not "the login button")
 - MUST NOT: Create criteria requiring "user manually tests..."
 - MUST NOT: Create criteria requiring "user visually confirms..."
 - MUST NOT: Create criteria requiring "user clicks/interacts..."
 - MUST NOT: Use placeholders without concrete examples (bad: "[endpoint]", good: "/api/users")
+- MUST NOT: Write vague QA scenarios ("verify it works", "check the page loads", "test the API returns data")
 
 Example of GOOD acceptance criteria:
 \`\`\`

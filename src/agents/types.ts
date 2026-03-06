@@ -88,6 +88,16 @@ export function isGeminiModel(model: string): boolean {
   return modelName.startsWith("gemini-")
 }
 
+export function isGpt5_4Model(model: string): boolean {
+  const modelName = extractModelName(model).toLowerCase()
+  return modelName.includes("gpt-4") && modelName.includes("-5") || modelName.includes("gpt-5.4")
+}
+
+export function isGpt5_3CodexModel(model: string): boolean {
+  const modelName = extractModelName(model).toLowerCase()
+  return (modelName.includes("gpt-5") || modelName.includes("gpt-4o")) && modelName.includes("codex")
+}
+
 export type BuiltinAgentName =
   | "sisyphus"
   | "master"
