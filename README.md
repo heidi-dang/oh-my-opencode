@@ -348,7 +348,12 @@ See [Configuration Documentation](docs/reference/configuration.md).
 - **JSONC Support**: Comments and trailing commas supported
 - **Agents**: Override models, temperatures, prompts, and permissions for any agent
 - **Built-in Skills**: `playwright` (browser automation), `git-master` (atomic commits)
-- **Sisyphus Agent**: Main orchestrator with Prometheus (Planner) and Metis (Plan Consultant)
+- **Multi-Model Orchestration**: Sisyphus, Hephaestus, and the new **Master Agent (YGK-a)**.
+- **Master-Sisyphus Workflow**: Brainstorm with Master (YGKA), then execute with Sisyphus via "executed plan".
+- **Parallel Background Agents**: Fire `explore` and `librarian` in parallel for deep research without blocking.
+- **Fail-Closed Model Policy**: Strict validation of model IDs to prevent configuration errors.
+- **Junior Inheritance**: `*-junior` agents intelligently inherit from their parents.
+- **Fork Doctor**: Built-in health checks for fork integrity and configuration.
 - **Background Tasks**: Configure concurrency limits per provider/model
 - **Categories**: Domain-specific task delegation (`visual`, `business-logic`, custom)
 - **Hooks**: 25+ built-in hooks, all configurable via `disabled_hooks`

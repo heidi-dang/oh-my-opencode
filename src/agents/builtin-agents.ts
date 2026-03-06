@@ -4,6 +4,7 @@ import type { CategoriesConfig, GitMasterConfig } from "../config/schema"
 import type { LoadedSkill } from "../features/opencode-skill-loader/types"
 import type { BrowserAutomationProvider } from "../config/schema"
 import { createSisyphusAgent } from "./sisyphus"
+import { createMasterAgent, MASTER_PROMPT_METADATA } from "./master"
 import { createOracleAgent, ORACLE_PROMPT_METADATA } from "./oracle"
 import { createLibrarianAgent, LIBRARIAN_PROMPT_METADATA } from "./librarian"
 import { createExploreAgent, EXPLORE_PROMPT_METADATA } from "./explore"
@@ -22,7 +23,7 @@ import { CATEGORY_DESCRIPTIONS } from "../tools/delegate-task/constants"
 import { mergeCategories } from "../shared/merge-categories"
 import { buildAvailableSkills } from "./builtin-agents/available-skills"
 import { collectPendingBuiltinAgents } from "./builtin-agents/general-agents"
-import { maybeCreateSisyphusConfig } from "./builtin-agents/sisyphus-agent"
+import { maybeCreatePrimaryAgentConfig } from "./builtin-agents/sisyphus-agent"
 import { maybeCreateHephaestusConfig } from "./builtin-agents/hephaestus-agent"
 import { maybeCreateAtlasConfig } from "./builtin-agents/atlas-agent"
 import { buildCustomAgentMetadata, parseRegisteredAgentSummaries } from "./custom-agent-summaries"
@@ -30,6 +31,7 @@ import { buildCustomAgentMetadata, parseRegisteredAgentSummaries } from "./custo
 type AgentSource = AgentFactory | AgentConfig
 
 const agentSources: Record<BuiltinAgentName, AgentSource> = {
+  master: createMasterAgent,
   sisyphus: createSisyphusAgent,
   hephaestus: createHephaestusAgent,
   oracle: createOracleAgent,
@@ -48,6 +50,7 @@ const agentSources: Record<BuiltinAgentName, AgentSource> = {
  * (Delegation Table, Tool Selection, Key Triggers, etc.)
  */
 const agentMetadata: Partial<Record<BuiltinAgentName, AgentPromptMetadata>> = {
+  master: MASTER_PROMPT_METADATA,
   oracle: ORACLE_PROMPT_METADATA,
   librarian: LIBRARIAN_PROMPT_METADATA,
   explore: EXPLORE_PROMPT_METADATA,
@@ -134,7 +137,31 @@ export async function createBuiltinAgents(
     })
   }
 
-  const sisyphusConfig = maybeCreateSisyphusConfig({
+  const masterConfig = maybeCreatePrimaryAgentConfig({
+    agentName: "master",
+    factory: createMasterAgent as any,
+    disabledAgents,
+    agentOverrides,
+    uiSelectedModel,
+    availableModels,
+    systemDefaultModel,
+    isFirstRunNoCache,
+    availableAgents,
+    availableSkills,
+    availableCategories,
+    mergedCategories,
+    directory,
+    userCategories: categories,
+    useTaskSystem,
+    disableOmoEnv,
+  })
+  if (masterConfig) {
+    result["master"] = masterConfig
+  }
+
+  const sisyphusConfig = maybeCreatePrimaryAgentConfig({
+    agentName: "sisyphus",
+    factory: createSisyphusAgent as any,
     disabledAgents,
     agentOverrides,
     uiSelectedModel,
@@ -195,3 +222,4 @@ export async function createBuiltinAgents(
 
   return result
 }
+

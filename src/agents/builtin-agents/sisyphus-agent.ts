@@ -8,7 +8,11 @@ import { applyOverrides } from "./agent-overrides"
 import { applyModelResolution, getFirstFallbackModel } from "./model-resolution"
 import { createSisyphusAgent } from "../sisyphus"
 
-export function maybeCreateSisyphusConfig(input: {
+import { BuiltinAgentName, AgentFactory } from "../types"
+
+export function maybeCreatePrimaryAgentConfig(input: {
+  agentName: BuiltinAgentName
+  factory: AgentFactory
   disabledAgents: string[]
   agentOverrides: AgentOverrides
   uiSelectedModel?: string
@@ -25,6 +29,8 @@ export function maybeCreateSisyphusConfig(input: {
   disableOmoEnv?: boolean
 }): AgentConfig | undefined {
   const {
+    agentName,
+    factory,
     disabledAgents,
     agentOverrides,
     uiSelectedModel,
@@ -40,49 +46,56 @@ export function maybeCreateSisyphusConfig(input: {
     disableOmoEnv = false,
   } = input
 
-  const sisyphusOverride = agentOverrides["sisyphus"]
-  const sisyphusRequirement = AGENT_MODEL_REQUIREMENTS["sisyphus"]
-  const hasSisyphusExplicitConfig = sisyphusOverride !== undefined
-  const meetsSisyphusAnyModelRequirement =
-    !sisyphusRequirement?.requiresAnyModel ||
-    hasSisyphusExplicitConfig ||
+  const override = agentOverrides[agentName]
+  const requirement = AGENT_MODEL_REQUIREMENTS[agentName]
+  const hasExplicitConfig = override !== undefined
+  const meetsAnyModelRequirement =
+    !requirement?.requiresAnyModel ||
+    hasExplicitConfig ||
     isFirstRunNoCache ||
-    isAnyFallbackModelAvailable(sisyphusRequirement.fallbackChain, availableModels)
+    isAnyFallbackModelAvailable(requirement.fallbackChain, availableModels)
 
-  if (disabledAgents.includes("sisyphus") || !meetsSisyphusAnyModelRequirement) return undefined
+  if (disabledAgents.includes(agentName) || !meetsAnyModelRequirement) return undefined
 
-  let sisyphusResolution = applyModelResolution({
-    uiSelectedModel: sisyphusOverride?.model ? undefined : uiSelectedModel,
-    userModel: sisyphusOverride?.model,
-    requirement: sisyphusRequirement,
+  let resolution = applyModelResolution({
+    uiSelectedModel: override?.model ? undefined : uiSelectedModel,
+    userModel: override?.model,
+    requirement: requirement,
     availableModels,
     systemDefaultModel,
   })
 
-  if (isFirstRunNoCache && !sisyphusOverride?.model && !uiSelectedModel) {
-    sisyphusResolution = getFirstFallbackModel(sisyphusRequirement)
+  if (isFirstRunNoCache && !override?.model && !uiSelectedModel) {
+    resolution = getFirstFallbackModel(requirement)
   }
 
-  if (!sisyphusResolution) return undefined
-  const { model: sisyphusModel, variant: sisyphusResolvedVariant } = sisyphusResolution
+  if (!resolution) return undefined
+  const { model, variant: resolvedVariant } = resolution
 
-  let sisyphusConfig = createSisyphusAgent(
-    sisyphusModel,
-    availableAgents,
-    undefined,
-    availableSkills,
-    availableCategories,
-    useTaskSystem
-  )
-
-  if (sisyphusResolvedVariant) {
-    sisyphusConfig = { ...sisyphusConfig, variant: sisyphusResolvedVariant }
+  // For Master agent, we use a simpler factory that only takes model
+  // For Sisyphus, it takes many more arguments.
+  let config: AgentConfig;
+  if (agentName === "sisyphus") {
+    config = (factory as any)(
+      model,
+      availableAgents,
+      undefined,
+      availableSkills,
+      availableCategories,
+      useTaskSystem
+    )
+  } else {
+    config = factory(model)
   }
 
-  sisyphusConfig = applyOverrides(sisyphusConfig, sisyphusOverride, mergedCategories, directory)
-  sisyphusConfig = applyEnvironmentContext(sisyphusConfig, directory, {
+  if (resolvedVariant) {
+    config = { ...config, variant: resolvedVariant }
+  }
+
+  config = applyOverrides(config, override, mergedCategories, directory)
+  config = applyEnvironmentContext(config, directory, {
     disableOmoEnv,
   })
 
-  return sisyphusConfig
+  return config
 }
