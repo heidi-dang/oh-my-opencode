@@ -41,7 +41,10 @@ export function createReportIssueVerificationTool(): any {
             toolContext.metadata(meta)
 
             if (toolContext.callID) {
-                storeToolMetadata(sessionID, toolContext.callID, meta)
+                storeToolMetadata(sessionID, toolContext.callID, {
+                    title: meta.title,
+                    metadata: meta
+                })
             }
             let response = `[VERIFICATION LOGGED]\n\nCurrent Verification State:\n- Reproduced: ${newState.reproduced}\n- Error Signature: ${newState.errorSignatureBefore ?? "None"}\n- Fix Applied: ${newState.fixApplied}\n- Repro After Fix Passed: ${newState.reproAfterPassed}\n- Nearby Checks Passed: ${newState.failureModeChecksPassed}\n\n`
             

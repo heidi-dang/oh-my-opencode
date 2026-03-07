@@ -72,7 +72,10 @@ export function createCompleteTaskTool(): any {
             toolContext.metadata(meta)
 
             if (toolContext.callID) {
-                storeToolMetadata(toolContext.sessionID, toolContext.callID, meta)
+                storeToolMetadata(toolContext.sessionID, toolContext.callID, {
+                    title: meta.title,
+                    metadata: meta
+                })
             }
 
             return `[RUNTIME AUTHORIZATION]\n\n${report}\n\nYou may now conclude your response using EXACTLY this report as your final output.`
