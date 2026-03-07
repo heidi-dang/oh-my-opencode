@@ -2,6 +2,7 @@
 import { tool } from "@opencode-ai/plugin"
 import { z } from "zod"
 import { compiler } from "../plan-compiler"
+import { createSuccessResult } from "../../utils/safety-tool-result"
 
 export function createSubmitPlanTool(): any {
     return tool({
@@ -17,9 +18,15 @@ export function createSubmitPlanTool(): any {
         execute: async (args, toolContext) => {
             compiler.submit(args.steps)
 
+            const result = createSuccessResult({
+                verified: true,
+                changedState: false,
+                metadata: { planLength: args.steps.length }
+            });
+
             toolContext.metadata({
                 title: "Plan Submitted",
-                metadata: { success: true, verified: true, changedState: false, planLength: args.steps.length }
+                ...result
             })
 
             const active = compiler.getActiveStep()
@@ -38,9 +45,15 @@ export function createMarkStepCompleteTool(): any {
         execute: async (args, toolContext) => {
             compiler.markStepComplete(args.id)
 
+            const result = createSuccessResult({
+                verified: true,
+                changedState: false,
+                metadata: { stepId: args.id }
+            });
+
             toolContext.metadata({
                 title: `Step ${args.id} Complete`,
-                metadata: { success: true, verified: true, changedState: false, stepId: args.id }
+                ...result
             })
 
             const active = compiler.getActiveStep()

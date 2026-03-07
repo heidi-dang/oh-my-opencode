@@ -7,6 +7,13 @@ def run_reliability_doctor():
     result = subprocess.run(["python3", "tools/doctor_runtime_reliability.py"])
     return result.returncode == 0
 
+def run_tool_contract_doctor():
+    print("Checking Tool Contract metadata shapes...")
+    result = subprocess.run(["bun", "tools/check_tool_contract.ts"])
+    if result.returncode != 0:
+        print("[FAIL] One or more safety tools returned invalid metadata shape.")
+    return result.returncode == 0
+
 def run_lsp_doctor():
     print("Checking TypeScript LSP dependencies...")
     tsc_check = subprocess.run(["which", "tsc"], capture_output=True)
@@ -48,13 +55,16 @@ def main():
     # Run Git checks
     git_pass = run_git_doctor()
     
+    # Run Tool Contract checks
+    contract_pass = run_tool_contract_doctor()
+    
     # Run LSP dependency checks
     lsp_pass = run_lsp_doctor()
     
     # Run upstream merge capability checks
     upstream_pass = run_upstream_merge_doctor()
     
-    if not reliability_pass or not git_pass or not lsp_pass or not upstream_pass:
+    if not reliability_pass or not git_pass or not contract_pass or not lsp_pass or not upstream_pass:
         print("\nERROR: Doctor checks failed. System integrity compromised.")
         sys.exit(1)
         
