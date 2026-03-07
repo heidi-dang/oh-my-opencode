@@ -12,6 +12,7 @@ import { checkToolContract } from "./tool-contract"
 import { checkEditAtomicity } from "./edit-atomicity"
 import { checkIssueResolutionWorkflow } from "./issue-resolution"
 import { checkToolMetadataContract } from "./tool-metadata"
+import { checkRunStateWatchdog } from "./run-state-watchdog"
 
 export type { CheckDefinition }
 export * from "./model-resolution-types"
@@ -74,6 +75,11 @@ export function getAllCheckDefinitions(): CheckDefinition[] {
       id: checkToolMetadataContract.id,
       name: checkToolMetadataContract.name,
       check: checkToolMetadataContract.check,
+    },
+    {
+      id: checkRunStateWatchdog.id,
+      name: checkRunStateWatchdog.name,
+      check: checkRunStateWatchdog.check,
     },
   ]
 }
