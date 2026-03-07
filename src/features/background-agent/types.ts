@@ -14,6 +14,9 @@ export interface TaskProgress {
   lastUpdate: Date
   lastMessage?: string
   lastMessageAt?: Date
+  phase?: string
+  percent?: number
+  message?: string
 }
 
 export interface BackgroundTask {

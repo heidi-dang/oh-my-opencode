@@ -5,10 +5,15 @@ export interface ExecutionGraphNode {
     status: "pending" | "running" | "completed" | "failed"
 }
 
+interface SessionState {
+    graph: ExecutionGraphNode[]
+    currentStepIndex: number
+    taskID: string
+}
+
 export class PlanCompiler {
     private static instance: PlanCompiler
-    private graph: ExecutionGraphNode[] = []
-    private currentStepIndex: number = -1
+    private sessionStates: Map<string, SessionState> = new Map()
 
     private constructor() { }
 
@@ -19,45 +24,72 @@ export class PlanCompiler {
         return PlanCompiler.instance
     }
 
-    public submit(planNodes: Omit<ExecutionGraphNode, "status">[]): void {
-        this.graph = planNodes.map(n => ({ ...n, status: "pending" }))
+    public submit(sessionID: string, steps: Omit<ExecutionGraphNode, "status">[]): string {
+        const taskID = Math.random().toString(36).substring(7)
+        const graph = this.injectVerificationDependencies(
+            steps.map(n => ({ ...n, status: "pending" as const }))
+        )
 
-        // Automatically inject implicit verification nodes
-        this.graph = this.injectVerificationDependencies(this.graph)
-        this.currentStepIndex = 0
+        this.sessionStates.set(sessionID, {
+            graph,
+            currentStepIndex: 0,
+            taskID
+        })
+
+        return taskID
     }
 
-    public getActiveStep(): ExecutionGraphNode | null {
-        if (this.graph && this.currentStepIndex >= 0 && this.currentStepIndex < this.graph.length) {
-            return this.graph[this.currentStepIndex]
+    public getActiveStep(sessionID: string): ExecutionGraphNode | null {
+        const state = this.sessionStates.get(sessionID)
+        if (!state) return null
+
+        if (state.currentStepIndex >= 0 && state.currentStepIndex < state.graph.length) {
+            return state.graph[state.currentStepIndex]
         }
         return null
     }
 
-    public markStepComplete(id: string): void {
-        const node = this.graph.find(n => n.id === id)
+    public markStepComplete(sessionID: string, id: string): void {
+        const state = this.sessionStates.get(sessionID)
+        if (!state) return
+
+        const node = state.graph.find(n => n.id === id)
         if (node) {
             node.status = "completed"
-            this.currentStepIndex++
+            state.currentStepIndex++
+            
+            // Auto-clear once complete
+            if (state.currentStepIndex >= state.graph.length) {
+                this.clear(sessionID)
+            }
         }
     }
 
-    public injectForcedReplan(reason: string): void {
-        const active = this.getActiveStep()
+    public injectForcedReplan(sessionID: string, reason: string): void {
+        const state = this.sessionStates.get(sessionID)
+        if (!state) return
+
+        const active = this.getActiveStep(sessionID)
         if (active) {
             active.status = "failed"
         }
 
         // Wipe the future graph and inject a mandatory replan
-        this.graph = [
+        this.submit(sessionID, [
             {
                 id: "forced_replan_" + Date.now(),
                 action: "submit_plan",
-                dependencies: [],
-                status: "pending"
+                dependencies: []
             }
-        ]
-        this.currentStepIndex = 0
+        ])
+    }
+
+    public clear(sessionID: string): void {
+        this.sessionStates.delete(sessionID)
+    }
+
+    public resetAll(): void {
+        this.sessionStates.clear()
     }
 
     private injectVerificationDependencies(nodes: ExecutionGraphNode[]): ExecutionGraphNode[] {

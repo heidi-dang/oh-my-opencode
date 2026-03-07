@@ -63,6 +63,20 @@ export class TaskToastManager {
   }
 
   /**
+   * Update task progress
+   */
+  updateTaskProgress(id: string, progress: { phase?: string; percent?: number; message?: string }): void {
+    const task = this.tasks.get(id)
+    if (task) {
+      task.progress = {
+        ...task.progress,
+        ...progress
+      }
+      this.showTaskListToast(task)
+    }
+  }
+
+  /**
    * Update model info for a task by session ID
    */
   updateTaskModelBySession(sessionID: string, modelInfo: ModelFallbackInfo): void {
@@ -122,6 +136,14 @@ export class TaskToastManager {
     return ` [${total}/${limit}]`
   }
 
+  private renderProgressBar(percent?: number): string {
+    if (percent === undefined) return "[░░░░░░░░░░]" // Indeterminate
+    const totalBlocks = 10
+    const filledBlocks = Math.round((percent / 100) * totalBlocks)
+    const emptyBlocks = totalBlocks - filledBlocks
+    return `[${"█".repeat(filledBlocks)}${"░".repeat(emptyBlocks)}] ${percent}%`
+  }
+
   private buildTaskListMessage(newTask: TrackedTask): string {
     const running = this.getRunningTasks()
     const queued = this.getQueuedTasks()
@@ -153,7 +175,17 @@ export class TaskToastManager {
         const isNew = task.id === newTask.id ? " ← NEW" : ""
         const categoryInfo = task.category ? `/${task.category}` : ""
         const skillsInfo = task.skills?.length ? ` [${task.skills.join(", ")}]` : ""
-        lines.push(`${bgIcon} ${task.description} (${task.agent}${categoryInfo})${skillsInfo} - ${duration}${isNew}`)
+        
+        let progressInfo = ""
+        if (task.progress) {
+          const { phase, percent, message: msg } = task.progress
+          const bar = this.renderProgressBar(percent)
+          const phaseInfo = phase ? ` - ${phase}` : ""
+          const msgInfo = msg ? ` (${msg})` : ""
+          progressInfo = `\n    ${bar}${phaseInfo}${msgInfo}`
+        }
+
+        lines.push(`${bgIcon} ${task.description} (${task.agent}${categoryInfo})${skillsInfo} - ${duration}${isNew}${progressInfo}`)
       }
     }
 

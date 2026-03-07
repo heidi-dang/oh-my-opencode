@@ -2,6 +2,7 @@ import type { DoctorOptions, DoctorResult, CheckDefinition, CheckResult, DoctorS
 import * as checks from "./checks"
 import { EXIT_CODES } from "./constants"
 import * as formatter from "./formatter"
+import { readActiveTasks } from "../../shared/active-task-storage"
 
 export async function runCheck(check: CheckDefinition): Promise<CheckResult> {
   const start = performance.now()
@@ -39,10 +40,11 @@ export async function runDoctor(options: DoctorOptions): Promise<DoctorResult> {
   const start = performance.now()
 
   const allChecks = checks.getAllCheckDefinitions()
-  const [results, systemInfo, tools] = await Promise.all([
+  const [results, systemInfo, tools, activeTasks] = await Promise.all([
     Promise.all(allChecks.map(runCheck)),
     checks.gatherSystemInfo(),
     checks.gatherToolsSummary(),
+    Promise.resolve(readActiveTasks()),
   ])
 
   const duration = performance.now() - start
@@ -54,6 +56,7 @@ export async function runDoctor(options: DoctorOptions): Promise<DoctorResult> {
     systemInfo,
     tools,
     summary,
+    activeTasks,
     exitCode,
   }
 

@@ -5,7 +5,9 @@ import { checkConfig } from "./config"
 import { checkTools, gatherToolsSummary } from "./tools"
 import { checkModels } from "./model-resolution"
 import { checkFork } from "./fork"
+import { checkPlanCompiler } from "./plan-compiler"
 import { checkDefaultConfig } from "./default-config"
+import { checkProgress } from "./progress"
 
 export type { CheckDefinition }
 export * from "./model-resolution-types"
@@ -43,6 +45,16 @@ export function getAllCheckDefinitions(): CheckDefinition[] {
       id: CHECK_IDS.DEFAULT_CONFIG,
       name: CHECK_NAMES[CHECK_IDS.DEFAULT_CONFIG],
       check: checkDefaultConfig,
+    },
+    {
+      id: CHECK_IDS.PLAN_COMPILER,
+      name: CHECK_NAMES[CHECK_IDS.PLAN_COMPILER],
+      check: checkPlanCompiler,
+    },
+    {
+      id: CHECK_IDS.PROGRESS,
+      name: CHECK_NAMES[CHECK_IDS.PROGRESS],
+      check: checkProgress,
     },
   ]
 }
