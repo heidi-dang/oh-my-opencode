@@ -2,7 +2,7 @@ import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool"
 
 import { DEFAULT_MAX_DIAGNOSTICS } from "./constants"
 import { filterDiagnosticsBySeverity, formatDiagnostic } from "./lsp-formatters"
-import { withLspClient } from "./lsp-client-wrapper"
+import { withLspClient, LspNotConfiguredError } from "./lsp-client-wrapper"
 import type { Diagnostic } from "./types"
 
 export const lsp_diagnostics: ToolDefinition = tool({
@@ -46,6 +46,9 @@ export const lsp_diagnostics: ToolDefinition = tool({
       const output = lines.join("\n")
       return output
     } catch (e) {
+      if (e instanceof LspNotConfiguredError) {
+        return "No diagnostics found (Unsupported file type / No LSP server configured)"
+      }
       const output = `Error: ${e instanceof Error ? e.message : String(e)}`
       throw new Error(output)
     }

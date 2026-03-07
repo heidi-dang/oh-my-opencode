@@ -130,6 +130,7 @@ describe("resolveModelWithFallback", () => {
       const result = resolveModelWithFallback(input)
 
       // then
+      console.log("Result:", result)
       expect(result!.model).toBe("opencode/big-pickle")
       expect(result!.source).toBe("override")
       expect(logSpy).toHaveBeenCalledWith("Model resolved via UI selection", { model: "opencode/big-pickle" })

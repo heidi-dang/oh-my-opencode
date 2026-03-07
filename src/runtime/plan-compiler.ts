@@ -28,7 +28,7 @@ export class PlanCompiler {
     }
 
     public getActiveStep(): ExecutionGraphNode | null {
-        if (this.currentStepIndex >= 0 && this.currentStepIndex < this.graph.length) {
+        if (this.graph && this.currentStepIndex >= 0 && this.currentStepIndex < this.graph.length) {
             return this.graph[this.currentStepIndex]
         }
         return null

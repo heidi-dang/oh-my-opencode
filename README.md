@@ -101,4 +101,4 @@ The reliability of this system is verified by:
   <br />
   Google • Microsoft • Amazon • ELESTYLE • Indent
 </div>
-different
+conflict

@@ -47,6 +47,7 @@ export function resolveModelPipeline(
   const systemDefaultModel = policy?.systemDefaultModel
 
   const normalizedUiModel = normalizeModel(intent?.uiSelectedModel)
+  console.log("[DEBUG] uiSelectedModel:", intent?.uiSelectedModel, "normalized:", normalizedUiModel)
   if (normalizedUiModel) {
     log("Model resolved via UI selection", { model: normalizedUiModel })
     return { model: normalizedUiModel, provenance: "override" }

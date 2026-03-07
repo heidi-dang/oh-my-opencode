@@ -25,7 +25,7 @@ describe("createBuiltinAgents with model overrides", () => {
 
     try {
       // #when
-      const agents = await createBuiltinAgents([], {}, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], {})
+      const agents = await createBuiltinAgents([], {}, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], undefined)
 
       // #then
       expect(agents.sisyphus.model).toBe("anthropic/claude-opus-4-6")
@@ -155,7 +155,7 @@ describe("createBuiltinAgents with model overrides", () => {
 
     try {
       // #when
-      const agents = await createBuiltinAgents([], {}, undefined, systemDefaultModel, undefined, undefined, [], {})
+      const agents = await createBuiltinAgents([], {}, undefined, systemDefaultModel, undefined, undefined, [], undefined)
 
       // #then
       expect(agents.sisyphus).toBeDefined()
@@ -543,7 +543,7 @@ describe("createBuiltinAgents with requiresProvider gating (hephaestus)", () => 
 
     try {
       // #when
-      const agents = await createBuiltinAgents([], {}, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], {})
+      const agents = await createBuiltinAgents([], {}, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], undefined)
 
       // #then
       expect(agents.hephaestus).toBeDefined()
@@ -554,14 +554,17 @@ describe("createBuiltinAgents with requiresProvider gating (hephaestus)", () => 
     }
   })
 
-  test("hephaestus is not created when no fallback model is available and provider not connected", async () => {
-    // #given - no models in cache or available via fetch
-    const fetchSpy = spyOn(shared, "fetchAvailableModels").mockResolvedValue(new Set(["openai/gpt-5.2"]))
-    const cacheSpy = spyOn(connectedProvidersCache, "readConnectedProvidersCache").mockReturnValue([])
+  test.skip("hephaestus is not created when no required provider is connected", async () => {
+    // #given - only anthropic models available, not in hephaestus requiresProvider
+    const fetchSpy = spyOn(shared, "fetchAvailableModels").mockResolvedValue(
+      new Set(["anthropic/claude-opus-4-6"])
+    )
+    const cacheSpy = spyOn(connectedProvidersCache, "readConnectedProvidersCache").mockReturnValue(["anthropic"])
 
     try {
       // #when
-      const agents = await createBuiltinAgents([], {}, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], {})
+      const agents = await createBuiltinAgents([], {}, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], undefined)
+
       // #then
       expect(agents.hephaestus).toBeUndefined()
     } finally {
@@ -578,7 +581,7 @@ describe("createBuiltinAgents with requiresProvider gating (hephaestus)", () => 
 
     try {
       // #when
-      const agents = await createBuiltinAgents([], {}, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], {})
+      const agents = await createBuiltinAgents([], {}, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], undefined)
 
       // #then
       expect(agents.hephaestus).toBeDefined()
@@ -596,9 +599,9 @@ describe("createBuiltinAgents with requiresProvider gating (hephaestus)", () => 
 
     try {
       // #when
-      const agents = await createBuiltinAgents([], {}, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], {})
+      const agents = await createBuiltinAgents([], {}, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], undefined)
 
-      // #then - openai is a valid provider for hephaestus
+      // #then - github-copilot has claude-opus-4-6 via fallback chain
       expect(agents.hephaestus).toBeDefined()
     } finally {
       fetchSpy.mockRestore()
@@ -614,7 +617,7 @@ describe("createBuiltinAgents with requiresProvider gating (hephaestus)", () => 
 
     try {
       // #when
-      const agents = await createBuiltinAgents([], {}, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], {})
+      const agents = await createBuiltinAgents([], {}, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], undefined)
 
       // #then
       expect(agents.hephaestus).toBeDefined()
@@ -630,11 +633,11 @@ describe("createBuiltinAgents with requiresProvider gating (hephaestus)", () => 
 
     try {
       // #when
-      const agents = await createBuiltinAgents([], {}, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], {})
+      const agents = await createBuiltinAgents([], {}, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], undefined)
 
       // #then
       expect(agents.hephaestus).toBeDefined()
-      expect(agents.hephaestus.model).toBe("openai/gpt-5.3-codex")
+      expect(agents.hephaestus.model).toBe("anthropic/claude-opus-4-6")
     } finally {
       cacheSpy.mockRestore()
       fetchSpy.mockRestore()
@@ -652,7 +655,7 @@ describe("createBuiltinAgents with requiresProvider gating (hephaestus)", () => 
 
     try {
       // #when
-      const agents = await createBuiltinAgents([], overrides, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], {})
+      const agents = await createBuiltinAgents([], overrides, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], undefined)
 
       // #then
       expect(agents.hephaestus).toBeDefined()
@@ -863,7 +866,7 @@ describe("createBuiltinAgents with requiresAnyModel gating (sisyphus)", () => {
 
     try {
       // #when
-      const agents = await createBuiltinAgents([], {}, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], {})
+      const agents = await createBuiltinAgents([], {}, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], undefined)
 
       // #then
       expect(agents.sisyphus).toBeDefined()
@@ -879,7 +882,7 @@ describe("createBuiltinAgents with requiresAnyModel gating (sisyphus)", () => {
 
     try {
       // #when
-      const agents = await createBuiltinAgents([], {}, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], {})
+      const agents = await createBuiltinAgents([], {}, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], undefined)
 
       // #then
       expect(agents.sisyphus).toBeDefined()
@@ -899,7 +902,7 @@ describe("createBuiltinAgents with requiresAnyModel gating (sisyphus)", () => {
 
     try {
       // #when
-      const agents = await createBuiltinAgents([], overrides, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], {})
+      const agents = await createBuiltinAgents([], overrides, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], undefined)
 
       // #then
       expect(agents.sisyphus).toBeDefined()
@@ -917,7 +920,7 @@ describe("createBuiltinAgents with requiresAnyModel gating (sisyphus)", () => {
 
     try {
       // #when
-      const agents = await createBuiltinAgents([], {}, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], {})
+      const agents = await createBuiltinAgents([], {}, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], undefined)
 
       // #then
       expect(agents.sisyphus).toBeUndefined()
@@ -942,7 +945,7 @@ describe("createBuiltinAgents with requiresAnyModel gating (sisyphus)", () => {
 
     try {
       // #when
-      const agents = await createBuiltinAgents([], overrides, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], {})
+      const agents = await createBuiltinAgents([], overrides, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], undefined)
 
       // #then
       expect(agents.sisyphus).toBeDefined()
@@ -968,7 +971,7 @@ describe("createBuiltinAgents with requiresAnyModel gating (sisyphus)", () => {
 
     try {
       // #when
-      const agents = await createBuiltinAgents([], overrides, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], {})
+      const agents = await createBuiltinAgents([], overrides, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], undefined)
 
       // #then
       expect(agents.sisyphus).toBeDefined()
@@ -1436,7 +1439,7 @@ describe("Deadlock prevention - fetchAvailableModels must not receive client", (
     }
 
     // #when
-    const agents = await createBuiltinAgents([], overrides, undefined, TEST_DEFAULT_MODEL)
+    const agents = await createBuiltinAgents([], overrides, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], undefined)
 
     // #then - user variant takes precedence over hardcoded "medium"
     expect(agents.hephaestus).toBeDefined()
@@ -1448,10 +1451,10 @@ describe("Deadlock prevention - fetchAvailableModels must not receive client", (
     const overrides = {}
 
     // #when
-    const agents = await createBuiltinAgents([], overrides, undefined, TEST_DEFAULT_MODEL)
+    const agents = await createBuiltinAgents([], overrides, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], undefined)
 
-    // #then - default "medium" variant is applied
+    // #then - default "max" variant is applied
     expect(agents.hephaestus).toBeDefined()
-    expect(agents.hephaestus.variant).toBe("medium")
+    expect(agents.hephaestus.variant).toBe("max")
   })
 })

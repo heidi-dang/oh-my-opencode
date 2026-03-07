@@ -59,6 +59,13 @@ If English isn't your first language, don't worry! We value your contributions r
 
 ### Development Setup
 
+> **Important**: Before starting any task or creating a new branch, you **MUST** run the task entry script to ensure your repository is clean and synced with `origin/main`. See [Developer Start Workflow](docs/dev-start-workflow.md) for full details.
+
+```bash
+# Start your intended feature branch
+./tools/start-task.sh <your-branch-name>
+```
+
 ```bash
 # Clone the repository
 git clone https://github.com/code-yeongyu/oh-my-opencode.git
@@ -235,15 +242,20 @@ export function createMyHook(input: PluginInput) {
 5. **Commit** with clear, descriptive messages:
    - Use present tense ("Add feature" not "Added feature")
    - Reference issues if applicable ("Fix #123")
-6. **Push** to your fork and create a Pull Request
-7. **Describe** your changes clearly in the PR description
+6. **Push** your branch securely via the PR tool. This runs the `--prepr` conflict doctor.
+   ```bash
+   ./tools/pr.sh
+   ```
+7. **Describe** your changes clearly using the PR template guidelines.
 
 ### PR Checklist
 
+- [ ] Ran `./tools/start-task.sh <branch>` before starting
 - [ ] Code follows project conventions
 - [ ] `bun run typecheck` passes
 - [ ] `bun run build` succeeds
 - [ ] Tested locally with OpenCode
+- [ ] Fully passed `./tools/pr.sh` strict checks
 - [ ] Updated documentation if needed (README, AGENTS.md)
 - [ ] No version changes in `package.json`
 
