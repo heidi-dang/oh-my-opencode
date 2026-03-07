@@ -42,6 +42,24 @@ export class PlanCompiler {
         }
     }
 
+    public injectForcedReplan(reason: string): void {
+        const active = this.getActiveStep()
+        if (active) {
+            active.status = "failed"
+        }
+
+        // Wipe the future graph and inject a mandatory replan
+        this.graph = [
+            {
+                id: "forced_replan_" + Date.now(),
+                action: "submit_plan",
+                dependencies: [],
+                status: "pending"
+            }
+        ]
+        this.currentStepIndex = 0
+    }
+
     private injectVerificationDependencies(nodes: ExecutionGraphNode[]): ExecutionGraphNode[] {
         const compiled: typeof nodes = []
 

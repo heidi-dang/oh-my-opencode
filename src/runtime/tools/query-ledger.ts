@@ -2,6 +2,7 @@
 import { tool } from "@opencode-ai/plugin"
 import { z } from "zod"
 import { ledger } from "../../runtime/state-ledger"
+import { createSuccessResult } from "../../utils/safety-tool-result"
 
 export function createQueryLedgerTool(): any {
     return tool({
@@ -20,9 +21,15 @@ export function createQueryLedgerTool(): any {
 
             const filtered = args.type ? entries.filter(e => e.type === args.type) : entries
 
+            const result = createSuccessResult({
+                verified: true,
+                changedState: false,
+                metadata: { recordCount: filtered.length }
+            });
+
             toolContext.metadata({
                 title: "Query Ledger",
-                metadata: { success: true, verified: true, changedState: false, recordCount: filtered.length }
+                ...result
             })
 
             if (filtered.length === 0) {

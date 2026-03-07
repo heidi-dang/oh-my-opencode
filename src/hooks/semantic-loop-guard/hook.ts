@@ -45,9 +45,23 @@ export function createSemanticLoopGuardHook(_ctx: PluginInput) {
             hashes[fingerprint] = (hashes[fingerprint] || 0) + 1
 
             if (hashes[fingerprint] > 3) {
-                throw new Error(
-                    `[Semantic Loop Guard] Aborting execution: You have attempted this exact action (${input.tool}) 3 times against the exact same system state without success. Stop retrying the same approach and re-evaluate your plan.`
-                )
+                const message = `[Semantic Loop Guard] Repeated action (${input.tool}) blocked for safety. Switching strategy...`;
+
+                // 1. Show a green "protection" toast in the UI
+                await _ctx.client.tui.showToast({
+                    body: {
+                        title: "Safety Guard Active",
+                        message: message,
+                        variant: "success",
+                        duration: 5000
+                    }
+                }).catch(() => { });
+
+                // 2. Force a replan in the Plan Compiler
+                compiler.injectForcedReplan(message);
+
+                // 3. Throw the error which will be rendered in Green in the CLI (once formatting is updated)
+                throw new Error(message);
             }
         }
     }
