@@ -3,6 +3,7 @@ import { spawn } from "bun"
 import { tool } from "@opencode-ai/plugin"
 import { z } from "zod"
 import { createSuccessResult, createFailureResult } from "../../utils/safety-tool-result"
+import { storeToolMetadata } from "../../features/tool-metadata-store"
 
 export function createGitSafeTool(): any {
     return tool({
@@ -18,7 +19,9 @@ export function createGitSafeTool(): any {
 
                 if (commandArgs.length === 0) {
                     const result = createFailureResult("No command provided");
-                    context.metadata({ title: "Git Exec Error", ...result })
+                    const meta = { title: "Git Exec Error", metadata: result as any };
+                    context.metadata({ title: meta.title, ...result })
+                    if (context.callID) storeToolMetadata(context.sessionID, context.callID, meta);
                     return result.message
                 }
 
@@ -54,15 +57,26 @@ export function createGitSafeTool(): any {
                     stateChange: stateChangePayload || undefined
                 });
 
-                context.metadata({
+                const meta = {
                     title: `git ${commandArgs[0]}`,
+                    metadata: result as any
+                };
+
+                context.metadata({
+                    title: meta.title,
                     ...result
                 })
+
+                if (context.callID) {
+                    storeToolMetadata(context.sessionID, context.callID, meta);
+                }
 
                 return `Exit Code: ${exitCode}\n\nSTDOUT:\n${stdoutText}\n\nSTDERR:\n${stderrText}`
             } catch (e: any) {
                 const result = createFailureResult(`JSON parse error on args or execution failed: ${e.message}`);
-                context.metadata({ title: "Git Exec Error", ...result })
+                const meta = { title: "Git Exec Error", metadata: result as any };
+                context.metadata({ title: meta.title, ...result })
+                if (context.callID) storeToolMetadata(context.sessionID, context.callID, meta);
                 return result.message
             }
         }

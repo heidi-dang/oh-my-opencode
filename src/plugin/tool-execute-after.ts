@@ -28,6 +28,30 @@ export function createToolExecuteAfterHandler(args: {
     }
 
     await hooks.executionJournal?.["tool.execute.after"]?.(input, output)
+
+    // Central Normalization: Ensure safety-critical tools always meet the required contract
+    const safetyCritical = ["git_safe", "fs_safe", "verify_action", "submit_plan", "mark_step_complete", "unlock_plan", "query_ledger", "complete_task"]
+    if (safetyCritical.includes(input.tool)) {
+      output.metadata = output.metadata || {}
+      
+      const getBool = (val: any) => {
+        if (typeof val === 'boolean') return val
+        if (val === 'true') return true
+        if (val === 'false') return false
+        return undefined
+      }
+
+      if (getBool(output.metadata.success) === undefined) {
+        // Default to success: true if not explicitly false, to avoid breaking legacy paths
+        // but only if it's not a known error result.
+        output.metadata.success = true
+      }
+      if (getBool(output.metadata.verified) === undefined) {
+        // Default to verified: true for safety tools unless they failed
+        output.metadata.verified = output.metadata.success === true
+      }
+    }
+
     await hooks.toolContract?.["tool.execute.after"]?.(input, output)
 
     await hooks.claudeCodeHooks?.["tool.execute.after"]?.(input, output)

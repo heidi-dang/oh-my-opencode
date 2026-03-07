@@ -3,6 +3,7 @@ import { tool } from "@opencode-ai/plugin"
 import { z } from "zod"
 import { ledger } from "../../runtime/state-ledger"
 import { createSuccessResult } from "../../utils/safety-tool-result"
+import { storeToolMetadata } from "../../features/tool-metadata-store"
 
 export function createQueryLedgerTool(): any {
     return tool({
@@ -27,13 +28,19 @@ export function createQueryLedgerTool(): any {
                 metadata: { recordCount: filtered.length }
             });
 
-            toolContext.metadata({
+            const meta = {
                 title: "Query Ledger",
                 metadata: {
                     ...result,
                     recordCount: filtered.length
                 }
-            })
+            };
+
+            toolContext.metadata(meta)
+
+            if (toolContext.callID) {
+                storeToolMetadata(toolContext.sessionID, toolContext.callID, meta)
+            }
 
             if (filtered.length === 0) {
                 return "No matching verified actions found in the current completion flow."
