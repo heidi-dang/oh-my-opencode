@@ -6,6 +6,13 @@ import { LSPClient, lspManager } from "./client"
 import { findServerForExtension } from "./config"
 import type { ServerLookupResult } from "./types"
 
+export class LspNotConfiguredError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = "LspNotConfiguredError"
+  }
+}
+
 export function findWorkspaceRoot(filePath: string): string {
   let dir = resolve(filePath)
 
@@ -74,7 +81,7 @@ export async function withLspClient<T>(filePath: string, fn: (client: LSPClient)
   const result = findServerForExtension(ext)
 
   if (result.status !== "found") {
-    throw new Error(formatServerLookupError(result))
+    throw new LspNotConfiguredError(formatServerLookupError(result))
   }
 
   const server = result.server
@@ -89,7 +96,7 @@ export async function withLspClient<T>(filePath: string, fn: (client: LSPClient)
       if (isInitializing) {
         throw new Error(
           `LSP server is still initializing. Please retry in a few seconds. ` +
-            `Original error: ${e.message}`
+          `Original error: ${e.message}`
         )
       }
     }

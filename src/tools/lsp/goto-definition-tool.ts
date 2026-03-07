@@ -1,7 +1,7 @@
 import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool"
 
 import { formatLocation } from "./lsp-formatters"
-import { withLspClient } from "./lsp-client-wrapper"
+import { withLspClient, LspNotConfiguredError } from "./lsp-client-wrapper"
 import type { Location, LocationLink } from "./types"
 
 export const lsp_goto_definition: ToolDefinition = tool({
@@ -35,6 +35,9 @@ export const lsp_goto_definition: ToolDefinition = tool({
       const output = locations.map(formatLocation).join("\n")
       return output
     } catch (e) {
+      if (e instanceof LspNotConfiguredError) {
+        return "No definition found (Unsupported file type / No LSP server configured)"
+      }
       const output = `Error: ${e instanceof Error ? e.message : String(e)}`
       return output
     }

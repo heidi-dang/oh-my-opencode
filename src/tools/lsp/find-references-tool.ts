@@ -2,7 +2,7 @@ import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool"
 
 import { DEFAULT_MAX_REFERENCES } from "./constants"
 import { formatLocation } from "./lsp-formatters"
-import { withLspClient } from "./lsp-client-wrapper"
+import { withLspClient, LspNotConfiguredError } from "./lsp-client-wrapper"
 import type { Location } from "./types"
 
 export const lsp_find_references: ToolDefinition = tool({
@@ -36,6 +36,9 @@ export const lsp_find_references: ToolDefinition = tool({
       const output = lines.join("\n")
       return output
     } catch (e) {
+      if (e instanceof LspNotConfiguredError) {
+        return "No references found (Unsupported file type / No LSP server configured)"
+      }
       const output = `Error: ${e instanceof Error ? e.message : String(e)}`
       return output
     }
