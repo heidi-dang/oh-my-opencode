@@ -3,7 +3,7 @@ import { tool } from "@opencode-ai/plugin"
 import { z } from "zod"
 import { compiler } from "../plan-compiler"
 import { createSuccessResult } from "../../utils/safety-tool-result"
-import { storeToolMetadata } from "../../features/tool-metadata-store"
+import { withToolContract } from "../../utils/tool-contract-wrapper"
 
 export function createSubmitPlanTool(): any {
     return tool({
@@ -16,7 +16,7 @@ export function createSubmitPlanTool(): any {
                 dependencies: z.array(z.string()).describe("IDs of steps that must complete before this one")
             })).describe("The execution DAG (Directed Acyclic Graph) of operations")
         },
-        execute: async (args, toolContext) => {
+        execute: withToolContract("submit_plan", async (args, toolContext) => {
             const taskID = compiler.submit(toolContext.sessionID, args.steps)
 
             const result = createSuccessResult({
@@ -30,16 +30,9 @@ export function createSubmitPlanTool(): any {
                 ...result
             })
 
-            if (toolContext.callID) {
-                storeToolMetadata(toolContext.sessionID, toolContext.callID, {
-                    title: "Plan Submitted",
-                    metadata: result as any
-                })
-            }
-
             const active = compiler.getActiveStep(toolContext.sessionID)
             return `Plan successfully compiled into an executable graph (including implicit verification nodes).\n\nCURRENT FORCED STEP: ${active?.action} (ID: ${active?.id}).\nDo not execute any other tools until this step is complete.`
-        }
+        })
     })
 }
 
@@ -50,7 +43,7 @@ export function createMarkStepCompleteTool(): any {
         args: {
             id: z.string().describe("The ID of the step that was completed")
         },
-        execute: async (args, toolContext) => {
+        execute: withToolContract("mark_step_complete", async (args, toolContext) => {
             compiler.markStepComplete(toolContext.sessionID, args.id)
 
             const result = createSuccessResult({
@@ -64,20 +57,13 @@ export function createMarkStepCompleteTool(): any {
                 ...result
             })
 
-            if (toolContext.callID) {
-                storeToolMetadata(toolContext.sessionID, toolContext.callID, {
-                    title: `Step ${args.id} Complete`,
-                    metadata: result as any
-                })
-            }
-
             const active = compiler.getActiveStep(toolContext.sessionID)
             if (!active) {
                 return `Step ${args.id} marked complete. The plan graph is now fully exhausted. You may report final success to the user.`
             }
 
             return `Step ${args.id} marked complete.\n\nNEXT FORCED STEP: ${active.action} (ID: ${active.id}).`
-        }
+        })
     })
 }
 
@@ -85,7 +71,7 @@ export function createUnlockPlanTool(): any {
     return tool({
         description: "Manually unlocks the deterministic execution plan, clearing any active steps for the current session.",
         args: {},
-        execute: async (_, toolContext) => {
+        execute: withToolContract("unlock_plan", async (_, toolContext) => {
             compiler.clear(toolContext.sessionID)
             
             const result = createSuccessResult({
@@ -98,14 +84,7 @@ export function createUnlockPlanTool(): any {
                 ...result
             })
 
-            if (toolContext.callID) {
-                storeToolMetadata(toolContext.sessionID, toolContext.callID, {
-                    title: "Plan Unlocked",
-                    metadata: result as any
-                })
-            }
-
             return "The deterministic execution plan has been cleared for this session. You are now in freestyle mode."
-        }
+        })
     })
 }

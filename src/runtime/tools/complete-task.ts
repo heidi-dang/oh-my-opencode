@@ -3,11 +3,11 @@ import { tool } from "@opencode-ai/plugin"
 import { z } from "zod"
 import { ledger } from "../../runtime/state-ledger"
 import { createSuccessResult, createFailureResult } from "../../utils/safety-tool-result"
-import { storeToolMetadata } from "../../features/tool-metadata-store"
 import { isSessionIssueMode } from "../../features/claude-code-session-state"
 import { getIssueState } from "../../features/issue-resolution/state"
 import { withToolContract } from "../../utils/tool-contract-wrapper"
-import { normalizeSDKResponse } from "../../shared"
+import { normalizeSDKResponse } from "../../shared/normalize-sdk-response"
+import { withToolContract } from "../../utils/tool-contract-wrapper"
 
 export function createCompleteTaskTool(client?: any): any {
     return tool({
@@ -22,8 +22,7 @@ export function createCompleteTaskTool(client?: any): any {
             if (client) {
                 try {
                     const todosRes = await client.session.todo({
-                        path: { id: sessionID },
-                        query: { directory: toolContext.directory }
+                        path: { id: sessionID }
                     })
                     const todos = normalizeSDKResponse(todosRes, [])
                     const incompleteTodos = todos.filter(
@@ -36,12 +35,6 @@ export function createCompleteTaskTool(client?: any): any {
                         const result = createFailureResult(failMsg)
                         const meta = { title: "Task Completion Rejected", ...result }
                         toolContext.metadata(meta)
-                        if (toolContext.callID) {
-                            storeToolMetadata(toolContext.sessionID, toolContext.callID, {
-                                title: meta.title,
-                                metadata: meta
-                            })
-                        }
                         return failMsg
                     }
                 } catch (e) {
@@ -55,11 +48,7 @@ export function createCompleteTaskTool(client?: any): any {
                     const failMsg = `[ERROR] STRICT ISSUE RESOLUTION MODE ACTIVE.\n\nYou cannot mark this task as complete until you have explicitly verified the fix.\n\nCurrent Verification State:\n- Reproduced: ${issueState.reproduced}\n- Fix Applied: ${issueState.fixApplied}\n- Repro After Fix Passed: ${issueState.reproAfterPassed}\n\nYou MUST use the 'report_issue_verification' tool to truthfully log your progress as you perform each step. If you only performed static reasoning without live verification, your state is incomplete.`
                     
                     const result = createFailureResult(failMsg)
-                    const meta = { title: "Task Completion Rejected", ...result }
-                    toolContext.metadata(meta)
-                    if (toolContext.callID) {
-                        storeToolMetadata(toolContext.sessionID, toolContext.callID, meta)
-                    }
+                    toolContext.metadata({ title: "Task Completion Rejected", ...result })
 
                     return failMsg
                 }
@@ -93,21 +82,12 @@ export function createCompleteTaskTool(client?: any): any {
                 message: args.message
             });
 
-            const meta = {
+            toolContext.metadata({
                 title: "Task Completed",
                 ...result,
                 sessionID: toolContext.sessionID,
                 entries: entries.length
-            };
-
-            toolContext.metadata(meta)
-
-            if (toolContext.callID) {
-                storeToolMetadata(toolContext.sessionID, toolContext.callID, {
-                    title: meta.title,
-                    metadata: meta
-                })
-            }
+            })
 
             return `[RUNTIME AUTHORIZATION]\n\n${report}\n\nYou may now conclude your response using EXACTLY this report as your final output.`
         })
