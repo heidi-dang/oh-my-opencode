@@ -2,6 +2,7 @@
 import { spawn } from "bun"
 import { tool } from "@opencode-ai/plugin"
 import { z } from "zod"
+import { createSuccessResult, createFailureResult } from "../../utils/safety-tool-result"
 
 export function createGitSafeTool(): any {
     return tool({
@@ -16,8 +17,9 @@ export function createGitSafeTool(): any {
                 commandArgs = (args.command as string).match(/([^\\"]\S*|".+?")\s*/g)?.map((s: string) => s.trim().replace(/^"(.*)"$/, '$1')) || []
 
                 if (commandArgs.length === 0) {
-                    context.metadata({ title: "Git Exec Error", metadata: { success: false, verified: false, changedState: false } })
-                    return "No command provided"
+                    const result = createFailureResult("No command provided");
+                    context.metadata({ title: "Git Exec Error", ...result })
+                    return result.message
                 }
 
                 const proc = spawn(["git", ...commandArgs], {
@@ -46,20 +48,22 @@ export function createGitSafeTool(): any {
                     else stateChangePayload = { type: "command.execute", key: `git ${commandArgs[0]}`, details: { exitCode } }
                 }
 
+                const result = createSuccessResult({
+                    verified: true,
+                    changedState,
+                    stateChange: stateChangePayload || undefined
+                });
+
                 context.metadata({
                     title: `git ${commandArgs[0]}`,
-                    metadata: {
-                        success,
-                        verified: true, // Git executions via smart wrapper are considered self-verifying outputs
-                        changedState,
-                        ...(stateChangePayload && { stateChange: stateChangePayload })
-                    }
+                    ...result
                 })
 
                 return `Exit Code: ${exitCode}\n\nSTDOUT:\n${stdoutText}\n\nSTDERR:\n${stderrText}`
             } catch (e: any) {
-                context.metadata({ title: "Git Exec Error", metadata: { success: false, verified: false, changedState: false } })
-                return `JSON parse error on args or execution failed: ${e.message}`
+                const result = createFailureResult(`JSON parse error on args or execution failed: ${e.message}`);
+                context.metadata({ title: "Git Exec Error", ...result })
+                return result.message
             }
         }
     })

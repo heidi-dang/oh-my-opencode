@@ -15,7 +15,7 @@ export function createToolExecuteAfterHandler(input: {
   ctx: PluginInput
   pendingFilePaths: Map<string, string>
   autoCommit: boolean
-  }): (toolInput: ToolExecuteAfterInput, toolOutput: ToolExecuteAfterOutput) => Promise<void> {
+}): (toolInput: ToolExecuteAfterInput, toolOutput: ToolExecuteAfterOutput) => Promise<void> {
   const { ctx, pendingFilePaths, autoCommit } = input
   return async (toolInput, toolOutput): Promise<void> => {
     // Guard against undefined output (e.g., from /review command - see issue #1035)
@@ -58,6 +58,12 @@ export function createToolExecuteAfterHandler(input: {
 
     if (toolOutput.output && typeof toolOutput.output === "string") {
       const gitStats = collectGitDiffStats(ctx.directory)
+      if (gitStats.length === 0) {
+        log(`[${HOOK_NAME}] No changes detected in ${ctx.directory}`, {
+          sessionID: toolInput.sessionID,
+          tool: toolInput.tool,
+        })
+      }
       const fileChanges = formatFileChanges(gitStats)
       const subagentSessionId = extractSessionIdFromOutput(toolOutput.output)
 
@@ -76,7 +82,7 @@ export function createToolExecuteAfterHandler(input: {
         // Preserve original subagent response - critical for debugging failed tasks
         const originalResponse = toolOutput.output
 
-toolOutput.output = `
+        toolOutput.output = `
 ## SUBAGENT WORK COMPLETED
 
 ${fileChanges}

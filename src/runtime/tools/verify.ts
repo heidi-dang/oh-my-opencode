@@ -4,6 +4,7 @@ import { spawn } from "bun"
 import { tool } from "@opencode-ai/plugin"
 import { z } from "zod"
 import { VERIFICATION_COMMANDS } from "../../agents/runtime/verify-action"
+import { createSuccessResult, createFailureResult } from "../../utils/safety-tool-result"
 
 export function createVerifyTool(): any {
     return tool({
@@ -18,8 +19,9 @@ export function createVerifyTool(): any {
             const config = VERIFICATION_COMMANDS[actionKey]
 
             if (!config || !config.command) {
-                toolContext.metadata({ title: "Verify Error", metadata: { success: false, verified: false, changedState: false } })
-                return `Unknown verification action or missing command: ${args.action}`
+                const result = createFailureResult(`Unknown verification action or missing command: ${args.action}`);
+                toolContext.metadata({ title: "Verify Error", ...result })
+                return result.message
             }
 
             // Replace ${VAR} in command template with provided context
@@ -54,22 +56,24 @@ export function createVerifyTool(): any {
                     isSuccess = exitCode === 0
                 }
 
+                const result = createSuccessResult({
+                    verified: isSuccess,
+                    changedState: false,
+                    message: isSuccess ? undefined : config.failureMessage
+                });
+
                 toolContext.metadata({
                     title: `Verify: ${config.name}`,
-                    metadata: {
-                        success: true, // Outputting verification result means the verification tool succeeded
-                        verified: isSuccess,
-                        changedState: false, // Verification itself never alters state
-                        ...(!isSuccess && { error: config.failureMessage })
-                    }
+                    ...result
                 })
 
                 return isSuccess
                     ? `Verification SUCCESS. (Output: ${stdoutText.trim()})`
                     : `Verification FAILED. ${config.failureMessage} (Output: ${stdoutText.trim()})`
             } catch (e: any) {
-                toolContext.metadata({ title: `Verify Error`, metadata: { success: false, verified: false, changedState: false } })
-                return `Execution failed: ${e.message}`
+                const result = createFailureResult(`Execution failed: ${e.message}`);
+                toolContext.metadata({ title: `Verify Error`, ...result })
+                return result.message
             }
         }
     })

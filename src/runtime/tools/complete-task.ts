@@ -2,6 +2,7 @@
 import { tool } from "@opencode-ai/plugin"
 import { z } from "zod"
 import { ledger } from "../../runtime/state-ledger"
+import { createSuccessResult } from "../../utils/safety-tool-result"
 
 export function createCompleteTaskTool(): any {
     return tool({
@@ -33,9 +34,17 @@ export function createCompleteTaskTool(): any {
                 report += `\nAgent Note: ${args.message}\n`
             }
 
+            const result = createSuccessResult({
+                verified: true,
+                changedState: false,
+                message: args.message
+            });
+
             toolContext.metadata({
                 title: "Task Completed",
-                metadata: { success: true, verified: true, changedState: false, sessionID: toolContext.sessionID, entries: entries.length, note: args.message }
+                ...result,
+                sessionID: toolContext.sessionID,
+                entries: entries.length
             })
 
             return `[RUNTIME AUTHORIZATION]\n\n${report}\n\nYou may now conclude your response using EXACTLY this report as your final output.`

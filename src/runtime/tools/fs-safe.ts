@@ -3,6 +3,7 @@ import * as fs from "fs"
 import * as path from "path"
 import { tool } from "@opencode-ai/plugin"
 import { z } from "zod"
+import { createSuccessResult, createFailureResult } from "../../utils/safety-tool-result"
 
 export function createFsSafeTool(): any {
     return tool({
@@ -50,23 +51,25 @@ export function createFsSafeTool(): any {
                     }
                 }
 
+                const result = createSuccessResult({
+                    verified: true,
+                    changedState,
+                    stateChange: stateChangePayload || undefined
+                });
+
                 context.metadata({
                     title: `fs ${operation}`,
-                    metadata: {
-                        success: true,
-                        verified: true, // FS executions via smart wrapper are considered self-verifying
-                        changedState,
-                        ...(stateChangePayload && { stateChange: stateChangePayload })
-                    }
+                    ...result
                 })
 
                 return `Successfully executed ${operation} on ${filePath}`
             } catch (err: any) {
+                const result = createFailureResult(`Failed: ${err.message}`);
                 context.metadata({
                     title: `fs ${args.operation} error`,
-                    metadata: { success: false, verified: false, changedState: false }
+                    ...result
                 })
-                return `Failed: ${err.message}`
+                return result.message
             }
         }
     })

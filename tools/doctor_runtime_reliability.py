@@ -19,6 +19,7 @@ def run_doctor():
         "src/runtime/state-ledger.ts",
         "src/agents/runtime/action-validator.ts",
         "src/hooks/tool-contract/hook.ts",
+        "src/utils/safety-tool-result.ts",
         "src/runtime/tools/registry.ts",
         "src/runtime/tools/complete-task.ts",
         "src/runtime/tools/query-ledger.ts",
@@ -32,7 +33,25 @@ def run_doctor():
     for f in required_files:
         if not check_file(f):
             all_pass = False
-            
+    
+    # Check if safety tools are using the helper
+    safety_tools = [
+        "src/runtime/tools/complete-task.ts",
+        "src/runtime/tools/verify.ts",
+        "src/runtime/tools/git-safe.ts",
+        "src/runtime/tools/fs-safe.ts"
+    ]
+    
+    for tool_path in safety_tools:
+        if os.path.exists(tool_path):
+            with open(tool_path, 'r') as f:
+                content = f.read()
+                if "safety-tool-result" not in content:
+                    print(f"[FAIL] {tool_path} does not appear to use safety-tool-result helper.")
+                    all_pass = False
+                else:
+                    print(f"[PASS] {tool_path} uses safety-tool-result helper.")
+
     if all_pass:
         print("\n[RESULT] 10/10 Reliability Architecture: Verified.")
         sys.exit(0)
