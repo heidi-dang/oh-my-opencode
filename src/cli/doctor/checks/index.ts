@@ -81,6 +81,11 @@ export function getAllCheckDefinitions(): CheckDefinition[] {
       name: checkRunStateWatchdog.name,
       check: checkRunStateWatchdog.check,
     },
+    {
+      id: "TOOL_CONTRACT",
+      name: "Tool Contract Compliance",
+      check: checkToolContract,
+    },
   ]
 }
 
