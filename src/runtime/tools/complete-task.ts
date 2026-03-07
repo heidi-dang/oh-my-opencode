@@ -7,8 +7,9 @@ import { storeToolMetadata } from "../../features/tool-metadata-store"
 import { isSessionIssueMode } from "../../features/claude-code-session-state"
 import { getIssueState } from "../../features/issue-resolution/state"
 import { withToolContract } from "../../utils/tool-contract-wrapper"
+import { normalizeSDKResponse } from "../../shared"
 
-export function createCompleteTaskTool(): any {
+export function createCompleteTaskTool(client?: any): any {
     return tool({
         description: "Signal that the task is complete. The runtime will compose the final verified state report. DO NOT output your own summary, just call this tool.",
         // @ts-ignore
@@ -17,6 +18,36 @@ export function createCompleteTaskTool(): any {
         },
         execute: withToolContract("complete_task", async (args, toolContext) => {
             const sessionID = toolContext.sessionID
+            
+            if (client) {
+                try {
+                    const todosRes = await client.session.todo({
+                        path: { id: sessionID },
+                        query: { directory: toolContext.directory }
+                    })
+                    const todos = normalizeSDKResponse(todosRes, [])
+                    const incompleteTodos = todos.filter(
+                        (t: any) => t.status !== "completed" && t.status !== "cancelled" && t.status !== "blocked" && t.status !== "deleted"
+                    )
+
+                    if (incompleteTodos.length > 0) {
+                        const failMsg = `[ERROR] TASK COMPLETION REJECTED.\n\nYou have ${incompleteTodos.length} incomplete TODOs remaining in the UI tracker. You CANNOT mark the task as complete until all TODOs are explicitly marked as completed or cancelled using the TodoWrite tool (or TaskUpdate if experimental tasks are enabled).\n\nPlease review your TODOs, complete them, and then retry calling complete_task.`
+                        
+                        const result = createFailureResult(failMsg)
+                        const meta = { title: "Task Completion Rejected", ...result }
+                        toolContext.metadata(meta)
+                        if (toolContext.callID) {
+                            storeToolMetadata(toolContext.sessionID, toolContext.callID, {
+                                title: meta.title,
+                                metadata: meta
+                            })
+                        }
+                        return failMsg
+                    }
+                } catch (e) {
+                    // Ignore API fetch errors so we don't hard block on network issues
+                }
+            }
             
             if (isSessionIssueMode(sessionID)) {
                 const issueState = getIssueState(sessionID)

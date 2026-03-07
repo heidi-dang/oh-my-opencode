@@ -13,7 +13,7 @@ import { createReportIssueVerificationTool } from "./report-issue-verification";
  * This prevents agents from calling unauthorized or arbitrary commands.
  */
 
-export const DETERMINISTIC_TOOLS: Record<string, () => any> = {
+export const DETERMINISTIC_TOOLS: Record<string, (args?: any) => any> = {
     "git_safe": createGitSafeTool,
     "fs_safe": createFsSafeTool,
     "verify_action": createVerifyTool,
