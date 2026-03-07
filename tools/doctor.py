@@ -46,6 +46,11 @@ def run_upstream_merge_doctor():
     result = subprocess.run(["python3", "tools/checks/check_upstream_capability_merge.py"])
     return result.returncode == 0
 
+def run_plan_compiler_guard_doctor():
+    print("Running Plan Compiler Guard Doctor...")
+    result = subprocess.run(["python3", "tools/checks/check_plan_compiler_guard.py"])
+    return result.returncode == 0
+
 def main():
     print("Starting OhMyOpencode Doctor Execution...")
     
@@ -64,7 +69,10 @@ def main():
     # Run upstream merge capability checks
     upstream_pass = run_upstream_merge_doctor()
     
-    if not reliability_pass or not git_pass or not contract_pass or not lsp_pass or not upstream_pass:
+    # Run plan compiler guard checks
+    guard_pass = run_plan_compiler_guard_doctor()
+    
+    if not reliability_pass or not git_pass or not contract_pass or not lsp_pass or not upstream_pass or not guard_pass:
         print("\nERROR: Doctor checks failed. System integrity compromised.")
         sys.exit(1)
         
