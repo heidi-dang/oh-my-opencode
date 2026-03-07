@@ -74,12 +74,23 @@ describe("model-error-classifier", () => {
     expect(provider).toBe("anthropic")
   })
 
-  test("shouldRetryError returns true for GitHub Copilot model_not_supported message", () => {
+  test("shouldRetryError returns false for GitHub Copilot model_not_supported message (not a generic retryable)", () => {
     //#given
     const error = { name: "APIError", message: "The requested model is not supported." }
 
     //#when
     const result = shouldRetryError(error)
+
+    //#then
+    expect(result).toBe(false)
+  })
+
+  test("isUnsupportedModelError detects 'not supported' message in message string for 400 errors", () => {
+    //#given
+    const error = { statusCode: 400, message: "The requested model is not supported." }
+
+    //#when
+    const result = isUnsupportedModelError(error)
 
     //#then
     expect(result).toBe(true)

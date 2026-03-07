@@ -2,7 +2,7 @@ import type { AgentConfig } from "@opencode-ai/sdk"
 import type { AgentOverrides } from "../types"
 import type { CategoryConfig } from "../../config/schema"
 import type { AvailableAgent, AvailableCategory, AvailableSkill } from "../types";
-import { AGENT_MODEL_REQUIREMENTS, isAnyFallbackModelAvailable } from "../../shared"
+import { AGENT_MODEL_REQUIREMENTS, isAnyFallbackModelAvailable, log } from "../../shared"
 import { createHephaestusAgent } from "../hephaestus"
 import { applyEnvironmentContext } from "./environment-context"
 import { applyCategoryOverride, mergeAgentConfig } from "./agent-overrides"
@@ -55,6 +55,16 @@ export function maybeCreateHephaestusConfig(input: {
 
   if (!meetsAnyModelRequirement) return undefined
 
+  // Dev logging to trace config -> resolver path [oh-my-opencode-heidi]
+  log("[hephaestus-agent] Resolving model", {
+    agentName: "hephaestus",
+    pluginConfigModel: hephaestusOverride?.model,
+    hephaestusOverrideModel: hephaestusOverride?.model,
+    uiSelectedModel,
+    sessionModel,
+    isFirstRunNoCache,
+  })
+
   let hephaestusResolution = applyModelResolution({
     uiSelectedModel: hephaestusOverride?.model ? undefined : uiSelectedModel,
     sessionModel: hephaestusOverride?.model ? undefined : sessionModel,
@@ -63,6 +73,12 @@ export function maybeCreateHephaestusConfig(input: {
     availableModels,
     systemDefaultModel,
     contextID: "hephaestus",
+  })
+
+  log("[hephaestus-agent] Resolved model", {
+    agentName: "hephaestus",
+    finalResolvedModel: hephaestusResolution?.model,
+    provenance: hephaestusResolution?.provenance,
   })
 
   if (isFirstRunNoCache && !hephaestusOverride?.model) {

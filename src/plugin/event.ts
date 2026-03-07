@@ -418,9 +418,9 @@ export function createEventHandler(args: {
         const errorInfo = { name: errorName, message: errorMessage };
 
         // Detect unsupported model errors (e.g. GitHub Copilot model_not_supported)
-        // These need special handling: richer message and deterministic fallback or block
-        const unsupportedModel = isUnsupportedModelError(error) ||
-          (typeof errorMessage === "string" && errorMessage.toLowerCase().includes("not supported"))
+        // These need special handling: richer message and deterministic fallback or block.
+        // We handle this BEFORE generic retry logic to avoid redundant transport-level retries.
+        const unsupportedModel = isUnsupportedModelError(error)
 
         if (unsupportedModel && sessionID) {
           const lastKnown = lastKnownModelBySession.get(sessionID)
@@ -428,28 +428,47 @@ export function createEventHandler(args: {
             ? `${lastKnown.providerID}/${lastKnown.modelID}`
             : "the selected model"
 
-          if (isModelFallbackEnabled && shouldRetryError(errorInfo)) {
-            // Fallback will fire below — log and continue
-            log("[event] Unsupported model detected, fallback chain will fire:", { sessionID, modelLabel })
-          } else {
-            // No fallback available — surface a clear blocked message
-            log("[event] Unsupported model with no fallback, session blocked:", { sessionID, modelLabel })
-            try {
-              await (pluginContext.client as any).tui?.showToast?.({
-                path: { id: sessionID },
-                body: {
-                  title: "Model not supported",
-                  description: `${modelLabel} is not supported by this provider. Please select a different model.`,
-                  variant: "error",
-                },
-              })
-            } catch {
-              // tui.showToast not available — swallow
+          // 1. If fallback is enabled and we have a chain, switch models immediately
+          if (isModelFallbackEnabled) {
+            let agentName = getSessionAgent(sessionID)
+            if (!agentName && sessionID === getMainSessionID()) {
+              // Heuristic if agent name not in cache
+              agentName = errorMessage.toLowerCase().includes("gpt-5") ? "hephaestus" : "sisyphus"
             }
-            // Abort the stuck session so OpenCode shows a terminal error state
-            await pluginContext.client.session.abort({ path: { id: sessionID } }).catch(() => {})
-            return
+
+            if (agentName) {
+              const currentProvider = (props?.providerID as string) || lastKnown?.providerID || "opencode";
+              let currentModel = (props?.modelID as string) || lastKnown?.modelID || "claude-opus-4-6";
+              currentModel = normalizeFallbackModelID(currentModel);
+
+              const setFallback = setPendingModelFallback(sessionID, agentName, currentProvider, currentModel);
+              if (setFallback) {
+                 log("[event] Unsupported model detected, fallback mode armed for session:", { sessionID, modelLabel })
+                 // Switch model and prompt 'continue' to resume with new provider/model
+                 await pluginContext.client.session.prompt({
+                   path: { id: sessionID },
+                   body: { parts: [{ type: "text", text: "continue" }] },
+                   query: { directory: pluginContext.directory }
+                 }).catch(() => {})
+                 return
+              }
+            }
           }
+
+          // 2. If no fallback or fallback exhausted, surface a terminal "blocked" state
+          log("[event] Unsupported model with no fallback, session blocked:", { sessionID, modelLabel })
+          await (pluginContext.client as any).tui?.showToast?.({
+            path: { id: sessionID },
+            body: {
+              title: "Model not supported",
+              description: `${modelLabel} is not supported by this provider. Please select a different model.`,
+              variant: "error",
+            },
+          }).catch(() => {})
+
+          // Abort the stuck session so OpenCode shows a terminal error state
+          await pluginContext.client.session.abort({ path: { id: sessionID } }).catch(() => {})
+          return
         }
 
         // First, try session recovery for internal errors (thinking blocks, tool results, etc.)

@@ -25,6 +25,8 @@ export const CategoryConfigSchema = z.object({
   is_unstable_agent: z.boolean().optional(),
   /** Disable this category. Disabled categories are excluded from task delegation. */
   disable: z.boolean().optional(),
+  /** Mis-nested background_task config - should be at root level only */
+  background_task: z.never().optional().describe("Mis-nested background_task config - move to root level"),
 })
 
 export const BuiltinCategoryNameSchema = z.enum([

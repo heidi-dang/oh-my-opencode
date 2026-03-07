@@ -105,4 +105,18 @@ describe("Model Resolution Acceptance Tests", () => {
     //#then - UI selection skipped, userModel (configured agent model) wins
     expect(result?.model).toBe("minimax/minimax-0.1")
   })
+
+  test("User specific case: opencode-go/minimax-m2.5 in userModel overrides openai/gpt-5.3-codex in sessionModel", () => {
+    //#given
+    const result = resolveModelPipeline({
+      intent: {
+        sessionModel: "openai/gpt-5.3-codex",
+        userModel: "opencode-go/minimax-m2.5",
+      },
+      constraints: { availableModels: new Set(["opencode-go/minimax-m2.5", "anthropic/claude-3.5-sonnet"]) }
+    })
+
+    //#then
+    expect(result?.model).toBe("opencode-go/minimax-m2.5")
+  })
 })

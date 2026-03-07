@@ -50,8 +50,6 @@ const RETRYABLE_MESSAGE_PATTERNS = [
   "timeout",
   "service unavailable",
   "internal_server_error",
-  "not supported",
-  "model_not_supported",
   "503",
   "502",
   "504",
@@ -100,8 +98,15 @@ export function isUnsupportedModelError(error: unknown): boolean {
         if (typeof innerRec.code === "string" && UNSUPPORTED_MODEL_CODES.has(innerRec.code)) return true
       }
     } catch {
-      // non-JSON body — ignore
+      // non-JSON body — treat as potentially containing message if it is a 400
     }
+  }
+
+  // Fallback to message string matching for 400 errors or specific patterns
+  const msg = (rec.message as string | undefined)?.toLowerCase() ?? ""
+  const is400 = rec.statusCode === 400 || (rec.data as any)?.statusCode === 400
+  if (is400) {
+    if (msg.includes("not supported") || msg.includes("unsupported model") || msg.includes("not found")) return true
   }
 
   return false
