@@ -11,7 +11,7 @@ import { createRuntimeEnforcementHook } from "../hooks/runtime-enforcement/hook"
 describe("Authoritative Truth & Flow Isolation Integration", () => {
     beforeEach(() => {
         ledger.clear()
-        compiler.submit([])
+        compiler.submit("", { sessionID: "test" } as any)
     })
 
     describe("Authoritative Truth (Bash Bypass Prevention)", () => {

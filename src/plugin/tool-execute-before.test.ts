@@ -1,4 +1,4 @@
-const { describe, expect, test } = require("bun:test")
+import { describe, expect, test } from "bun:test"
 const { createToolExecuteBeforeHandler } = require("./tool-execute-before")
 const { createToolRegistry } = require("./tool-registry")
 

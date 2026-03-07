@@ -1,4 +1,4 @@
-const { describe, test, expect, mock } = require("bun:test")
+import { describe, test, expect, mock } from "bun:test"
 
 describe("executeBackgroundContinuation - subagent metadata", () => {
   test("includes subagent in task_metadata when task has agent", async () => {
@@ -20,7 +20,6 @@ describe("executeBackgroundContinuation - subagent metadata", () => {
       metadata: () => {},
       ask: async () => {},
       callID: "call-456",
-      metadata: mock(() => Promise.resolve()),
     }
 
     const mockExecutorCtx = {
@@ -74,7 +73,6 @@ describe("executeBackgroundContinuation - subagent metadata", () => {
       metadata: () => {},
       ask: async () => {},
       callID: "call-789",
-      metadata: mock(() => Promise.resolve()),
     }
 
     const mockExecutorCtx = {

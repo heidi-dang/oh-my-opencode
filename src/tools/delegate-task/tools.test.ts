@@ -1,5 +1,5 @@
 declare const require: (name: string) => any
-const { describe, test, expect, beforeEach, afterEach, spyOn, mock } = require("bun:test")
+import { describe, test, expect, beforeEach, afterEach, spyOn, mock } from "bun:test"
 import { DEFAULT_CATEGORIES, CATEGORY_PROMPT_APPENDS, CATEGORY_DESCRIPTIONS, isPlanAgent, PLAN_AGENT_NAMES, isPlanFamily, PLAN_FAMILY_NAMES } from "./constants"
 import { resolveCategoryConfig } from "./tools"
 import type { CategoryConfig } from "../../config/schema"
@@ -312,6 +312,7 @@ describe("sisyphus-task", () => {
 
       const resolveSkillContentSpy = spyOn(executor, "resolveSkillContent").mockResolvedValue({
         content: "resolved skill content",
+        contents: ["resolved skill content"],
         error: null,
       })
 
@@ -327,7 +328,7 @@ describe("sisyphus-task", () => {
       await tool.execute(args as unknown as DelegateTaskArgs, toolContext)
 
       //#then
-      expect(args.load_skills).toEqual(["playwright", "git-master"])
+      expect(args.load_skills as unknown as string[]).toEqual(["playwright", "git-master"])
       expect(resolveSkillContentSpy).toHaveBeenCalledWith(["playwright", "git-master"], expect.any(Object))
     }, { timeout: 10000 })
 
@@ -379,6 +380,7 @@ describe("sisyphus-task", () => {
 
       const resolveSkillContentSpy = spyOn(executor, "resolveSkillContent").mockResolvedValue({
         content: "resolved skill content",
+        contents: ["resolved skill content"],
         error: null,
       })
 
@@ -394,7 +396,7 @@ describe("sisyphus-task", () => {
       await tool.execute(args as unknown as DelegateTaskArgs, toolContext)
 
       //#then
-      expect(args.load_skills).toEqual([])
+      expect(args.load_skills as unknown as string[]).toEqual([])
       expect(resolveSkillContentSpy).toHaveBeenCalledWith([], expect.any(Object))
     }, { timeout: 10000 })
   })
@@ -688,14 +690,13 @@ describe("sisyphus-task", () => {
       const metadataCalls: Array<{ title?: string; metadata?: Record<string, unknown> }> = []
       const toolContext = {
         sessionID: "parent-session",
-      directory: "/tmp",
-      worktree: "",
-      metadata: () => {},
-      ask: async () => {},
+        directory: "/tmp",
+        worktree: "",
+        ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
-        metadata: (input: { title?: string; metadata?: Record<string, unknown> }) => {
+        metadata: (input: any) => {
           metadataCalls.push(input)
         },
       }

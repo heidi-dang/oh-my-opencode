@@ -90,7 +90,7 @@ describe("executeAction", () => {
 
 	test("does not apply layout when spawn fails", async () => {
 		// given
-		mockSpawnTmuxPane.mockImplementationOnce(async () => ({ success: false }))
+		mockSpawnTmuxPane.mockImplementationOnce(async () => ({ success: false, paneId: "" } as any))
 
 		// when
 		const result = await executeActionWithDeps(

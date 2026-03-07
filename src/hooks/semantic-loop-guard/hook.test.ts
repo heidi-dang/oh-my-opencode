@@ -61,7 +61,7 @@ describe("Semantic Loop Guard Recovery", () => {
         expect(toastCalls[0].body.title).toBe("Safety Guard Active");
 
         // Verify compiler has a forced replan step
-        const activeStep = compiler.getActiveStep();
+        const activeStep = compiler.getActiveStep("forced_replan" as any);
         expect(activeStep).not.toBeNull();
         expect(activeStep?.action).toBe("submit_plan");
         expect(activeStep?.id).toContain("forced_replan_");

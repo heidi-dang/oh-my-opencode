@@ -12,10 +12,10 @@ describe("createContextInjectorMessagesTransformHook", () => {
   })
 
   const createMockMessage = (
-    role: "user" | "assistant",
+    role: any,
     text: string,
     sessionID: string
-  ) => ({
+  ): any => ({
     info: {
       id: `msg_${Date.now()}_${Math.random()}`,
       sessionID,

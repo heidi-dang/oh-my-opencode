@@ -60,9 +60,7 @@ describe("scheduleDeferredModelOverride", () => {
     const db = new Database(dbPath)
     db.run(
       `INSERT INTO message (id, session_id, data) VALUES (?, ?, ?)`,
-      id,
-      "ses_test",
-      JSON.stringify({ model }),
+      [id, "ses_test", JSON.stringify({ model })],
     )
     db.close()
   }

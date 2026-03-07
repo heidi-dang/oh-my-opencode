@@ -351,9 +351,9 @@ describe("session-manager storage - getMainSessions", () => {
 describe("session-manager storage - SDK path (beta mode)", () => {
   const mockClient = {
     session: {
-      list: mock(() => Promise.resolve({ data: [] })),
-      messages: mock(() => Promise.resolve({ data: [] })),
-      todo: mock(() => Promise.resolve({ data: [] })),
+      list: mock(() => Promise.resolve({ data: [] as any[] })),
+      messages: mock(() => Promise.resolve({ data: [] as any[] })),
+      todo: mock(() => Promise.resolve({ data: [] as any[] })),
     },
   }
 

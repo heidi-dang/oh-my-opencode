@@ -1,4 +1,4 @@
-const { describe, test, expect } = require("bun:test")
+import { describe, test, expect } from "bun:test"
 
 describe("fetchSyncResult", () => {
   test("without anchor: returns latest assistant message (existing behavior)", async () => {

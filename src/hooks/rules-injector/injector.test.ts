@@ -38,14 +38,14 @@ describe("createRuleInjectionProcessor", () => {
   let ruleRealPath: string;
 
   beforeEach(() => {
-    readFileSyncSpy = spyOn(fs, "readFileSync").mockImplementation((filePath: any, encoding?: any) => {
+    readFileSyncSpy = spyOn(fs, "readFileSync").mockImplementation(((filePath: any, encoding?: any) => {
       if (filePath === trackedRulePath) {
         trackedReadFileCount += 1;
       }
       return originalReadFileSync(filePath, encoding as never);
-    });
+    }) as any);
 
-    statSyncSpy = spyOn(fs, "statSync").mockImplementation((filePath: any) => {
+    statSyncSpy = spyOn(fs, "statSync").mockImplementation(((filePath: any) => {
       if (filePath === trackedRulePath) {
         const next = statSnapshots.shift();
         if (next instanceof Error) {
@@ -60,7 +60,7 @@ describe("createRuleInjectionProcessor", () => {
         }
       }
       return originalStatSync(filePath);
-    });
+    }) as any);
 
     homedirSpy = spyOn(os, "homedir").mockImplementation(() => mockedHomeDir || originalHomedir());
 

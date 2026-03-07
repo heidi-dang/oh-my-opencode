@@ -34,12 +34,12 @@ describe("normalizeModelFormat", () => {
 
   describe("edge cases", () => {
     it("returns undefined for null", () => {
-      const result = normalizeModelFormat(null)
+      const result = normalizeModelFormat(null as unknown as string)
       expect(result).toBeUndefined()
     })
 
     it("returns undefined for undefined", () => {
-      const result = normalizeModelFormat(undefined)
+      const result = normalizeModelFormat(undefined as unknown as string)
       expect(result).toBeUndefined()
     })
   })

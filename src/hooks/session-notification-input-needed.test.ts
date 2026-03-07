@@ -1,4 +1,4 @@
-const { describe, expect, test, beforeEach, afterEach, spyOn } = require("bun:test")
+import { describe, expect, test, beforeEach, afterEach, spyOn } from "bun:test"
 
 const { createSessionNotification } = require("./session-notification")
 const { setMainSession, subagentSessions, _resetForTesting } = require("../features/claude-code-session-state")

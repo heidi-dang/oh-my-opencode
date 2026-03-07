@@ -29,11 +29,7 @@ describe("createLookAt error handling", () => {
       ask: async () => {},
       messageID: "parent-message",
       agent: "sisyphus",
-      directory: "/project",
-      worktree: "/project",
       abort: new AbortController().signal,
-      metadata: () => {},
-      ask: async () => {},
     }
 
     const result = await tool.execute(
@@ -70,11 +66,7 @@ describe("createLookAt error handling", () => {
       ask: async () => {},
       messageID: "parent-message",
       agent: "sisyphus",
-      directory: "/project",
-      worktree: "/project",
       abort: new AbortController().signal,
-      metadata: () => {},
-      ask: async () => {},
     }
 
     const result = await tool.execute(
@@ -111,11 +103,7 @@ describe("createLookAt error handling", () => {
       ask: async () => {},
       messageID: "parent-message",
       agent: "sisyphus",
-      directory: "/project",
-      worktree: "/project",
       abort: new AbortController().signal,
-      metadata: () => {},
-      ask: async () => {},
     }
 
     const result = await tool.execute(

@@ -29,7 +29,7 @@ function createMockContext(todoResponses: Array<Todo>[]): PluginInput {
 
   const request = new Request("http://localhost")
   const response = new Response()
-  client.session.todo = mock((_: SessionTodoOptions): SessionTodoResult => {
+  client.session.todo = mock<any>((_: SessionTodoOptions): SessionTodoResult => {
     const current = todoResponses[Math.min(callIndex, todoResponses.length - 1)] ?? []
     callIndex += 1
     return Promise.resolve({ data: current, error: undefined, request, response })

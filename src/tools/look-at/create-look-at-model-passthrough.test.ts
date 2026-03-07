@@ -49,11 +49,7 @@ describe("createLookAt model passthrough", () => {
       ask: async () => {},
       messageID: "parent-message",
       agent: "sisyphus",
-      directory: "/project",
-      worktree: "/project",
       abort: new AbortController().signal,
-      metadata: () => {},
-      ask: async () => {},
     }
 
     await tool.execute(

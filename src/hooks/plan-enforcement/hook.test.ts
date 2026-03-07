@@ -8,12 +8,12 @@ describe("Plan Enforcement Hook", () => {
     beforeEach(() => {
         hook = createPlanEnforcementHook({} as any)
         // Reset compiler state
-        compiler.submit([])
+        compiler.submit([] as any, { sessionID: "test" } as any)
     })
 
     afterEach(() => {
         // Clean up after each test
-        compiler.submit([])
+        compiler.submit([] as any, { sessionID: "test" } as any)
     })
 
     describe("No active step", () => {
@@ -29,7 +29,7 @@ describe("Plan Enforcement Hook", () => {
                 id: "1",
                 action: "Fix model-resolver tests to pass in full test suite",
                 dependencies: []
-            }])
+            }] as any, { sessionID: "test" } as any)
         })
 
         const allowedTools = [
@@ -84,7 +84,7 @@ describe("Plan Enforcement Hook", () => {
                 id: "1",
                 action: "Fix model-resolver tests to pass in full test suite",
                 dependencies: []
-            }])
+            }] as any, { sessionID: "test" } as any)
         })
 
         const blockedTools = [
@@ -119,7 +119,7 @@ describe("Plan Enforcement Hook", () => {
                 id: "1",
                 action: "Fix model-resolver tests to pass in full test suite",
                 dependencies: []
-            }])
+            }] as any, { sessionID: "test" } as any)
         })
 
         it("should log guard decisions", async () => {

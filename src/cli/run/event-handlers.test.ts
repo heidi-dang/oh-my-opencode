@@ -1,4 +1,4 @@
-const { describe, it, expect, spyOn } = require("bun:test")
+import { describe, it, expect, spyOn } from "bun:test"
 import type { RunContext } from "./types"
 import { createEventState } from "./events"
 import { handleSessionStatus, handleMessagePartUpdated, handleMessageUpdated, handleTuiToast } from "./event-handlers"
@@ -297,7 +297,7 @@ describe("handleMessagePartUpdated", () => {
     )
 
     // then
-    const output = stdoutSpy.mock.calls.map(call => String(call[0])).join("")
+    const output = (stdoutSpy as any).mock.calls.map((call: any) => String(call[0])).join("")
     const metaCount = output.split("Sisyphus · claude-sonnet-4-6 · 2.4s").length - 1
     expect(metaCount).toBe(1)
     expect(state.completionMetaPrintedByMessageId["msg_1"]).toBe(true)

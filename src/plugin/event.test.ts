@@ -244,7 +244,7 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 		await eventHandler({
 			event: {
 				type: "message.updated",
-			},
+			} as any,
 		})
 
 		//#then - both maps should be pruned (no dedup should occur for new events)
@@ -287,7 +287,7 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 				stopContinuationGuard: { event: async () => {} },
 				compactionTodoPreserver: { event: async () => {} },
 				atlasHook: { handler: async () => {} },
-			},
+			} as any,
 		})
 
 		await eventHandlerWithMock({
@@ -296,7 +296,7 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 				properties: {
 					sessionID: "ses_stale_1",
 				},
-			},
+			} as any,
 		})
 
 		expect(dispatchCalls.length).toBe(1)
@@ -425,7 +425,7 @@ describe("createEventHandler - event forwarding", () => {
 			event: {
 				type: "session.deleted",
 				properties: { info: { id: sessionID } },
-			},
+			} as any,
 		})
 
 		//#then

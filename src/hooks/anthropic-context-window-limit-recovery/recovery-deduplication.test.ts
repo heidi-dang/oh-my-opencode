@@ -36,7 +36,7 @@ describe("createAnthropicContextWindowLimitRecoveryHook", () => {
     const restoreTimeouts = createImmediateTimeouts()
 
     const experimental = {
-      dynamic_context_pruning: {
+      dynamic_context_pruning: { notification: "off", protected_tools: [], 
         enabled: true,
         strategies: {
           deduplication: { enabled: true },
@@ -63,7 +63,7 @@ describe("createAnthropicContextWindowLimitRecoveryHook", () => {
 
     try {
       const { createAnthropicContextWindowLimitRecoveryHook } = await import("./recovery-hook")
-      const ctx = { client: mockClient, directory: "/tmp" } as PluginInput
+      const ctx = { client: mockClient, directory: "/tmp" } as unknown as PluginInput
       const hook = createAnthropicContextWindowLimitRecoveryHook(ctx, { experimental, pluginConfig: {} as any })
 
       // first error triggers compaction (setTimeout runs immediately due to mock)
@@ -86,7 +86,7 @@ describe("createAnthropicContextWindowLimitRecoveryHook", () => {
       expect(attemptDeduplicationRecoveryMock).toHaveBeenCalledTimes(1)
       expect(attemptDeduplicationRecoveryMock.mock.calls[0]![0]).toBe("session-96")
     } finally {
-      if (resolveSummarize) resolveSummarize()
+      if (resolveSummarize) (resolveSummarize as any)()
       restoreTimeouts()
     }
   })
@@ -106,7 +106,7 @@ describe("createAnthropicContextWindowLimitRecoveryHook", () => {
     }
 
     const { createAnthropicContextWindowLimitRecoveryHook } = await import("./recovery-hook")
-    const ctx = { client: mockClient, directory: "/tmp" } as PluginInput
+    const ctx = { client: mockClient, directory: "/tmp" } as unknown as PluginInput
     const hook = createAnthropicContextWindowLimitRecoveryHook(ctx, { pluginConfig: {} as any })
 
     //#when - single error (no compaction in progress)

@@ -1,4 +1,4 @@
-const { describe, test, expect, mock } = require("bun:test")
+import { describe, test, expect, mock } from "bun:test"
 
 import type { DelegateTaskArgs, ToolContextWithMetadata } from "./types"
 import type { ParentContext } from "./executor-types"

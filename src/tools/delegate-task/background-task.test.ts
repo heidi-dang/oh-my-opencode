@@ -1,4 +1,4 @@
-const bunTest = require("bun:test")
+import * as bunTest from "bun:test"
 const describeFn = bunTest.describe
 const testFn = bunTest.test
 const expectFn = bunTest.expect

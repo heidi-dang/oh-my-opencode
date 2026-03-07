@@ -59,7 +59,7 @@ describe("createBackgroundTask", () => {
     })
 
     //#when
-    const result = await tool.execute(testArgs, testContext)
+    const result = await tool.execute(testArgs, testContext as any)
 
     //#then
     expect(result).toContain("Task entered error state")

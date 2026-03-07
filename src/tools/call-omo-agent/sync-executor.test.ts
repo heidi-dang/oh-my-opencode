@@ -1,4 +1,4 @@
-const { describe, test, expect, mock } = require("bun:test")
+import { describe, test, expect, mock } from "bun:test"
 
 describe("executeSync", () => {
   test("passes question=false via tools parameter to block question tool", async () => {
@@ -32,7 +32,6 @@ describe("executeSync", () => {
       messageID: "msg-1",
       agent: "sisyphus",
       abort: new AbortController().signal,
-      metadata: mock(async () => {}),
     }
 
     const ctx = {
@@ -80,7 +79,6 @@ describe("executeSync", () => {
       messageID: "msg-2",
       agent: "sisyphus",
       abort: new AbortController().signal,
-      metadata: mock(async () => {}),
     }
 
     const ctx = {

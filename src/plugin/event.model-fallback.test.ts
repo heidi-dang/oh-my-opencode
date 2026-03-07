@@ -58,9 +58,9 @@ describe("createEventHandler - model fallback", () => {
 
     //#when
     await handler({
-      event: {
+      event: { ...({} as any),
         type: "message.updated",
-        properties: {
+        properties: { ...({} as any),
           info: {
             id: "msg_err_1",
             sessionID,
@@ -101,9 +101,9 @@ describe("createEventHandler - model fallback", () => {
 
     //#when
     await handler({
-      event: {
+      event: { ...({} as any),
         type: "session.error",
-        properties: {
+        properties: { ...({} as any),
           sessionID,
           error: {
             name: "UnknownError",
@@ -158,9 +158,9 @@ describe("createEventHandler - model fallback", () => {
     })
 
     await handler({
-      event: {
+      event: { ...({} as any),
         type: "message.updated",
-        properties: {
+        properties: { ...({} as any),
           info: {
             id: "msg_user_status_1",
             sessionID,
@@ -178,9 +178,9 @@ describe("createEventHandler - model fallback", () => {
 
     //#when
     await handler({
-      event: {
+      event: { ...({} as any),
         type: "session.status",
-        properties: {
+        properties: { ...({} as any),
           sessionID,
           status: {
             type: "retry",
@@ -206,11 +206,11 @@ describe("createEventHandler - model fallback", () => {
     //#then
     expect(abortCalls).toEqual([sessionID])
     expect(promptCalls).toEqual([sessionID])
-    expect(output.message["model"]).toEqual({
+    expect((output.message as Record<string, unknown>)["model"]).toEqual({
       providerID: "anthropic",
       modelID: "claude-opus-4-6",
     })
-    expect(output.message["variant"]).toBe("max")
+    expect((output.message as Record<string, unknown>)["variant"]).toBe("max")
   })
 
   test("advances main-session fallback chain across repeated session.error retries end-to-end", async () => {
@@ -288,9 +288,9 @@ describe("createEventHandler - model fallback", () => {
 
     const triggerRetryCycle = async () => {
       await eventHandler({
-        event: {
+        event: { ...({} as any),
           type: "session.error",
-          properties: {
+          properties: { ...({} as any),
             sessionID,
             providerID: "anthropic",
             modelID: "claude-opus-4-6-thinking",
@@ -323,21 +323,21 @@ describe("createEventHandler - model fallback", () => {
     const first = await triggerRetryCycle()
 
     //#then - first fallback entry applied (prefers current provider when available)
-    expect(first.message["model"]).toEqual({
+    expect((first.message as any)["model"]).toEqual({
       providerID: "anthropic",
       modelID: "claude-opus-4-6",
     })
-    expect(first.message["variant"]).toBe("max")
+    expect((first.message as any)["variant"]).toBe("max")
 
     //#when - second retry cycle
     const second = await triggerRetryCycle()
 
     //#then - second fallback entry applied (chain advanced)
-    expect(second.message["model"]).toEqual({
+    expect((second.message as Record<string, unknown>)["model"]).toEqual({
       providerID: "zai-coding-plan",
       modelID: "glm-5",
     })
-    expect(second.message["variant"]).toBeUndefined()
+    expect((second.message as Record<string, unknown>)["variant"]).toBeUndefined()
     expect(abortCalls).toEqual([sessionID, sessionID])
     expect(promptCalls).toEqual([sessionID, sessionID])
     expect(toastCalls.length).toBeGreaterThanOrEqual(0)
@@ -351,9 +351,9 @@ describe("createEventHandler - model fallback", () => {
 
     //#when - message.updated with assistant error
     await handler({
-      event: {
+      event: { ...({} as any),
         type: "message.updated",
-        properties: {
+        properties: { ...({} as any),
           info: {
             id: "msg_err_disabled_1",
             sessionID,
@@ -381,9 +381,9 @@ describe("createEventHandler - model fallback", () => {
 
     //#when - session.error with retryable error
     await handler({
-      event: {
+      event: { ...({} as any),
         type: "session.error",
-        properties: {
+        properties: { ...({} as any),
           sessionID,
           error: {
             name: "UnknownError",

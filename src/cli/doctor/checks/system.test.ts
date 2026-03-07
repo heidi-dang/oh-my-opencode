@@ -3,11 +3,11 @@ import * as binary from "./system-binary"
 import * as plugin from "./system-plugin"
 import * as loaded from "./system-loaded-version"
 
-const { checkSystem } = await import("./system?test")
+const { checkSystem } = await import("./system")
 
 describe("system check", () => {
   beforeEach(() => {
-    spyOn(binary, "findOpenCodeBinary").mockResolvedValue({ path: "/usr/local/bin/opencode" })
+    spyOn(binary, "findOpenCodeBinary").mockResolvedValue({ path: "/usr/local/bin/opencode", binary: "opencode" })
     spyOn(binary, "getOpenCodeVersion").mockResolvedValue("1.0.200")
     spyOn(binary, "compareVersions").mockImplementation((v1, v2) => {
       // Simple mock implementation or just mockReturnValue(true)
@@ -34,11 +34,11 @@ describe("system check", () => {
   describe("#given cache directory contains spaces", () => {
     it("uses a quoted cache directory in mismatch fix command", async () => {
       //#when
-      const { checkSystem } = await import("./system?test-quoted")
+      const { checkSystem } = await import("./system")
       const result = await checkSystem()
 
       //#then
-      const mismatchIssue = result.issues.find((issue) => issue.title === "Loaded plugin version mismatch")
+      const mismatchIssue = result.issues.find((issue: any) => issue.title === "Loaded plugin version mismatch")
       expect(mismatchIssue?.fix).toBe('Reinstall: cd "/Users/test/Library/Caches/opencode with spaces" && bun install')
     })
 
@@ -57,11 +57,11 @@ describe("system check", () => {
       })
 
       //#when
-      const { checkSystem } = await import("./system?test-update")
+      const { checkSystem } = await import("./system")
       const result = await checkSystem()
 
       //#then
-      const outdatedIssue = result.issues.find((issue) => issue.title === "Loaded plugin is outdated")
+      const outdatedIssue = result.issues.find((issue: any) => issue.title === "Loaded plugin is outdated")
       expect(outdatedIssue?.fix).toBe(
         'Update: cd "/Users/test/Library/Caches/opencode with spaces" && bun add oh-my-opencode@canary'
       )

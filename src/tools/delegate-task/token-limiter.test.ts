@@ -1,17 +1,4 @@
-declare const require: (name: string) => unknown
-const { describe, test, expect } = require("bun:test") as {
-  describe: (name: string, fn: () => void) => void
-  test: (name: string, fn: () => void) => void
-  expect: (value: unknown) => {
-    toBe: (expected: unknown) => void
-    toContain: (expected: string) => void
-    not: {
-      toContain: (expected: string) => void
-    }
-    toBeLessThanOrEqual: (expected: number) => void
-    toBeUndefined: () => void
-  }
-}
+import { describe, test, expect } from "bun:test"
 
 import {
   buildSystemContentWithTokenLimit,

@@ -1,4 +1,4 @@
-const { describe, test, expect, beforeEach, afterEach, mock, spyOn } = require("bun:test")
+import { describe, test, expect, beforeEach, afterEach, mock, spyOn } from "bun:test"
 
 describe("executeSyncTask - cleanup on error paths", () => {
   let removeTaskCalls: string[] = []
@@ -83,7 +83,6 @@ describe("executeSyncTask - cleanup on error paths", () => {
       metadata: () => {},
       ask: async () => {},
       callID: "call-123",
-      metadata: () => {},
     }
 
     const mockExecutorCtx = {
@@ -141,7 +140,6 @@ describe("executeSyncTask - cleanup on error paths", () => {
       metadata: () => {},
       ask: async () => {},
       callID: "call-123",
-      metadata: () => {},
     }
 
     const mockExecutorCtx = {
@@ -199,7 +197,6 @@ describe("executeSyncTask - cleanup on error paths", () => {
       metadata: () => {},
       ask: async () => {},
       callID: "call-123",
-      metadata: () => {},
     }
 
     const mockExecutorCtx = {

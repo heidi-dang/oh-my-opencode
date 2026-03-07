@@ -7,7 +7,7 @@ import * as logger from "../../shared/logger"
 const executeHookCommandSpy = spyOn(commandExecutor, "executeHookCommand").mockImplementation(() =>
   Promise.resolve({ exitCode: 0, stdout: "", stderr: "" })
 )
-const executeCommandSpy = spyOn(commandExecutor, "executeCommand").mockImplementation(() => Promise.resolve({ exitCode: 0, stdout: "", stderr: "" }))
+const executeCommandSpy = spyOn(commandExecutor, "executeCommand").mockImplementation(() => Promise.resolve(""))
 const resolveCommandsInTextSpy = spyOn(commandExecutor, "resolveCommandsInText").mockImplementation(() => ({} as any))
 
 const logSpy = spyOn(logger, "log").mockImplementation(() => { })

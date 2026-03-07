@@ -1,5 +1,5 @@
 declare const require: (name: string) => any
-const { describe, test, expect, beforeEach, afterEach } = require("bun:test")
+import { describe, test, expect, beforeEach, afterEach } from "bun:test"
 import { __setTimingConfig, __resetTimingConfig } from "./timing"
 
 describe("executeUnstableAgentTask timeout handling", () => {
@@ -59,7 +59,6 @@ describe("executeUnstableAgentTask timeout handling", () => {
       metadata: () => {},
       ask: async () => {},
         messageID: "parent-message",
-        metadata: () => Promise.resolve(),
       },
       {
         manager: mockManager,

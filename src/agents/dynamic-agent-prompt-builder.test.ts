@@ -6,10 +6,8 @@ import {
   buildUltraworkSection,
   buildDeepParallelSection,
   buildNonClaudePlannerSection,
-  type AvailableSkill,
-  type AvailableCategory,
-  type AvailableAgent,
-} from "./prompts";
+  } from "./prompts";
+import type { AvailableSkill, AvailableCategory, AvailableAgent } from "./types";
 
 describe("buildCategorySkillsDelegationGuide", () => {
   const categories: AvailableCategory[] = [

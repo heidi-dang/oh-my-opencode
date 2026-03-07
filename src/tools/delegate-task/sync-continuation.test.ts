@@ -1,4 +1,4 @@
-const { describe, test, expect, beforeEach, afterEach, mock, spyOn } = require("bun:test")
+import { describe, test, expect, beforeEach, afterEach, mock, spyOn } from "bun:test"
 
 describe("executeSyncContinuation - toast cleanup error paths", () => {
   let removeTaskCalls: string[] = []
@@ -82,7 +82,6 @@ describe("executeSyncContinuation - toast cleanup error paths", () => {
       metadata: () => {},
       ask: async () => {},
       callID: "call-123",
-      metadata: () => {},
     }
 
     const mockExecutorCtx = {
@@ -148,7 +147,6 @@ describe("executeSyncContinuation - toast cleanup error paths", () => {
       metadata: () => {},
       ask: async () => {},
       callID: "call-123",
-      metadata: () => {},
     }
 
     const mockExecutorCtx = {
@@ -218,7 +216,6 @@ describe("executeSyncContinuation - toast cleanup error paths", () => {
       metadata: () => {},
       ask: async () => {},
       callID: "call-123",
-      metadata: () => {},
     }
 
     const mockExecutorCtx = {
@@ -285,7 +282,6 @@ describe("executeSyncContinuation - toast cleanup error paths", () => {
       metadata: () => {},
       ask: async () => {},
       callID: "call-123",
-      metadata: () => {},
       abort: controller.signal,
     }
 
@@ -347,7 +343,6 @@ describe("executeSyncContinuation - toast cleanup error paths", () => {
       metadata: () => {},
       ask: async () => {},
       callID: "call-123",
-      metadata: () => {},
     }
 
     const mockExecutorCtx = {
@@ -411,7 +406,6 @@ describe("executeSyncContinuation - toast cleanup error paths", () => {
       metadata: () => {},
       ask: async () => {},
       callID: "call-123",
-      metadata: () => {},
     }
 
     const mockExecutorCtx = {
@@ -469,7 +463,6 @@ describe("executeSyncContinuation - toast cleanup error paths", () => {
       metadata: () => {},
       ask: async () => {},
       callID: "call-123",
-      metadata: () => {},
     }
 
     const mockExecutorCtx = {

@@ -1,4 +1,4 @@
-const { describe, expect, test, spyOn } = require("bun:test")
+import { describe, expect, test, spyOn } from "bun:test"
 
 const sessionState = require("../features/claude-code-session-state")
 const { createToolExecuteBeforeHandler } = require("./tool-execute-before")
@@ -10,8 +10,8 @@ describe("createToolExecuteBeforeHandler session notification sessionID", () => 
 
     let capturedSessionID: string | undefined
     const hooks = {
-      sessionNotification: async (input) => {
-        capturedSessionID = input.event.properties?.sessionID
+      sessionNotification: async (input: unknown) => {
+        capturedSessionID = (input as any).event.properties?.sessionID
       },
     }
 

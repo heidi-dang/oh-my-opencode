@@ -1,5 +1,5 @@
 declare const require: (name: string) => any
-const { describe, expect, test } = require("bun:test")
+import { describe, expect, test } from "bun:test"
 import { __resetTimingConfig, __setTimingConfig, getDefaultSyncPollTimeoutMs } from "./timing"
 
 describe("timing sync poll timeout defaults", () => {

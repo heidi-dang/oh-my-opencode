@@ -31,7 +31,7 @@ const getCachedVersionSpy = spyOn(checker, "getCachedVersion").mockReturnValue("
 const getLatestVersionSpy = spyOn(checker, "getLatestVersion").mockResolvedValue("3.5.0")
 const revertPinnedVersionSpy = spyOn(checker, "revertPinnedVersion").mockReturnValue(false)
 const extractChannelSpy = spyOn(versionChannel, "extractChannel").mockReturnValue("latest")
-const invalidatePackageSpy = spyOn(cache, "invalidatePackage").mockImplementation(() => { })
+const invalidatePackageSpy = spyOn(cache, "invalidatePackage").mockImplementation(() => true)
 const runBunInstallSpy = spyOn(configManager, "runBunInstall").mockResolvedValue(true)
 const showUpdateAvailableToastSpy = spyOn(updateToasts, "showUpdateAvailableToast").mockImplementation(async () => { })
 const showAutoUpdatedToastSpy = spyOn(updateToasts, "showAutoUpdatedToast").mockImplementation(async () => { })

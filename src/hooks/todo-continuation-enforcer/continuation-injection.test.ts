@@ -1,5 +1,5 @@
 declare const require: (name: string) => any
-const { describe, expect, test } = require("bun:test")
+import { describe, expect, test } from "bun:test"
 
 import { injectContinuation } from "./continuation-injection"
 import { OMO_INTERNAL_INITIATOR_MARKER } from "../../shared/internal-initiator-marker"

@@ -1,5 +1,5 @@
 declare const require: (name: string) => any
-const { describe, it, expect, beforeEach, afterEach, beforeAll } = require("bun:test")
+import { describe, it, expect, beforeEach, afterEach, beforeAll } from "bun:test"
 import { mkdtempSync, writeFileSync, rmSync } from "fs"
 import { tmpdir } from "os"
 import { join } from "path"

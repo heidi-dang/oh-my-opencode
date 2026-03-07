@@ -8,7 +8,7 @@ describe("pending-calls cleanup interval", () => {
     let unrefCalled = 0
 
     globalThis.setInterval = ((
-      _handler: TimerHandler,
+      _handler: Parameters<typeof setTimeout>[0],
       timeout?: number,
       ..._args: any[]
     ) => {

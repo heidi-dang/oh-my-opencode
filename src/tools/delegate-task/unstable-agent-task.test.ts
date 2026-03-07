@@ -1,4 +1,4 @@
-const { describe, test, expect, beforeEach, afterEach, mock } = require("bun:test")
+import { describe, test, expect, beforeEach, afterEach, mock } from "bun:test"
 
 describe("executeUnstableAgentTask - interrupt detection", () => {
   beforeEach(() => {
@@ -64,7 +64,6 @@ describe("executeUnstableAgentTask - interrupt detection", () => {
       metadata: () => {},
       ask: async () => {},
       callID: "call-123",
-      metadata: () => {},
     }
 
     const mockExecutorCtx = {
@@ -139,7 +138,6 @@ describe("executeUnstableAgentTask - interrupt detection", () => {
       metadata: () => {},
       ask: async () => {},
       callID: "call-123",
-      metadata: () => {},
     }
 
     const mockExecutorCtx = {
@@ -214,7 +212,6 @@ describe("executeUnstableAgentTask - interrupt detection", () => {
       metadata: () => {},
       ask: async () => {},
       callID: "call-123",
-      metadata: () => {},
     }
 
     const mockExecutorCtx = {

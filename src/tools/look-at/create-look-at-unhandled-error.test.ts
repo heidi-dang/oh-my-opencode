@@ -11,11 +11,7 @@ describe("createLookAt unhandled error resilience", () => {
       ask: async () => {},
     messageID: "parent-message",
     agent: "sisyphus",
-    directory: "/project",
-    worktree: "/project",
     abort: new AbortController().signal,
-    metadata: () => {},
-    ask: async () => {},
   })
 
   // given session.create throws (network error, not error response)

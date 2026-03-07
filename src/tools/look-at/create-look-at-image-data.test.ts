@@ -41,11 +41,7 @@ describe("createLookAt with image_data", () => {
       ask: async () => {},
       messageID: "parent-message",
       agent: "sisyphus",
-      directory: "/project",
-      worktree: "/project",
       abort: new AbortController().signal,
-      metadata: () => {},
-      ask: async () => {},
     }
 
     await tool.execute(
@@ -98,11 +94,7 @@ describe("createLookAt with image_data", () => {
       ask: async () => {},
       messageID: "parent-message",
       agent: "sisyphus",
-      directory: "/project",
-      worktree: "/project",
       abort: new AbortController().signal,
-      metadata: () => {},
-      ask: async () => {},
     }
 
     await tool.execute(
