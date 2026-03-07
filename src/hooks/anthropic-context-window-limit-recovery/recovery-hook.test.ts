@@ -1,37 +1,12 @@
-import { afterAll, afterEach, beforeEach, describe, expect, mock, test } from "bun:test"
+import { afterEach, beforeEach, describe, expect, mock, test, spyOn } from "bun:test"
 import type { PluginInput } from "@opencode-ai/plugin"
-import * as originalExecutor from "./executor"
-import * as originalParser from "./parser"
-import * as originalLogger from "../../shared/logger"
+import * as executor from "./executor"
+import * as parser from "./parser"
+import * as logger from "../../shared/logger"
 
-const executeCompactMock = mock(async () => {})
-const getLastAssistantMock = mock(async () => ({
-  providerID: "anthropic",
-  modelID: "claude-sonnet-4-6",
-}))
-const parseAnthropicTokenLimitErrorMock = mock(() => ({
-  providerID: "anthropic",
-  modelID: "claude-sonnet-4-6",
-}))
-
-mock.module("./executor", () => ({
-  executeCompact: executeCompactMock,
-  getLastAssistant: getLastAssistantMock,
-}))
-
-mock.module("./parser", () => ({
-  parseAnthropicTokenLimitError: parseAnthropicTokenLimitErrorMock,
-}))
-
-mock.module("../../shared/logger", () => ({
-  log: () => {},
-}))
-
-afterAll(() => {
-  mock.module("./executor", () => originalExecutor)
-  mock.module("./parser", () => originalParser)
-  mock.module("../../shared/logger", () => originalLogger)
-})
+let executeCompactMock: any
+let getLastAssistantMock: any
+let parseAnthropicTokenLimitErrorMock: any
 
 function createMockContext(): PluginInput {
   return {
@@ -76,9 +51,16 @@ function setupDelayedTimeoutMocks(): {
 
 describe("createAnthropicContextWindowLimitRecoveryHook", () => {
   beforeEach(() => {
-    executeCompactMock.mockClear()
-    getLastAssistantMock.mockClear()
-    parseAnthropicTokenLimitErrorMock.mockClear()
+    executeCompactMock = spyOn(executor, "executeCompact").mockResolvedValue(undefined as any)
+    getLastAssistantMock = spyOn(executor, "getLastAssistant").mockResolvedValue({
+      providerID: "anthropic",
+      modelID: "claude-sonnet-4-6",
+    } as any)
+    parseAnthropicTokenLimitErrorMock = spyOn(parser, "parseAnthropicTokenLimitError").mockReturnValue({
+      providerID: "anthropic",
+      modelID: "claude-sonnet-4-6",
+    } as any)
+    spyOn(logger, "log").mockImplementation(() => { })
   })
 
   afterEach(() => {

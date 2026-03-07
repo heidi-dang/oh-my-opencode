@@ -7,11 +7,11 @@ import type { InstallConfig } from "./types"
 import type { AgentConfig, CategoryConfig, GeneratedOmoConfig } from "./model-fallback-types"
 import { toProviderAvailability } from "./provider-availability"
 import {
-	getSisyphusFallbackChain,
-	isAnyFallbackEntryAvailable,
-	isRequiredModelAvailable,
-	isRequiredProviderAvailable,
-	resolveModelFromChain,
+  getSisyphusFallbackChain,
+  isAnyFallbackEntryAvailable,
+  isRequiredModelAvailable,
+  isRequiredProviderAvailable,
+  resolveModelFromChain,
 } from "./fallback-chain-resolution"
 
 export type { GeneratedOmoConfig } from "./model-fallback-types"
@@ -39,7 +39,7 @@ export function generateModelConfig(config: InstallConfig): GeneratedOmoConfig {
       $schema: SCHEMA_URL,
       agents: Object.fromEntries(
         Object.entries(CLI_AGENT_MODEL_REQUIREMENTS)
-          .filter(([role, req]) => !(role === "sisyphus" && req.requiresAnyModel))
+          .filter(([_, req]) => !req.requiresAnyModel)
           .map(([role]) => [role, { model: ULTIMATE_FALLBACK }])
       ),
       categories: Object.fromEntries(
@@ -94,9 +94,10 @@ export function generateModelConfig(config: InstallConfig): GeneratedOmoConfig {
     if (resolved) {
       const variant = resolved.variant ?? req.variant
       agents[role] = variant ? { model: resolved.model, variant } : { model: resolved.model }
-    } else {
+    } else if (!req.requiresAnyModel) {
       agents[role] = { model: ULTIMATE_FALLBACK }
     }
+
   }
 
   for (const [cat, req] of Object.entries(CLI_CATEGORY_MODEL_REQUIREMENTS)) {

@@ -1,17 +1,9 @@
-import { describe, test, expect, mock, beforeEach, afterAll } from "bun:test"
+import { describe, test, expect, mock, beforeEach, afterEach, spyOn } from "bun:test"
 import type { PluginInput } from "@opencode-ai/plugin"
 import type { ExperimentalConfig } from "../../config"
-import * as originalDeduplicationRecovery from "./deduplication-recovery"
+import * as deduplicationRecovery from "./deduplication-recovery"
 
-const attemptDeduplicationRecoveryMock = mock(async () => {})
-
-mock.module("./deduplication-recovery", () => ({
-  attemptDeduplicationRecovery: attemptDeduplicationRecoveryMock,
-}))
-
-afterAll(() => {
-  mock.module("./deduplication-recovery", () => originalDeduplicationRecovery)
-})
+let attemptDeduplicationRecoveryMock: any
 
 function createImmediateTimeouts(): () => void {
   const originalSetTimeout = globalThis.setTimeout
@@ -22,7 +14,7 @@ function createImmediateTimeouts(): () => void {
     return 0 as unknown as ReturnType<typeof setTimeout>
   }) as typeof setTimeout
 
-  globalThis.clearTimeout = ((_: ReturnType<typeof setTimeout>) => {}) as typeof clearTimeout
+  globalThis.clearTimeout = ((_: ReturnType<typeof setTimeout>) => { }) as typeof clearTimeout
 
   return () => {
     globalThis.setTimeout = originalSetTimeout
@@ -32,7 +24,11 @@ function createImmediateTimeouts(): () => void {
 
 describe("createAnthropicContextWindowLimitRecoveryHook", () => {
   beforeEach(() => {
-    attemptDeduplicationRecoveryMock.mockClear()
+    attemptDeduplicationRecoveryMock = spyOn(deduplicationRecovery, "attemptDeduplicationRecovery").mockResolvedValue(undefined as any)
+  })
+
+  afterEach(() => {
+    attemptDeduplicationRecoveryMock.mockRestore()
   })
 
   test("calls deduplication recovery when compaction is already in progress", async () => {

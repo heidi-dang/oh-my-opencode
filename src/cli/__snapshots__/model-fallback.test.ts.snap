@@ -10,9 +10,6 @@ exports[`generateModelConfig no providers available returns ULTIMATE_FALLBACK fo
     "explore": {
       "model": "opencode/glm-4.7-free",
     },
-    "hephaestus": {
-      "model": "opencode/glm-4.7-free",
-    },
     "librarian": {
       "model": "opencode/glm-4.7-free",
     },
@@ -99,6 +96,10 @@ exports[`generateModelConfig single native provider uses Claude models when only
     },
   },
   "categories": {
+    "deep": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
     "quick": {
       "model": "anthropic/claude-haiku-4-5",
     },
@@ -161,6 +162,10 @@ exports[`generateModelConfig single native provider uses Claude models with isMa
     },
   },
   "categories": {
+    "deep": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
     "quick": {
       "model": "anthropic/claude-haiku-4-5",
     },
@@ -359,6 +364,10 @@ exports[`generateModelConfig single native provider uses Gemini models when only
       "model": "google/gemini-3.1-pro-preview",
       "variant": "high",
     },
+    "deep": {
+      "model": "google/gemini-3.1-pro-preview",
+      "variant": "high",
+    },
     "quick": {
       "model": "google/gemini-3-flash-preview",
     },
@@ -417,6 +426,10 @@ exports[`generateModelConfig single native provider uses Gemini models with isMa
   },
   "categories": {
     "artistry": {
+      "model": "google/gemini-3.1-pro-preview",
+      "variant": "high",
+    },
+    "deep": {
       "model": "google/gemini-3.1-pro-preview",
       "variant": "high",
     },
@@ -788,6 +801,10 @@ exports[`generateModelConfig fallback providers uses GitHub Copilot models when 
       "model": "github-copilot/gemini-3.1-pro-preview",
       "variant": "high",
     },
+    "deep": {
+      "model": "github-copilot/claude-opus-4.6",
+      "variant": "max",
+    },
     "quick": {
       "model": "github-copilot/claude-haiku-4.5",
     },
@@ -854,6 +871,10 @@ exports[`generateModelConfig fallback providers uses GitHub Copilot models with 
       "model": "github-copilot/gemini-3.1-pro-preview",
       "variant": "high",
     },
+    "deep": {
+      "model": "github-copilot/claude-opus-4.6",
+      "variant": "max",
+    },
     "quick": {
       "model": "github-copilot/claude-haiku-4.5",
     },
@@ -912,6 +933,9 @@ exports[`generateModelConfig fallback providers uses ZAI model for librarian whe
     },
   },
   "categories": {
+    "deep": {
+      "model": "opencode/glm-4.7-free",
+    },
     "quick": {
       "model": "opencode/glm-4.7-free",
     },
@@ -967,6 +991,9 @@ exports[`generateModelConfig fallback providers uses ZAI model for librarian wit
     },
   },
   "categories": {
+    "deep": {
+      "model": "opencode/glm-4.7-free",
+    },
     "quick": {
       "model": "opencode/glm-4.7-free",
     },
@@ -1177,6 +1204,10 @@ exports[`generateModelConfig mixed provider scenarios uses Claude + ZAI combinat
     },
   },
   "categories": {
+    "deep": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
+    },
     "quick": {
       "model": "anthropic/claude-haiku-4-5",
     },
@@ -1241,6 +1272,10 @@ exports[`generateModelConfig mixed provider scenarios uses Gemini + Claude combi
     "artistry": {
       "model": "google/gemini-3.1-pro-preview",
       "variant": "high",
+    },
+    "deep": {
+      "model": "anthropic/claude-opus-4-6",
+      "variant": "max",
     },
     "quick": {
       "model": "anthropic/claude-haiku-4-5",

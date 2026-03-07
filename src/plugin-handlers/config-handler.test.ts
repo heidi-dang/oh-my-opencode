@@ -59,7 +59,7 @@ beforeEach(() => {
 
   spyOn(mcpModule, "createBuiltinMcps" as any).mockReturnValue({})
 
-  spyOn(shared, "log" as any).mockImplementation(() => {})
+  spyOn(shared, "log" as any).mockImplementation(() => { })
   spyOn(shared, "fetchAvailableModels" as any).mockResolvedValue(new Set(["anthropic/claude-opus-4-6"]))
   spyOn(shared, "readConnectedProvidersCache" as any).mockReturnValue(null)
 
@@ -75,31 +75,32 @@ beforeEach(() => {
 
 afterEach(() => {
   (agents.createBuiltinAgents as any)?.mockRestore?.()
-  ;(sisyphusJunior.createSisyphusJuniorAgentWithOverrides as any)?.mockRestore?.()
-  ;(commandLoader.loadUserCommands as any)?.mockRestore?.()
-  ;(commandLoader.loadProjectCommands as any)?.mockRestore?.()
-  ;(commandLoader.loadOpencodeGlobalCommands as any)?.mockRestore?.()
-  ;(commandLoader.loadOpencodeProjectCommands as any)?.mockRestore?.()
-  ;(builtinCommands.loadBuiltinCommands as any)?.mockRestore?.()
-  ;(skillLoader.loadUserSkills as any)?.mockRestore?.()
-  ;(skillLoader.loadProjectSkills as any)?.mockRestore?.()
-  ;(skillLoader.loadOpencodeGlobalSkills as any)?.mockRestore?.()
-  ;(skillLoader.loadOpencodeProjectSkills as any)?.mockRestore?.()
-  ;(skillLoader.discoverUserClaudeSkills as any)?.mockRestore?.()
-  ;(skillLoader.discoverProjectClaudeSkills as any)?.mockRestore?.()
-  ;(skillLoader.discoverOpencodeGlobalSkills as any)?.mockRestore?.()
-  ;(skillLoader.discoverOpencodeProjectSkills as any)?.mockRestore?.()
-  ;(agentLoader.loadUserAgents as any)?.mockRestore?.()
-  ;(agentLoader.loadProjectAgents as any)?.mockRestore?.()
-  ;(mcpLoader.loadMcpConfigs as any)?.mockRestore?.()
-  ;(pluginLoader.loadAllPluginComponents as any)?.mockRestore?.()
-  ;(mcpModule.createBuiltinMcps as any)?.mockRestore?.()
-  ;(shared.log as any)?.mockRestore?.()
-  ;(shared.fetchAvailableModels as any)?.mockRestore?.()
-  ;(shared.readConnectedProvidersCache as any)?.mockRestore?.()
-  ;(configDir.getOpenCodeConfigPaths as any)?.mockRestore?.()
-  ;(permissionCompat.migrateAgentConfig as any)?.mockRestore?.()
-  ;(modelResolver.resolveModelWithFallback as any)?.mockRestore?.()
+    ; (sisyphusJunior.createSisyphusJuniorAgentWithOverrides as any)?.mockRestore?.()
+    ; (commandLoader.loadUserCommands as any)?.mockRestore?.()
+    ; (commandLoader.loadProjectCommands as any)?.mockRestore?.()
+    ; (commandLoader.loadOpencodeGlobalCommands as any)?.mockRestore?.()
+    ; (commandLoader.loadOpencodeProjectCommands as any)?.mockRestore?.()
+    ; (builtinCommands.loadBuiltinCommands as any)?.mockRestore?.()
+    ; (skillLoader.loadUserSkills as any)?.mockRestore?.()
+    ; (skillLoader.loadProjectSkills as any)?.mockRestore?.()
+    ; (skillLoader.loadOpencodeGlobalSkills as any)?.mockRestore?.()
+    ; (skillLoader.loadOpencodeProjectSkills as any)?.mockRestore?.()
+    ; (skillLoader.discoverUserClaudeSkills as any)?.mockRestore?.()
+    ; (skillLoader.discoverProjectClaudeSkills as any)?.mockRestore?.()
+    ; (skillLoader.discoverOpencodeGlobalSkills as any)?.mockRestore?.()
+    ; (skillLoader.discoverOpencodeProjectSkills as any)?.mockRestore?.()
+    ; (agentLoader.loadUserAgents as any)?.mockRestore?.()
+    ; (agentLoader.loadProjectAgents as any)?.mockRestore?.()
+    ; (mcpLoader.loadMcpConfigs as any)?.mockRestore?.()
+    ; (pluginLoader.loadAllPluginComponents as any)?.mockRestore?.()
+    ; (mcpModule.createBuiltinMcps as any)?.mockRestore?.()
+    ; (shared.log as any)?.mockRestore?.()
+    ; (shared.fetchAvailableModels as any)?.mockRestore?.()
+    ; (shared.readConnectedProvidersCache as any)?.mockRestore?.()
+    ; (shared.resolveModelPipeline as any)?.mockRestore?.()
+    ; (configDir.getOpenCodeConfigPaths as any)?.mockRestore?.()
+    ; (permissionCompat.migrateAgentConfig as any)?.mockRestore?.()
+    ; (modelResolver.resolveModelWithFallback as any)?.mockRestore?.()
 })
 
 describe("Sisyphus-Junior model inheritance", () => {
@@ -1039,7 +1040,7 @@ describe("Deadlock prevention - fetchAvailableModels must not receive client", (
 describe("config-handler plugin loading error boundary (#1559)", () => {
   test("returns empty defaults when loadAllPluginComponents throws", async () => {
     //#given
-    ;(pluginLoader.loadAllPluginComponents as any).mockRestore?.()
+    ; (pluginLoader.loadAllPluginComponents as any).mockRestore?.()
     spyOn(pluginLoader, "loadAllPluginComponents" as any).mockRejectedValue(new Error("crash"))
     const pluginConfig: OhMyOpenCodeConfig = {}
     const config: Record<string, unknown> = {
@@ -1064,9 +1065,9 @@ describe("config-handler plugin loading error boundary (#1559)", () => {
 
   test("returns empty defaults when loadAllPluginComponents times out", async () => {
     //#given
-    ;(pluginLoader.loadAllPluginComponents as any).mockRestore?.()
+    ; (pluginLoader.loadAllPluginComponents as any).mockRestore?.()
     spyOn(pluginLoader, "loadAllPluginComponents" as any).mockImplementation(
-      () => new Promise(() => {})
+      () => new Promise(() => { })
     )
     const pluginConfig: OhMyOpenCodeConfig = {
       experimental: { plugin_load_timeout_ms: 100 },
@@ -1093,7 +1094,7 @@ describe("config-handler plugin loading error boundary (#1559)", () => {
 
   test("logs error when loadAllPluginComponents fails", async () => {
     //#given
-    ;(pluginLoader.loadAllPluginComponents as any).mockRestore?.()
+    ; (pluginLoader.loadAllPluginComponents as any).mockRestore?.()
     spyOn(pluginLoader, "loadAllPluginComponents" as any).mockRejectedValue(new Error("crash"))
     const logSpy = shared.log as ReturnType<typeof spyOn>
     const pluginConfig: OhMyOpenCodeConfig = {}
@@ -1123,7 +1124,7 @@ describe("config-handler plugin loading error boundary (#1559)", () => {
 
   test("passes through plugin data on successful load (identity test)", async () => {
     //#given
-    ;(pluginLoader.loadAllPluginComponents as any).mockRestore?.()
+    ; (pluginLoader.loadAllPluginComponents as any).mockRestore?.()
     spyOn(pluginLoader, "loadAllPluginComponents" as any).mockResolvedValue({
       commands: { "test-cmd": { description: "test", template: "test" } },
       skills: {},

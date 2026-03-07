@@ -1,24 +1,20 @@
-import { describe, test, expect, mock, beforeEach } from "bun:test"
+import { describe, test, expect, mock, spyOn, beforeEach, afterAll } from "bun:test"
+import * as shared from "../../shared"
+import * as modelErrorClassifier from "../../shared/model-error-classifier"
+import * as providerModelTransform from "../../shared/provider-model-id-transform"
 
-mock.module("../../shared", () => ({
-  log: mock(() => {}),
-  readConnectedProvidersCache: mock(() => null),
-  readProviderModelsCache: mock(() => null),
-}))
+const logSpy = spyOn(shared, "log").mockImplementation(() => { })
+const readConnectedProvidersCacheSpy = spyOn(shared, "readConnectedProvidersCache").mockReturnValue(null)
+const readProviderModelsCacheSpy = spyOn(shared, "readProviderModelsCache").mockReturnValue(null)
 
-mock.module("../../shared/model-error-classifier", () => ({
-  shouldRetryError: mock(() => true),
-  getNextFallback: mock((chain: Array<{ model: string }>, attempt: number) => chain[attempt]),
-  hasMoreFallbacks: mock((chain: Array<{ model: string }>, attempt: number) => attempt < chain.length),
-  selectFallbackProvider: mock((providers: string[]) => providers[0]),
-}))
+const shouldRetryErrorSpy = spyOn(modelErrorClassifier, "shouldRetryError").mockReturnValue(true)
+const getNextFallbackSpy = spyOn(modelErrorClassifier, "getNextFallback").mockImplementation((chain: any[], attempt: number) => chain[attempt])
+const hasMoreFallbacksSpy = spyOn(modelErrorClassifier, "hasMoreFallbacks").mockImplementation((chain: any[], attempt: number) => attempt < chain.length)
+const selectFallbackProviderSpy = spyOn(modelErrorClassifier, "selectFallbackProvider").mockImplementation((providers: string[]) => providers[0])
 
-mock.module("../../shared/provider-model-id-transform", () => ({
-  transformModelForProvider: mock((_provider: string, model: string) => model),
-}))
+const transformModelForProviderSpy = spyOn(providerModelTransform, "transformModelForProvider").mockImplementation((_provider: string, model: string) => model)
 
 import { tryFallbackRetry } from "./fallback-retry-handler"
-import { shouldRetryError } from "../../shared/model-error-classifier"
 import type { BackgroundTask } from "./types"
 import type { ConcurrencyManager } from "./concurrency"
 
@@ -44,8 +40,8 @@ function createMockTask(overrides: Partial<BackgroundTask> = {}): BackgroundTask
 
 function createMockConcurrencyManager(): ConcurrencyManager {
   return {
-    release: mock(() => {}),
-    acquire: mock(async () => {}),
+    release: mock(() => { }),
+    acquire: mock(async () => { }),
     getQueueLength: mock(() => 0),
     getActiveCount: mock(() => 0),
   } as unknown as ConcurrencyManager
@@ -60,7 +56,7 @@ function createMockClient() {
 }
 
 function createDefaultArgs(taskOverrides: Partial<BackgroundTask> = {}) {
-  const processKeyFn = mock(() => {})
+  const processKeyFn = mock(() => { })
   const queuesByKey = new Map<string, Array<{ task: BackgroundTask; input: any }>>()
   const idleDeferralTimers = new Map<string, ReturnType<typeof setTimeout>>()
   const concurrencyManager = createMockConcurrencyManager()
@@ -81,7 +77,7 @@ function createDefaultArgs(taskOverrides: Partial<BackgroundTask> = {}) {
 
 describe("tryFallbackRetry", () => {
   beforeEach(() => {
-    ;(shouldRetryError as any).mockImplementation(() => true)
+    shouldRetryErrorSpy.mockImplementation(() => true)
   })
 
   describe("#given retryable error with fallback chain", () => {
@@ -188,7 +184,7 @@ describe("tryFallbackRetry", () => {
 
   describe("#given non-retryable error", () => {
     test("returns false when shouldRetryError returns false", () => {
-      ;(shouldRetryError as any).mockImplementation(() => false)
+      shouldRetryErrorSpy.mockImplementation(() => false)
       const args = createDefaultArgs()
 
       const result = tryFallbackRetry(args)
@@ -248,7 +244,7 @@ describe("tryFallbackRetry", () => {
   describe("#given active idle deferral timer", () => {
     test("clears the timer and removes from map", () => {
       const args = createDefaultArgs()
-      const timerId = setTimeout(() => {}, 10000)
+      const timerId = setTimeout(() => { }, 10000)
       args.idleDeferralTimers.set("test-task-1", timerId)
 
       tryFallbackRetry(args)

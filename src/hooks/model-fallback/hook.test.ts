@@ -1,9 +1,16 @@
-declare const require: (name: string) => any
-const { beforeEach, describe, expect, mock, test } = require("bun:test")
+import { afterAll, beforeEach, describe, expect, spyOn, test } from "bun:test"
+import * as connectedProvidersCache from "../../shared/connected-providers-cache"
+import * as providerModelTransform from "../../shared/provider-model-id-transform"
+import {
+  clearPendingModelFallback,
+  createModelFallbackHook,
+  setSessionFallbackChain,
+  setPendingModelFallback,
+} from "./hook"
 
-const readConnectedProvidersCacheMock = mock(() => null)
-const readProviderModelsCacheMock = mock(() => null)
-const transformModelForProviderMock = mock((provider: string, model: string) => {
+const readConnectedProvidersCacheSpy = spyOn(connectedProvidersCache, "readConnectedProvidersCache").mockReturnValue(null)
+const readProviderModelsCacheSpy = spyOn(connectedProvidersCache, "readProviderModelsCache").mockReturnValue(null)
+const transformModelForProviderSpy = spyOn(providerModelTransform, "transformModelForProvider").mockImplementation((provider: string, model: string) => {
   if (provider === "github-copilot") {
     return model
       .replace("claude-opus-4-6", "claude-opus-4.6")
@@ -22,32 +29,23 @@ const transformModelForProviderMock = mock((provider: string, model: string) => 
   return model
 })
 
-mock.module("../../shared/connected-providers-cache", () => ({
-  readConnectedProvidersCache: readConnectedProvidersCacheMock,
-  readProviderModelsCache: readProviderModelsCacheMock,
-}))
-
-mock.module("../../shared/provider-model-id-transform", () => ({
-  transformModelForProvider: transformModelForProviderMock,
-}))
-
-import {
-  clearPendingModelFallback,
-  createModelFallbackHook,
-  setSessionFallbackChain,
-  setPendingModelFallback,
-} from "./hook"
-
 describe("model fallback hook", () => {
   beforeEach(() => {
-    readConnectedProvidersCacheMock.mockReturnValue(null)
-    readProviderModelsCacheMock.mockReturnValue(null)
-    readConnectedProvidersCacheMock.mockClear()
-    readProviderModelsCacheMock.mockClear()
+    readConnectedProvidersCacheSpy.mockReturnValue(null)
+    readProviderModelsCacheSpy.mockReturnValue(null)
+    readConnectedProvidersCacheSpy.mockClear()
+    readProviderModelsCacheSpy.mockClear()
+    transformModelForProviderSpy.mockClear()
 
     clearPendingModelFallback("ses_model_fallback_main")
     clearPendingModelFallback("ses_model_fallback_ghcp")
     clearPendingModelFallback("ses_model_fallback_google")
+  })
+
+  afterAll(() => {
+    readConnectedProvidersCacheSpy.mockRestore()
+    readProviderModelsCacheSpy.mockRestore()
+    transformModelForProviderSpy.mockRestore()
   })
 
   test("applies pending fallback on chat.message by overriding model", async () => {
@@ -137,7 +135,7 @@ describe("model fallback hook", () => {
       providerID: "zai-coding-plan",
       modelID: "glm-5",
     })
-    expect(secondOutput.message["variant"]).toBeUndefined()
+    expect((secondOutput.message as any)["variant"]).toBeUndefined()
   })
 
   test("shows toast when fallback is applied", async () => {
@@ -175,7 +173,7 @@ describe("model fallback hook", () => {
 
     //#then
     expect(toastCalls.length).toBe(1)
-    expect(toastCalls[0]?.title).toBe("Model fallback")
+    expect((toastCalls[0] as any)?.title).toBe("Model fallback")
   })
 
   test("transforms model names for github-copilot provider via fallback chain", async () => {

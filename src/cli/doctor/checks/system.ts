@@ -2,9 +2,9 @@ import { existsSync, readFileSync } from "node:fs"
 
 import { MIN_OPENCODE_VERSION, CHECK_IDS, CHECK_NAMES } from "../constants"
 import type { CheckResult, DoctorIssue, SystemInfo } from "../types"
-import { findOpenCodeBinary, getOpenCodeVersion, compareVersions } from "./system-binary"
-import { getPluginInfo } from "./system-plugin"
-import { getLatestPluginVersion, getLoadedPluginVersion, getSuggestedInstallTag } from "./system-loaded-version"
+import * as binary from "./system-binary"
+import * as plugin from "./system-plugin"
+import * as loaded from "./system-loaded-version"
 import { parseJsonc } from "../../../shared"
 
 function isConfigValid(configPath: string | null): boolean {
@@ -32,10 +32,10 @@ function buildMessage(status: CheckResult["status"], issues: DoctorIssue[]): str
 }
 
 export async function gatherSystemInfo(): Promise<SystemInfo> {
-  const [binaryInfo, pluginInfo] = await Promise.all([findOpenCodeBinary(), Promise.resolve(getPluginInfo())])
-  const loadedInfo = getLoadedPluginVersion()
+  const [binaryInfo, pluginInfo] = await Promise.all([binary.findOpenCodeBinary(), Promise.resolve(plugin.getPluginInfo())])
+  const loadedInfo = loaded.getLoadedPluginVersion()
 
-  const opencodeVersion = binaryInfo ? await getOpenCodeVersion(binaryInfo.path) : null
+  const opencodeVersion = binaryInfo ? await binary.getOpenCodeVersion(binaryInfo.path) : null
   const pluginVersion = pluginInfo.pinnedVersion ?? loadedInfo.expectedVersion
 
   return {
@@ -51,10 +51,10 @@ export async function gatherSystemInfo(): Promise<SystemInfo> {
 }
 
 export async function checkSystem(): Promise<CheckResult> {
-  const [systemInfo, pluginInfo] = await Promise.all([gatherSystemInfo(), Promise.resolve(getPluginInfo())])
-  const loadedInfo = getLoadedPluginVersion()
-  const latestVersion = await getLatestPluginVersion(systemInfo.loadedVersion)
-  const installTag = getSuggestedInstallTag(systemInfo.loadedVersion)
+  const [systemInfo, pluginInfo] = await Promise.all([gatherSystemInfo(), Promise.resolve(plugin.getPluginInfo())])
+  const loadedInfo = loaded.getLoadedPluginVersion()
+  const latestVersion = await loaded.getLatestPluginVersion(systemInfo.loadedVersion)
+  const installTag = loaded.getSuggestedInstallTag(systemInfo.loadedVersion)
   const issues: DoctorIssue[] = []
 
   if (!systemInfo.opencodePath) {
@@ -69,7 +69,7 @@ export async function checkSystem(): Promise<CheckResult> {
 
   if (
     systemInfo.opencodeVersion &&
-    !compareVersions(systemInfo.opencodeVersion, MIN_OPENCODE_VERSION)
+    !binary.compareVersions(systemInfo.opencodeVersion, MIN_OPENCODE_VERSION)
   ) {
     issues.push({
       title: "OpenCode version below minimum",
@@ -103,7 +103,7 @@ export async function checkSystem(): Promise<CheckResult> {
   if (
     systemInfo.loadedVersion &&
     latestVersion &&
-    !compareVersions(systemInfo.loadedVersion, latestVersion)
+    !binary.compareVersions(systemInfo.loadedVersion, latestVersion)
   ) {
     issues.push({
       title: "Loaded plugin is outdated",

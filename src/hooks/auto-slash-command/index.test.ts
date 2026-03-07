@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach, mock, spyOn } from "bun:test"
+import { describe, expect, it, beforeEach, afterEach, afterAll, mock, spyOn } from "bun:test"
 import type {
   AutoSlashCommandHookInput,
   AutoSlashCommandHookOutput,
@@ -10,7 +10,7 @@ import type {
 import * as shared from "../../shared"
 
 // Spy on log instead of mocking the entire module
-const logMock = spyOn(shared, "log").mockImplementation(() => {})
+const logMock = spyOn(shared, "log").mockImplementation(() => { })
 
 
 
@@ -40,6 +40,14 @@ function createMockOutput(text: string): AutoSlashCommandHookOutput {
 describe("createAutoSlashCommandHook", () => {
   beforeEach(() => {
     logMock.mockClear()
+  })
+
+  afterEach(() => {
+    logMock.mockClear()
+  })
+
+  afterAll(() => {
+    logMock.mockRestore()
   })
 
   describe("slash command replacement", () => {

@@ -1,4 +1,6 @@
-import { afterEach, describe, expect, it, mock } from "bun:test"
+import { afterEach, describe, expect, it, mock, spyOn } from "bun:test"
+import * as checks from "./checks"
+import * as formatter from "./formatter"
 import type { CheckDefinition, CheckResult, DoctorResult, SystemInfo, ToolsSummary } from "./types"
 
 function createSystemInfo(): SystemInfo {
@@ -35,7 +37,7 @@ function createDeferred(): {
   promise: Promise<CheckResult>
   resolve: (value: CheckResult) => void
 } {
-  let resolvePromise: (value: CheckResult) => void = () => {}
+  let resolvePromise: (value: CheckResult) => void = () => { }
   const promise = new Promise<CheckResult>((resolve) => {
     resolvePromise = resolve
   })
@@ -137,7 +139,7 @@ describe("runner", () => {
       const deferredThree = createDeferred()
       const deferredFour = createDeferred()
 
-      const checks: CheckDefinition[] = [
+      const mockChecks: CheckDefinition[] = [
         {
           id: "system",
           name: "System",
@@ -192,20 +194,14 @@ describe("runner", () => {
         exitCode: 0,
       }
 
-      const formatDoctorOutputMock = mock((result: DoctorResult) => result.summary.total.toString())
-      const formatJsonOutputMock = mock((result: DoctorResult) => JSON.stringify(result))
+      const getAllCheckDefinitionsSpy = spyOn(checks, "getAllCheckDefinitions").mockReturnValue(mockChecks)
+      const gatherSystemInfoSpy = spyOn(checks, "gatherSystemInfo").mockResolvedValue(expectedResult.systemInfo)
+      const gatherToolsSummarySpy = spyOn(checks, "gatherToolsSummary").mockResolvedValue(expectedResult.tools)
 
-      mock.module("./checks", () => ({
-        getAllCheckDefinitions: () => checks,
-        gatherSystemInfo: async () => expectedResult.systemInfo,
-        gatherToolsSummary: async () => expectedResult.tools,
-      }))
-      mock.module("./formatter", () => ({
-        formatDoctorOutput: formatDoctorOutputMock,
-        formatJsonOutput: formatJsonOutputMock,
-      }))
+      const formatDoctorOutputSpy = spyOn(formatter, "formatDoctorOutput").mockReturnValue(expectedResult.summary.total.toString())
+      const formatJsonOutputSpy = spyOn(formatter, "formatJsonOutput").mockReturnValue(JSON.stringify(expectedResult))
 
-      const logSpy = mock(() => {})
+      const logSpy = mock(() => { })
       const originalLog = console.log
       console.log = logSpy
 
@@ -226,8 +222,8 @@ describe("runner", () => {
       expect(startedBeforeResolve.sort()).toEqual(["config", "models", "system", "tools"])
       expect(result.results.length).toBe(4)
       expect(result.exitCode).toBe(0)
-      expect(formatDoctorOutputMock).toHaveBeenCalledTimes(1)
-      expect(formatJsonOutputMock).toHaveBeenCalledTimes(0)
+      expect(formatDoctorOutputSpy).toHaveBeenCalledTimes(1)
+      expect(formatJsonOutputSpy).toHaveBeenCalledTimes(0)
     })
   })
 })

@@ -262,6 +262,7 @@ describe("createBuiltinAgents with model overrides", () => {
         "zai-coding-plan/glm-5",
         "opencode/big-pickle",
         "openai/gpt-5.2",
+        "openai/gpt-5.3-codex",
       ])
     )
 
@@ -298,7 +299,7 @@ describe("createBuiltinAgents with model overrides", () => {
   test("excludes hidden custom agents from orchestrator prompts", async () => {
     // #given
     const fetchSpy = spyOn(shared, "fetchAvailableModels").mockResolvedValue(
-      new Set(["anthropic/claude-opus-4-6", "openai/gpt-5.2"])
+      new Set(["anthropic/claude-opus-4-6", "openai/gpt-5.3-codex"])
     )
 
     const customAgentSummaries = [
@@ -334,7 +335,7 @@ describe("createBuiltinAgents with model overrides", () => {
   test("excludes disabled custom agents from orchestrator prompts", async () => {
     // #given
     const fetchSpy = spyOn(shared, "fetchAvailableModels").mockResolvedValue(
-      new Set(["anthropic/claude-opus-4-6", "openai/gpt-5.2"])
+      new Set(["anthropic/claude-opus-4-6", "openai/gpt-5.3-codex"])
     )
 
     const customAgentSummaries = [
@@ -370,7 +371,7 @@ describe("createBuiltinAgents with model overrides", () => {
   test("excludes custom agents when disabledAgents contains their name (case-insensitive)", async () => {
     // #given
     const fetchSpy = spyOn(shared, "fetchAvailableModels").mockResolvedValue(
-      new Set(["anthropic/claude-opus-4-6", "openai/gpt-5.2"])
+      new Set(["anthropic/claude-opus-4-6", "openai/gpt-5.3-codex"])
     )
 
     const disabledAgents = ["ReSeArChEr"]
@@ -589,12 +590,12 @@ describe("createBuiltinAgents with requiresProvider gating (hephaestus)", () => 
     }
   })
 
-  test("hephaestus IS created when github-copilot is connected with a GPT model", async () => {
-    // #given - github-copilot provider has gpt-5.3-codex available
+  test("hephaestus IS created when openai is connected with a Codex model", async () => {
+    // #given - openai provider has gpt-5.3-codex available
     const fetchSpy = spyOn(shared, "fetchAvailableModels").mockResolvedValue(
-      new Set(["github-copilot/gpt-5.3-codex"])
+      new Set(["openai/gpt-5.3-codex"])
     )
-    const cacheSpy = spyOn(connectedProvidersCache, "readConnectedProvidersCache").mockReturnValue(null)
+    const cacheSpy = spyOn(connectedProvidersCache, "readConnectedProvidersCache").mockReturnValue([])
 
     try {
       // #when
@@ -661,6 +662,26 @@ describe("createBuiltinAgents with requiresProvider gating (hephaestus)", () => 
     } finally {
       fetchSpy.mockRestore()
     }
+  })
+
+  test("hephaestus IS created when any fallback model (e.g. Codex) is available", async () => {
+    // #given
+    const fetchSpy = spyOn(shared, "fetchAvailableModels").mockResolvedValue(
+      new Set(["openai/gpt-5.3-codex"])
+    )
+    const agents = await createBuiltinAgents(
+      [],
+      {},
+      undefined,
+      TEST_DEFAULT_MODEL,
+      undefined,
+      undefined,
+      [],
+      {},
+    )
+    // #then
+    expect(agents.hephaestus).toBeDefined()
+    fetchSpy.mockRestore()
   })
 })
 

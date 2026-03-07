@@ -1,55 +1,19 @@
-import { beforeEach, describe, expect, it, mock } from "bun:test"
-
-const mockFindOpenCodeBinary = mock(async () => ({ path: "/usr/local/bin/opencode" }))
-const mockGetOpenCodeVersion = mock(async () => "1.0.200")
-const mockCompareVersions = mock(() => true)
-const mockGetPluginInfo = mock(() => ({
-  registered: true,
-  entry: "oh-my-opencode",
-  isPinned: false,
-  pinnedVersion: null,
-  configPath: null,
-  isLocalDev: false,
-}))
-const mockGetLoadedPluginVersion = mock(() => ({
-  cacheDir: "/Users/test/Library/Caches/opencode with spaces",
-  cachePackagePath: "/tmp/package.json",
-  installedPackagePath: "/tmp/node_modules/oh-my-opencode/package.json",
-  expectedVersion: "3.0.0",
-  loadedVersion: "3.1.0",
-}))
-const mockGetLatestPluginVersion = mock(async () => null)
-
-mock.module("./system-binary", () => ({
-  findOpenCodeBinary: mockFindOpenCodeBinary,
-  getOpenCodeVersion: mockGetOpenCodeVersion,
-  compareVersions: mockCompareVersions,
-}))
-
-mock.module("./system-plugin", () => ({
-  getPluginInfo: mockGetPluginInfo,
-}))
-
-mock.module("./system-loaded-version", () => ({
-  getLoadedPluginVersion: mockGetLoadedPluginVersion,
-  getLatestPluginVersion: mockGetLatestPluginVersion,
-}))
+import { beforeEach, describe, expect, it, mock, spyOn } from "bun:test"
+import * as binary from "./system-binary"
+import * as plugin from "./system-plugin"
+import * as loaded from "./system-loaded-version"
 
 const { checkSystem } = await import("./system?test")
 
 describe("system check", () => {
   beforeEach(() => {
-    mockFindOpenCodeBinary.mockReset()
-    mockGetOpenCodeVersion.mockReset()
-    mockCompareVersions.mockReset()
-    mockGetPluginInfo.mockReset()
-    mockGetLoadedPluginVersion.mockReset()
-    mockGetLatestPluginVersion.mockReset()
-
-    mockFindOpenCodeBinary.mockResolvedValue({ path: "/usr/local/bin/opencode" })
-    mockGetOpenCodeVersion.mockResolvedValue("1.0.200")
-    mockCompareVersions.mockReturnValue(true)
-    mockGetPluginInfo.mockReturnValue({
+    spyOn(binary, "findOpenCodeBinary").mockResolvedValue({ path: "/usr/local/bin/opencode" })
+    spyOn(binary, "getOpenCodeVersion").mockResolvedValue("1.0.200")
+    spyOn(binary, "compareVersions").mockImplementation((v1, v2) => {
+      // Simple mock implementation or just mockReturnValue(true)
+      return true
+    })
+    spyOn(plugin, "getPluginInfo").mockReturnValue({
       registered: true,
       entry: "oh-my-opencode",
       isPinned: false,
@@ -57,19 +21,20 @@ describe("system check", () => {
       configPath: null,
       isLocalDev: false,
     })
-    mockGetLoadedPluginVersion.mockReturnValue({
+    spyOn(loaded, "getLoadedPluginVersion").mockReturnValue({
       cacheDir: "/Users/test/Library/Caches/opencode with spaces",
       cachePackagePath: "/tmp/package.json",
       installedPackagePath: "/tmp/node_modules/oh-my-opencode/package.json",
       expectedVersion: "3.0.0",
       loadedVersion: "3.1.0",
     })
-    mockGetLatestPluginVersion.mockResolvedValue(null)
+    spyOn(loaded, "getLatestPluginVersion").mockResolvedValue(null)
   })
 
   describe("#given cache directory contains spaces", () => {
     it("uses a quoted cache directory in mismatch fix command", async () => {
       //#when
+      const { checkSystem } = await import("./system?test-quoted")
       const result = await checkSystem()
 
       //#then
@@ -79,19 +44,20 @@ describe("system check", () => {
 
     it("uses the loaded version channel for update fix command", async () => {
       //#given
-      mockGetLoadedPluginVersion.mockReturnValue({
+      spyOn(loaded, "getLoadedPluginVersion").mockReturnValue({
         cacheDir: "/Users/test/Library/Caches/opencode with spaces",
         cachePackagePath: "/tmp/package.json",
         installedPackagePath: "/tmp/node_modules/oh-my-opencode/package.json",
         expectedVersion: "3.0.0-canary.1",
         loadedVersion: "3.0.0-canary.1",
       })
-      mockGetLatestPluginVersion.mockResolvedValue("3.0.0-canary.2")
-      mockCompareVersions.mockImplementation((leftVersion: string, rightVersion: string) => {
+      spyOn(loaded, "getLatestPluginVersion").mockResolvedValue("3.0.0-canary.2")
+      spyOn(binary, "compareVersions").mockImplementation((leftVersion: string, rightVersion: string) => {
         return !(leftVersion === "3.0.0-canary.1" && rightVersion === "3.0.0-canary.2")
       })
 
       //#when
+      const { checkSystem } = await import("./system?test-update")
       const result = await checkSystem()
 
       //#then
