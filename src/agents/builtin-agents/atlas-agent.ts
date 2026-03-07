@@ -11,6 +11,7 @@ export function maybeCreateAtlasConfig(input: {
   disabledAgents: string[]
   agentOverrides: AgentOverrides
   uiSelectedModel?: string
+  sessionModel?: string
   availableModels: Set<string>
   systemDefaultModel?: string
   availableAgents: AvailableAgent[]
@@ -24,6 +25,7 @@ export function maybeCreateAtlasConfig(input: {
     disabledAgents,
     agentOverrides,
     uiSelectedModel,
+    sessionModel,
     availableModels,
     systemDefaultModel,
     availableAgents,
@@ -40,10 +42,12 @@ export function maybeCreateAtlasConfig(input: {
 
   const atlasResolution = applyModelResolution({
     uiSelectedModel: orchestratorOverride?.model ? undefined : uiSelectedModel,
+    sessionModel: orchestratorOverride?.model ? undefined : sessionModel,
     userModel: orchestratorOverride?.model,
     requirement: atlasRequirement,
     availableModels,
     systemDefaultModel,
+    contextID: "atlas",
   })
 
   if (!atlasResolution) return undefined

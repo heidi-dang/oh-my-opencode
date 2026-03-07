@@ -16,6 +16,7 @@ export function maybeCreatePrimaryAgentConfig(input: {
   disabledAgents: string[]
   agentOverrides: AgentOverrides
   uiSelectedModel?: string
+  sessionModel?: string
   availableModels: Set<string>
   systemDefaultModel?: string
   isFirstRunNoCache: boolean
@@ -34,6 +35,7 @@ export function maybeCreatePrimaryAgentConfig(input: {
     disabledAgents,
     agentOverrides,
     uiSelectedModel,
+    sessionModel,
     availableModels,
     systemDefaultModel,
     isFirstRunNoCache,
@@ -59,10 +61,12 @@ export function maybeCreatePrimaryAgentConfig(input: {
 
   let resolution = applyModelResolution({
     uiSelectedModel: override?.model ? undefined : uiSelectedModel,
+    sessionModel: override?.model ? undefined : sessionModel,
     userModel: override?.model,
     requirement: requirement,
     availableModels,
     systemDefaultModel,
+    contextID: agentName,
   })
 
   if (isFirstRunNoCache && !override?.model && !uiSelectedModel) {

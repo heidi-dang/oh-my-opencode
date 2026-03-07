@@ -20,6 +20,7 @@ export function collectPendingBuiltinAgents(input: {
   gitMasterConfig?: GitMasterConfig
   browserProvider?: BrowserAutomationProvider
   uiSelectedModel?: string
+  sessionModel?: string
   availableModels: Set<string>
   disabledSkills?: Set<string>
   useTaskSystem?: boolean
@@ -36,6 +37,7 @@ export function collectPendingBuiltinAgents(input: {
     gitMasterConfig,
     browserProvider,
     uiSelectedModel,
+    sessionModel,
     availableModels,
     disabledSkills,
     disableOmoEnv = false,
@@ -67,10 +69,12 @@ export function collectPendingBuiltinAgents(input: {
 
     const resolution = applyModelResolution({
       uiSelectedModel: ((isPrimaryAgent || agentName === "chat") && !override?.model) ? uiSelectedModel : undefined,
+      sessionModel: ((isPrimaryAgent || agentName === "chat") && !override?.model) ? sessionModel : undefined,
       userModel: override?.model,
       requirement,
       availableModels,
       systemDefaultModel,
+      contextID: agentName,
     })
     if (!resolution) continue
     const { model, variant: resolvedVariant } = resolution

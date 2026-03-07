@@ -8,6 +8,7 @@ import { normalizeModel } from "./model-normalization"
 export type ModelResolutionRequest = {
   intent?: {
     uiSelectedModel?: string
+    sessionModel?: string
     userModel?: string
     userFallbackModels?: string[]
     categoryDefaultModel?: string
@@ -47,10 +48,15 @@ export function resolveModelPipeline(
   const systemDefaultModel = policy?.systemDefaultModel
 
   const normalizedUiModel = normalizeModel(intent?.uiSelectedModel)
-  console.log("[DEBUG] uiSelectedModel:", intent?.uiSelectedModel, "normalized:", normalizedUiModel)
   if (normalizedUiModel) {
     log("Model resolved via UI selection", { model: normalizedUiModel })
     return { model: normalizedUiModel, provenance: "override" }
+  }
+
+  const normalizedSessionModel = normalizeModel(intent?.sessionModel)
+  if (normalizedSessionModel) {
+    log("Model resolved via session state", { model: normalizedSessionModel })
+    return { model: normalizedSessionModel, provenance: "override" }
   }
 
   const normalizedUserModel = normalizeModel(intent?.userModel)

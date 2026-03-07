@@ -77,19 +77,21 @@ export async function applyAgentConfig(params: {
   const browserProvider =
     params.pluginConfig.browser_automation_engine?.provider ?? "playwright";
   
-  let currentModel = params.config.model as string | undefined;
+  const uiSelectedModel = params.config.model as string | undefined;
+  let sessionModel: string | undefined;
 
-  // Persistence: If model selection is missing (e.g., following turn), try to restore from session state
-  if (!currentModel) {
-    const mainSessionID = getMainSessionID();
-    if (mainSessionID) {
-      const sessionModel = getSessionModel(mainSessionID);
-      if (sessionModel) {
-        currentModel = `${sessionModel.providerID}/${sessionModel.modelID}`;
-        log("[agent-config-handler] Restoring currentModel from session state:", currentModel);
-      }
+  const mainSessionID = getMainSessionID();
+  if (mainSessionID) {
+    const sessionState = getSessionModel(mainSessionID);
+    if (sessionState) {
+      sessionModel = `${sessionState.providerID}/${sessionState.modelID}`;
+      log("[agent-config-handler] Identified sessionModel:", sessionModel);
     }
   }
+
+  // systemDefaultModel can stay as currentModel for legacy compatibility in some agents,
+  // but most now use the intent-based resolution.
+  const systemDefaultModel = uiSelectedModel ?? sessionModel;
 
   const disabledSkills = new Set<string>(params.pluginConfig.disabled_skills ?? []);
   const useTaskSystem = params.pluginConfig.experimental?.task_system ?? false;
@@ -99,13 +101,14 @@ export async function applyAgentConfig(params: {
     migratedDisabledAgents,
     params.pluginConfig.agents,
     params.ctx.directory,
-    currentModel,
+    systemDefaultModel,
     params.pluginConfig.categories,
     params.pluginConfig.git_master,
     allDiscoveredSkills,
     params.ctx.client,
     browserProvider,
-    currentModel,
+    uiSelectedModel,
+    sessionModel,
     disabledSkills,
     useTaskSystem,
     disableOmoEnv,
@@ -190,7 +193,8 @@ export async function applyAgentConfig(params: {
         configAgentPlan: configAgent?.plan,
         pluginPrometheusOverride: prometheusOverride,
         userCategories: params.pluginConfig.categories,
-        currentModel,
+        uiSelectedModel,
+        sessionModel,
       });
     }
 

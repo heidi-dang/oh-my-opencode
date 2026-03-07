@@ -13,6 +13,8 @@ export function maybeCreateHephaestusConfig(input: {
   agentOverrides: AgentOverrides
   availableModels: Set<string>
   systemDefaultModel?: string
+  uiSelectedModel?: string
+  sessionModel?: string
   isFirstRunNoCache: boolean
   availableAgents: AvailableAgent[]
   availableSkills: AvailableSkill[]
@@ -27,6 +29,8 @@ export function maybeCreateHephaestusConfig(input: {
     agentOverrides,
     availableModels,
     systemDefaultModel,
+    uiSelectedModel,
+    sessionModel,
     isFirstRunNoCache,
     availableAgents,
     availableSkills,
@@ -52,10 +56,13 @@ export function maybeCreateHephaestusConfig(input: {
   if (!meetsAnyModelRequirement) return undefined
 
   let hephaestusResolution = applyModelResolution({
+    uiSelectedModel: hephaestusOverride?.model ? undefined : uiSelectedModel,
+    sessionModel: hephaestusOverride?.model ? undefined : sessionModel,
     userModel: hephaestusOverride?.model,
     requirement: hephaestusRequirement,
     availableModels,
     systemDefaultModel,
+    contextID: "hephaestus",
   })
 
   if (isFirstRunNoCache && !hephaestusOverride?.model) {

@@ -3,6 +3,7 @@ import type { FallbackEntry } from "./model-requirements"
 export type ModelResolutionRequest = {
   intent?: {
     uiSelectedModel?: string
+    sessionModel?: string
     userModel?: string
     categoryDefaultModel?: string
   }
