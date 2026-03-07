@@ -77,6 +77,10 @@ describe("executeSyncContinuation - toast cleanup error paths", () => {
 
     const mockCtx = {
       sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
       callID: "call-123",
       metadata: () => {},
     }
@@ -139,6 +143,10 @@ describe("executeSyncContinuation - toast cleanup error paths", () => {
 
     const mockCtx = {
       sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
       callID: "call-123",
       metadata: () => {},
     }
@@ -205,6 +213,10 @@ describe("executeSyncContinuation - toast cleanup error paths", () => {
 
     const mockCtx = {
       sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
       callID: "call-123",
       metadata: () => {},
     }
@@ -268,6 +280,10 @@ describe("executeSyncContinuation - toast cleanup error paths", () => {
 
     const mockCtx = {
       sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
       callID: "call-123",
       metadata: () => {},
       abort: controller.signal,
@@ -326,6 +342,10 @@ describe("executeSyncContinuation - toast cleanup error paths", () => {
 
     const mockCtx = {
       sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
       callID: "call-123",
       metadata: () => {},
     }
@@ -386,6 +406,10 @@ describe("executeSyncContinuation - toast cleanup error paths", () => {
 
     const mockCtx = {
       sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
       callID: "call-123",
       metadata: () => {},
     }
@@ -440,6 +464,10 @@ describe("executeSyncContinuation - toast cleanup error paths", () => {
 
     const mockCtx = {
       sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
       callID: "call-123",
       metadata: () => {},
     }

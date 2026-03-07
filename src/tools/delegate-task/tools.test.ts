@@ -301,6 +301,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -364,6 +368,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -428,6 +436,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -492,6 +504,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -549,6 +565,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -598,6 +618,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -664,6 +688,10 @@ describe("sisyphus-task", () => {
       const metadataCalls: Array<{ title?: string; metadata?: Record<string, unknown> }> = []
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -956,6 +984,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -1021,6 +1053,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -1082,6 +1118,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -1132,6 +1172,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -1173,6 +1217,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -1226,6 +1274,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -1327,6 +1379,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -1424,6 +1480,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -1483,6 +1543,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -1541,6 +1605,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -1606,6 +1674,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -1662,6 +1734,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -1789,6 +1865,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -1848,6 +1928,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -1920,6 +2004,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -1984,6 +2072,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -2052,6 +2144,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -2120,6 +2216,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -2193,6 +2293,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -2262,6 +2366,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -2327,6 +2435,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -2388,6 +2500,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -2453,6 +2569,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -2514,6 +2634,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -2576,6 +2700,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -2636,6 +2764,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -2691,6 +2823,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -3210,6 +3346,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -3274,6 +3414,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -3338,6 +3482,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -3402,6 +3550,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -3469,6 +3621,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -3533,6 +3689,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -3594,6 +3754,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -3678,6 +3842,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -3733,6 +3901,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -3782,6 +3954,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,
@@ -3840,6 +4016,10 @@ describe("sisyphus-task", () => {
 
       const toolContext = {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         agent: "sisyphus",
         abort: new AbortController().signal,

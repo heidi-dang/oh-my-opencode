@@ -59,6 +59,10 @@ describe("executeUnstableAgentTask - interrupt detection", () => {
 
     const mockCtx = {
       sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
       callID: "call-123",
       metadata: () => {},
     }
@@ -71,6 +75,10 @@ describe("executeUnstableAgentTask - interrupt detection", () => {
 
     const parentContext = {
       sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
       messageID: "msg-123",
     }
 
@@ -126,6 +134,10 @@ describe("executeUnstableAgentTask - interrupt detection", () => {
 
     const mockCtx = {
       sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
       callID: "call-123",
       metadata: () => {},
     }
@@ -138,6 +150,10 @@ describe("executeUnstableAgentTask - interrupt detection", () => {
 
     const parentContext = {
       sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
       messageID: "msg-123",
     }
 
@@ -193,6 +209,10 @@ describe("executeUnstableAgentTask - interrupt detection", () => {
 
     const mockCtx = {
       sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
       callID: "call-123",
       metadata: () => {},
     }
@@ -205,6 +225,10 @@ describe("executeUnstableAgentTask - interrupt detection", () => {
 
     const parentContext = {
       sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
       messageID: "msg-123",
     }
 

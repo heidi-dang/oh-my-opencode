@@ -23,6 +23,10 @@ describe("createLookAt error handling", () => {
 
     const toolContext: ToolContext = {
       sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
       messageID: "parent-message",
       agent: "sisyphus",
       directory: "/project",
@@ -60,6 +64,10 @@ describe("createLookAt error handling", () => {
 
     const toolContext: ToolContext = {
       sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
       messageID: "parent-message",
       agent: "sisyphus",
       directory: "/project",
@@ -97,6 +105,10 @@ describe("createLookAt error handling", () => {
 
     const toolContext: ToolContext = {
       sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
       messageID: "parent-message",
       agent: "sisyphus",
       directory: "/project",

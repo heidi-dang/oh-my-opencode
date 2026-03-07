@@ -25,6 +25,10 @@ describe("executeSync", () => {
 
     const toolContext = {
       sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
       messageID: "msg-1",
       agent: "sisyphus",
       abort: new AbortController().signal,
@@ -69,6 +73,10 @@ describe("executeSync", () => {
 
     const toolContext = {
       sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
       messageID: "msg-2",
       agent: "sisyphus",
       abort: new AbortController().signal,

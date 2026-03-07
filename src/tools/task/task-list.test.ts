@@ -29,6 +29,7 @@ describe("createTaskList", () => {
       sisyphus: {
         tasks: {
           storage_path: join(testProjectDir, ".sisyphus/tasks"),
+      claude_code_compat: true,
           claude_code_compat: false,
         },
       },
@@ -71,6 +72,7 @@ describe("createTaskList", () => {
       sisyphus: {
         tasks: {
           storage_path: join(testProjectDir, ".sisyphus/tasks"),
+      claude_code_compat: true,
           claude_code_compat: false,
         },
       },
@@ -114,6 +116,7 @@ describe("createTaskList", () => {
        sisyphus: {
          tasks: {
            storage_path: join(testProjectDir, ".sisyphus/tasks"),
+      claude_code_compat: true,
            claude_code_compat: false,
          },
        },
@@ -148,6 +151,7 @@ describe("createTaskList", () => {
        sisyphus: {
          tasks: {
            storage_path: join(testProjectDir, ".sisyphus/tasks"),
+      claude_code_compat: true,
            claude_code_compat: false,
          },
        },
@@ -212,6 +216,7 @@ describe("createTaskList", () => {
        sisyphus: {
          tasks: {
            storage_path: join(testProjectDir, ".sisyphus/tasks"),
+      claude_code_compat: true,
            claude_code_compat: false,
          },
        },
@@ -255,6 +260,7 @@ describe("createTaskList", () => {
        sisyphus: {
          tasks: {
            storage_path: join(testProjectDir, ".sisyphus/tasks"),
+      claude_code_compat: true,
            claude_code_compat: false,
          },
        },
@@ -287,6 +293,7 @@ describe("createTaskList", () => {
        sisyphus: {
          tasks: {
            storage_path: join(testProjectDir, ".sisyphus/tasks"),
+      claude_code_compat: true,
            claude_code_compat: false,
          },
        },
@@ -319,6 +326,7 @@ describe("createTaskList", () => {
        sisyphus: {
          tasks: {
            storage_path: join(testProjectDir, ".sisyphus/tasks"),
+      claude_code_compat: true,
            claude_code_compat: false,
          },
        },

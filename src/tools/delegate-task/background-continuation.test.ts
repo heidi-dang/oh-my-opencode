@@ -15,6 +15,10 @@ describe("executeBackgroundContinuation - subagent metadata", () => {
 
     const mockCtx = {
       sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
       callID: "call-456",
       metadata: mock(() => Promise.resolve()),
     }
@@ -25,6 +29,10 @@ describe("executeBackgroundContinuation - subagent metadata", () => {
 
     const parentContext = {
       sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
       messageID: "msg-parent",
       agent: "sisyphus",
     }
@@ -61,6 +69,10 @@ describe("executeBackgroundContinuation - subagent metadata", () => {
 
     const mockCtx = {
       sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
       callID: "call-789",
       metadata: mock(() => Promise.resolve()),
     }
@@ -71,6 +83,10 @@ describe("executeBackgroundContinuation - subagent metadata", () => {
 
     const parentContext = {
       sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
       messageID: "msg-parent",
       agent: "sisyphus",
     }
