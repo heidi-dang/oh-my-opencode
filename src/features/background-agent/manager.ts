@@ -1385,8 +1385,24 @@ export class BackgroundManager {
     // to ensure slots are freed even if notification fails
 
     const duration = formatDuration(task.startedAt ?? new Date(), task.completedAt)
-
     log("[background-agent] notifyParentSession called for task:", task.id)
+
+    // Change Aggregation: Fetch child session to get affected files from its metadata
+    try {
+      if (task.sessionID) {
+        const sessionResp = await this.client.session.get({ path: { id: task.sessionID } })
+        const sessionData = sessionResp.data as any
+        if (sessionData?.metadata?.affectedFiles) {
+          task.affectedFiles = sessionData.metadata.affectedFiles
+          log("[background-agent] Aggregated affected files from child session:", {
+            taskId: task.id,
+            count: task.affectedFiles?.length || 0
+          })
+        }
+      }
+    } catch (e) {
+      log("[background-agent] Failed to fetch session metadata for change aggregation:", e)
+    }
 
     // Show toast notification
     const toastManager = getTaskToastManager()
@@ -1421,6 +1437,19 @@ export class BackgroundManager {
     const statusText = task.status === "completed" ? "COMPLETED" : task.status === "interrupt" ? "INTERRUPTED" : "CANCELLED"
     const errorInfo = task.error ? `\n**Error:** ${task.error}` : ""
 
+    const allAffectedFiles = new Set<string>()
+    if (allComplete) {
+      for (const t of completedTasks) {
+        if (t.affectedFiles) t.affectedFiles.forEach((f: string) => allAffectedFiles.add(f))
+      }
+    } else if (task.affectedFiles) {
+      task.affectedFiles.forEach((f: string) => allAffectedFiles.add(f))
+    }
+
+    const affectedFilesText = allAffectedFiles.size > 0
+      ? `\n\n**Affected Files:**\n${Array.from(allAffectedFiles).map(f => `- ${f}`).join("\n")}`
+      : ""
+
     let notification: string
     if (allComplete) {
         const completedTasksText = completedTasks
@@ -1431,7 +1460,7 @@ export class BackgroundManager {
 [ALL BACKGROUND TASKS COMPLETE]
 
 **Completed:**
-${completedTasksText || `- \`${task.id}\`: ${task.description}`}
+${completedTasksText || `- \`${task.id}\`: ${task.description}`}${affectedFilesText}
 
 Use \`background_output(task_id="<id>")\` to retrieve each result.
 </system-reminder>`
@@ -1441,7 +1470,7 @@ Use \`background_output(task_id="<id>")\` to retrieve each result.
 [BACKGROUND TASK ${statusText}]
 **ID:** \`${task.id}\`
 **Description:** ${task.description}
-**Duration:** ${duration}${errorInfo}
+**Duration:** ${duration}${errorInfo}${affectedFilesText}
 
 **${remainingCount} task${remainingCount === 1 ? "" : "s"} still in progress.** You WILL be notified when ALL complete.
 Do NOT poll - continue productive work.

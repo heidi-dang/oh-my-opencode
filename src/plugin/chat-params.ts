@@ -6,6 +6,9 @@ export type ChatParamsInput = {
   message: { variant?: string }
 }
 
+import { log } from "../shared/logger"
+import { isModelSupported } from "../shared/model-availability"
+
 export type ChatParamsOutput = {
   temperature?: number
   topP?: number
@@ -75,6 +78,15 @@ export function createChatParamsHandler(args: {
     const normalizedInput = buildChatParamsInput(input)
     if (!normalizedInput) return
     if (!isChatParamsOutput(output)) return
+
+    // Pre-queue validation: Fail fast if the model is not supported by the provider.
+    // This prevents the run from entering a "Queued" hang state.
+    const { providerID, modelID } = normalizedInput.model
+    if (!isModelSupported(providerID, modelID)) {
+      const errorMsg = `Model not supported: ${providerID}/${modelID} is not available on this provider. Action aborted.`
+      log("[chat.params] Model not supported, failing fast:", { providerID, modelID })
+      throw new Error(errorMsg)
+    }
 
     await args.anthropicEffort?.["chat.params"]?.(normalizedInput, output)
   }

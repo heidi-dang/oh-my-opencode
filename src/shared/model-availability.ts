@@ -4,6 +4,7 @@ import { log } from "./logger"
 import { getOpenCodeCacheDir } from "./data-path"
 import * as connectedProvidersCache from "./connected-providers-cache"
 import { normalizeSDKResponse } from "./normalize-sdk-response"
+import { normalizeModelID } from "./model-normalization"
 
 /**
  * Fuzzy match a target model name against available models
@@ -115,6 +116,35 @@ export function isModelAvailable(
 	availableModels: Set<string>,
 ): boolean {
 	return fuzzyMatchModel(targetModel, availableModels) !== null
+}
+
+/**
+ * Perform a strict check for model support using the connected-providers cache.
+ * Returns true if the (providerID, modelID) pair is known to be supported.
+ * Returns true if the cache is missing (fail-open to allow for potentially stale cache).
+ */
+export function isModelSupported(providerID: string, modelID: string): boolean {
+	const providerModelsCache = connectedProvidersCache.readProviderModelsCache()
+	if (!providerModelsCache) {
+		log("[isModelSupported] Cache missing, fail-open", { providerID, modelID })
+		return true
+	}
+
+	const models = providerModelsCache.models[providerID]
+	if (!models) {
+		log("[isModelSupported] Provider not in cache", { providerID, modelID })
+		return false
+	}
+
+	const normalizedTarget = normalizeModelID(modelID)
+
+	const supported = models.some((m) => {
+		const id = typeof m === "string" ? m : (m as any).id
+		return id === modelID || id === normalizedTarget
+	})
+
+	log("[isModelSupported] Result:", { providerID, modelID, normalizedTarget, supported })
+	return supported
 }
 
 export async function getConnectedProviders(client: any): Promise<string[]> {

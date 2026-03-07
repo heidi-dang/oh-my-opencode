@@ -962,3 +962,95 @@ describe("fallback model availability", () => {
 		expect(result).toBeNull()
 	})
 })
+
+describe("isModelSupported", () => {
+	let tempDir: string
+	let originalXdgCache: string | undefined
+	let isModelSupported: (providerID: string, modelID: string) => boolean
+
+	beforeAll(async () => {
+		const mod = await import("./model-availability")
+		isModelSupported = mod.isModelSupported
+	})
+
+	beforeEach(() => {
+		__resetModelCache()
+		tempDir = mkdtempSync(join(tmpdir(), "opencode-test-is-supported-"))
+		originalXdgCache = process.env.XDG_CACHE_HOME
+		process.env.XDG_CACHE_HOME = tempDir
+	})
+
+	afterEach(() => {
+		if (originalXdgCache !== undefined) {
+			process.env.XDG_CACHE_HOME = originalXdgCache
+		} else {
+			delete process.env.XDG_CACHE_HOME
+		}
+		rmSync(tempDir, { recursive: true, force: true })
+	})
+
+	function writeProviderModelsCache(data: any) {
+		const cacheDir = join(tempDir, "oh-my-opencode")
+		require("fs").mkdirSync(cacheDir, { recursive: true })
+		writeFileSync(
+			join(cacheDir, "provider-models.json"),
+			JSON.stringify({
+				...data,
+				updatedAt: new Date().toISOString(),
+			}),
+		)
+	}
+
+	it("should return true when model is in cache", () => {
+		writeProviderModelsCache({
+			models: {
+				openai: ["gpt-5.2", "gpt-5.3-codex"],
+			},
+		})
+		expect(isModelSupported("openai", "gpt-5.2")).toBe(true)
+		expect(isModelSupported("openai", "gpt-5.3-codex")).toBe(true)
+	})
+
+	it("should return false when model is not in cache", () => {
+		writeProviderModelsCache({
+			models: {
+				openai: ["gpt-5.2"],
+			},
+		})
+		expect(isModelSupported("openai", "gpt-5.3-codex")).toBe(false)
+	})
+
+	it("should return false when provider is not in cache", () => {
+		writeProviderModelsCache({
+			models: {
+				openai: ["gpt-5.2"],
+			},
+		})
+		expect(isModelSupported("google", "gemini-3")).toBe(false)
+	})
+
+	it("should return true when cache is missing (fail-open)", () => {
+		// No cache written
+		expect(isModelSupported("openai", "gpt-5.2")).toBe(true)
+	})
+
+	it("should handle normalized model IDs", () => {
+		writeProviderModelsCache({
+			models: {
+				openai: ["gpt-3-5-turbo"],
+			},
+		})
+		// normalizeModelID("gpt-3.5-turbo") -> "gpt-3-5-turbo"
+		expect(isModelSupported("openai", "gpt-3.5-turbo")).toBe(true)
+	})
+
+	it("should handle MiniMax special case normalization", () => {
+		writeProviderModelsCache({
+			models: {
+				"opencode-go": ["MiniMax-M2.5"],
+			},
+		})
+		// normalizeModelID("minimax-m2.5") -> "MiniMax-M2.5"
+		expect(isModelSupported("opencode-go", "minimax-m2.5")).toBe(true)
+	})
+})
