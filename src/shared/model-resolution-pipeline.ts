@@ -68,15 +68,46 @@ export function resolveModelPipeline(
   }
 
   const normalizedSessionModel = normalizeModel(intent?.sessionModel)
-  if (normalizedSessionModel) {
-    log("Model resolved via session state", { model: normalizedSessionModel })
-    return { model: normalizedSessionModel, provenance: "override" }
-  }
 
+  // userModel (agent-level config, e.g. agents.hephaestus.model) MUST take priority over sessionModel.
+  // sessionModel is the parent session's current model and should only be used as a fallback when
+  // the agent has no explicit model config. Without this ordering, sub-agents silently inherit the
+  // parent's model and ignore their own configuration.
   const normalizedUserModel = normalizeModel(intent?.userModel)
   if (normalizedUserModel) {
-    log("Model resolved via config override", { model: normalizedUserModel })
-    return { model: normalizedUserModel, provenance: "override" }
+    // When we have an availability cache, validate the config override before returning.
+    if (availableModels.size > 0) {
+      const parts = normalizedUserModel.split("/")
+      const providerHint = parts.length >= 2 ? [parts[0]] : undefined
+      const match = fuzzyMatchModel(normalizedUserModel, availableModels, providerHint)
+      if (match) {
+        log("Model resolved via config override (availability confirmed)", { model: match })
+        return { model: match, provenance: "override" }
+      }
+      log("Config-override model not available, skipping to next option", { model: normalizedUserModel })
+    } else {
+      log("Model resolved via config override (no cache, first run)", { model: normalizedUserModel })
+      return { model: normalizedUserModel, provenance: "override" }
+    }
+  }
+
+  if (normalizedSessionModel) {
+    // Apply the same availability guard as uiSelectedModel:
+    // a stale or unsupported inherited session model must be skipped, not silently accepted.
+    if (availableModels.size > 0) {
+      const parts = normalizedSessionModel.split("/")
+      const providerHint = parts.length >= 2 ? [parts[0]] : undefined
+      const match = fuzzyMatchModel(normalizedSessionModel, availableModels, providerHint)
+      if (match) {
+        log("Model resolved via session state (availability confirmed)", { model: match })
+        return { model: match, provenance: "override" }
+      }
+      log("Session model not available, skipping to fallback chain", { model: normalizedSessionModel })
+      // Do NOT return — fall through to category-default / fallback chain
+    } else {
+      log("Model resolved via session state (no cache, first run)", { model: normalizedSessionModel })
+      return { model: normalizedSessionModel, provenance: "override" }
+    }
   }
 
   const normalizedCategoryDefault = normalizeModel(intent?.categoryDefaultModel)
