@@ -1,4 +1,5 @@
-// ===== New 3-tier doctor types =====
+import type { ActiveTaskInfo } from "../../shared/active-task-storage"
+export type { ActiveTaskInfo }
 
 export type DoctorMode = "default" | "status" | "verbose"
 
@@ -71,6 +72,7 @@ export interface DoctorResult {
   systemInfo: SystemInfo
   tools: ToolsSummary
   summary: DoctorSummary
+  activeTasks?: ActiveTaskInfo[]
   exitCode: number
 }
 

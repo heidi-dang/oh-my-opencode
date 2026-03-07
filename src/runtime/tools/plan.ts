@@ -16,12 +16,12 @@ export function createSubmitPlanTool(): any {
             })).describe("The execution DAG (Directed Acyclic Graph) of operations")
         },
         execute: async (args, toolContext) => {
-            compiler.submit(args.steps)
+            const taskID = compiler.submit(toolContext.sessionID, args.steps)
 
             const result = createSuccessResult({
                 verified: true,
                 changedState: false,
-                metadata: { planLength: args.steps.length }
+                metadata: { planLength: args.steps.length, taskID }
             });
 
             toolContext.metadata({
@@ -29,7 +29,7 @@ export function createSubmitPlanTool(): any {
                 ...result
             })
 
-            const active = compiler.getActiveStep()
+            const active = compiler.getActiveStep(toolContext.sessionID)
             return `Plan successfully compiled into an executable graph (including implicit verification nodes).\n\nCURRENT FORCED STEP: ${active?.action} (ID: ${active?.id}).\nDo not execute any other tools until this step is complete.`
         }
     })
@@ -43,7 +43,7 @@ export function createMarkStepCompleteTool(): any {
             id: z.string().describe("The ID of the step that was completed")
         },
         execute: async (args, toolContext) => {
-            compiler.markStepComplete(args.id)
+            compiler.markStepComplete(toolContext.sessionID, args.id)
 
             const result = createSuccessResult({
                 verified: true,
@@ -56,12 +56,34 @@ export function createMarkStepCompleteTool(): any {
                 ...result
             })
 
-            const active = compiler.getActiveStep()
+            const active = compiler.getActiveStep(toolContext.sessionID)
             if (!active) {
                 return `Step ${args.id} marked complete. The plan graph is now fully exhausted. You may report final success to the user.`
             }
 
             return `Step ${args.id} marked complete.\n\nNEXT FORCED STEP: ${active.action} (ID: ${active.id}).`
+        }
+    })
+}
+
+export function createUnlockPlanTool(): any {
+    return tool({
+        description: "Manually unlocks the deterministic execution plan, clearing any active steps for the current session.",
+        args: {},
+        execute: async (_, toolContext) => {
+            compiler.clear(toolContext.sessionID)
+            
+            const result = createSuccessResult({
+                verified: true,
+                changedState: false
+            })
+
+            toolContext.metadata({
+                title: "Plan Unlocked",
+                ...result
+            })
+
+            return "The deterministic execution plan has been cleared for this session. You are now in freestyle mode."
         }
     })
 }

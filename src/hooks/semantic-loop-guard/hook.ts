@@ -58,7 +58,7 @@ export function createSemanticLoopGuardHook(_ctx: PluginInput) {
                 }).catch(() => { });
 
                 // 2. Force a replan in the Plan Compiler
-                compiler.injectForcedReplan(message);
+                compiler.injectForcedReplan(input.sessionID, message);
 
                 // 3. Throw the error which will be rendered in Green in the CLI (once formatting is updated)
                 throw new Error(message);

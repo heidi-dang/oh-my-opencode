@@ -19,6 +19,11 @@ export interface TrackedTask {
   category?: string
   skills?: string[]
   modelInfo?: ModelFallbackInfo
+  progress?: {
+    phase?: string
+    percent?: number
+    message?: string
+  }
 }
 
 export interface TaskToastOptions {

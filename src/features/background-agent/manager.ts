@@ -15,6 +15,7 @@ import {
   resolveInheritedPromptTools,
   createInternalAgentTextPart,
 } from "../../shared"
+import { saveActiveTasks, ActiveTaskInfo } from "../../shared/active-task-storage"
 import { setSessionTools } from "../../shared/session-tools-store"
 import { SessionCategoryRegistry } from "../../shared/session-category-registry"
 import { ConcurrencyManager } from "./concurrency"
@@ -204,8 +205,28 @@ export class BackgroundManager {
 
     // Trigger processing (fire-and-forget)
     this.processKey(key)
+    this.persistActiveTasks()
 
     return task
+  }
+
+  private persistActiveTasks(): void {
+    const activeTasks: ActiveTaskInfo[] = Array.from(this.tasks.values())
+      .filter(t => t.status === "running" || t.status === "pending")
+      .map(t => ({
+        id: t.id,
+        sessionID: t.sessionID ?? "",
+        description: t.description,
+        agent: t.agent,
+        status: t.status,
+        startedAt: (t.startedAt ?? t.queuedAt ?? new Date()).toISOString(),
+        progress: t.progress ? {
+          phase: t.progress.phase,
+          percent: t.progress.percent,
+          message: t.progress.message
+        } : undefined
+      }))
+    saveActiveTasks(activeTasks)
   }
 
   private async processKey(key: string): Promise<void> {
@@ -330,6 +351,7 @@ export class BackgroundManager {
     if (toastManager) {
       toastManager.updateTask(task.id, "running")
     }
+    this.persistActiveTasks()
 
     log("[background-agent] Calling prompt (fire-and-forget) for launch with:", {
       sessionID,
@@ -530,6 +552,7 @@ export class BackgroundManager {
     }
 
     log("[background-agent] Registered external task:", { taskId: task.id, sessionID: input.sessionID })
+    this.persistActiveTasks()
 
     return task
   }
@@ -738,6 +761,33 @@ export class BackgroundManager {
       if (partInfo?.type === "tool" || partInfo?.tool) {
         task.progress.toolCalls += 1
         task.progress.lastTool = partInfo.tool
+      }
+
+      // PARSE PROGRESS MARKERS
+      const rawText = (props as any).text || (props as any).delta
+      const text = typeof rawText === "string" ? rawText : (typeof rawText === "object" ? (rawText as any).text : undefined)
+      
+      if (typeof text === "string" && text.includes("<omo-progress")) {
+        const phaseMatch = text.match(/phase="([^"]*)"/)
+        const percentMatch = text.match(/percent="([^"]*)"/)
+        const messageMatch = text.match(/message="([^"]*)"/)
+
+        const updates: any = {}
+        if (phaseMatch) updates.phase = phaseMatch[1]
+        if (percentMatch) {
+          const val = parseInt(percentMatch[1], 10)
+          if (!isNaN(val)) updates.percent = val
+        }
+        if (messageMatch) updates.message = messageMatch[1]
+
+        if (Object.keys(updates).length > 0) {
+          task.progress = { ...task.progress, ...updates }
+          const toastManager = getTaskToastManager()
+          if (toastManager) {
+            toastManager.updateTaskProgress(task.id, updates)
+          }
+          this.persistActiveTasks()
+        }
       }
     }
 
@@ -1388,6 +1438,7 @@ Use \`background_output(task_id="${task.id}")\` to retrieve this result when rea
           parentSessionID: task.parentSessionID,
         })
       }
+      this.persistActiveTasks()
 
     if (allComplete) {
       for (const completedTask of completedTasks) {

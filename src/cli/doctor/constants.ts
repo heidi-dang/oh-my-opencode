@@ -24,6 +24,8 @@ export const CHECK_IDS = {
   MODELS: "models",
   FORK: "fork",
   DEFAULT_CONFIG: "default-config",
+  PLAN_COMPILER: "plan-compiler",
+  PROGRESS: "progress",
 } as const
 
 export const CHECK_NAMES: Record<string, string> = {
@@ -33,6 +35,8 @@ export const CHECK_NAMES: Record<string, string> = {
   [CHECK_IDS.MODELS]: "Models",
   [CHECK_IDS.FORK]: "Fork Integrity",
   [CHECK_IDS.DEFAULT_CONFIG]: "Default Config",
+  [CHECK_IDS.PLAN_COMPILER]: "Plan Compiler",
+  [CHECK_IDS.PROGRESS]: "Subagent Progress",
 } as const
 
 export const EXIT_CODES = {

@@ -1,7 +1,7 @@
 import { createGitSafeTool } from "./git-safe";
 import { createFsSafeTool } from "./fs-safe";
 import { createVerifyTool } from "./verify";
-import { createSubmitPlanTool, createMarkStepCompleteTool } from "./plan";
+import { createSubmitPlanTool, createMarkStepCompleteTool, createUnlockPlanTool } from "./plan";
 import { createQueryLedgerTool } from "./query-ledger";
 import { createCompleteTaskTool } from "./complete-task";
 
@@ -18,6 +18,7 @@ export const DETERMINISTIC_TOOLS: Record<string, () => any> = {
     "verify_action": createVerifyTool,
     "submit_plan": createSubmitPlanTool,
     "mark_step_complete": createMarkStepCompleteTool,
+    "unlock_plan": createUnlockPlanTool,
     "query_ledger": createQueryLedgerTool,
     "complete_task": createCompleteTaskTool
 };

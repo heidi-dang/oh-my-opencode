@@ -20,6 +20,7 @@ import { log } from "../shared/logger";
 import { shouldRetryError } from "../shared/model-error-classifier";
 import { clearSessionModel, setSessionModel } from "../shared/session-model-state";
 import { deleteSessionTools } from "../shared/session-tools-store";
+import { compiler } from "../runtime/plan-compiler";
 import { lspManager } from "../tools";
 
 import type { CreatedHooks } from "../create-hooks";
@@ -247,6 +248,7 @@ export function createEventHandler(args: {
         clearSessionModel(sessionInfo.id);
         syncSubagentSessions.delete(sessionInfo.id);
         deleteSessionTools(sessionInfo.id);
+        compiler.clear(sessionInfo.id);
         await managers.skillMcpManager.disconnectSession(sessionInfo.id);
         await lspManager.cleanupTempDirectoryClients();
         await managers.tmuxSessionManager.onSessionDeleted({

@@ -89,18 +89,25 @@ export function createPlanEnforcementHook(_ctx: PluginInput) {
             input: { tool: string; sessionID: string; callID: string },
             _output: { args: any }
         ) => {
-            const activeStep = compiler.getActiveStep()
-            if (!activeStep) {
-                // No active plan, allow all tools
-                return
-            }
+            const activeStep = compiler.getActiveStep(input.sessionID)
+            if (!activeStep) return // No active plan, agent is in freestyle mode
 
             // Always allow essential tools
             if (ALWAYS_ALLOWED_TOOLS.has(input.tool)) {
                 return
             }
 
-            // Check if the current tool being called matches the active step's intent
+            // STALE STATE AUTO-RECOVERY
+            const isStaleLock = 
+                (input.tool === "todowrite" || input.tool === "task" || input.tool === "read") &&
+                !activeStep.action.toLowerCase().includes(input.tool.replace("_safe", ""))
+
+            if (isStaleLock) {
+                console.warn(`[Plan Compiler Guard] Stale lock detected in session ${input.sessionID}. Auto-clearing plan.`)
+                compiler.clear(input.sessionID)
+                return
+            }
+
             const actionMatchesTool =
                 activeStep.action.toLowerCase().includes(input.tool.replace("_safe", "")) ||
                 input.tool.includes(activeStep.action.toLowerCase().split("_")[0] || "")
@@ -119,15 +126,17 @@ export function createPlanEnforcementHook(_ctx: PluginInput) {
                 throw new PlanCompilerGuardError(
                     `[Plan Compiler Guard] Action Rejected.\n` +
                     `Active Step: ${activeStep.action} (ID: ${activeStep.id})\n` +
-                    `Requested Tool: ${input.tool}\n` +
-                    `Reason: Tool not allowed for current step\n` +
-                    `Allowed Tools: ${Array.from(ALWAYS_ALLOWED_TOOLS).join(", ")}\n\n` +
-                    `You must focus on completing the active step, then call 'mark_step_complete'.`,
+                    `Current Tool: ${input.tool}\n\n` +
+                    `You are currently locked into a deterministic plan. You MUST finish the active step ` +
+                    `or use 'mark_step_complete' if the work is done. If you need to break out of this plan, ` +
+                    `use 'unlock_plan' or complete all steps.\n\n` +
+                    `Wait! If you believe this is a stale lock, the guard should have auto-cleared. ` +
+                    `If it didn't, use 'unlock_plan' now.`,
                     activeStep.id,
                     activeStep.action,
                     input.tool,
                     Array.from(ALWAYS_ALLOWED_TOOLS),
-                    "Tool does not match active step intent and is not in always-allowed list"
+                    "Tool mismatch"
                 )
             }
         }

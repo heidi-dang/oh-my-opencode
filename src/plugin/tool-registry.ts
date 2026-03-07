@@ -143,6 +143,7 @@ export function createToolRegistry(args: {
     verify_action: DETERMINISTIC_TOOLS["verify_action"](),
     submit_plan: DETERMINISTIC_TOOLS["submit_plan"](),
     mark_step_complete: DETERMINISTIC_TOOLS["mark_step_complete"](),
+    unlock_plan: DETERMINISTIC_TOOLS["unlock_plan"](),
     query_ledger: DETERMINISTIC_TOOLS["query_ledger"](),
     complete_task: DETERMINISTIC_TOOLS["complete_task"](),
   }

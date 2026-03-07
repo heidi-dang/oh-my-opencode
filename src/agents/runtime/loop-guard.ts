@@ -23,10 +23,10 @@ export const buildLoopGuardSection = (depth: number, agentCalls: number, toolCal
 - Tool Calls: ${toolCalls}/${MAX_TOOL_CALLS}`
 }
 
-export function detectLoop(history: any[], currentGoal: string, actionType: string) {
+export function detectLoop(sessionID: string, history: any[], currentGoal: string, actionType: string) {
     if (history.length < 3) return false
 
-    const activeStepId = compiler.getActiveStep()?.id || "no-active-step"
+    const activeStepId = compiler.getActiveStep(sessionID)?.id || "no-active-step"
 
     // Hash includes Plan Step + Goal + ActionType
     const currentFingerprint = createHash("sha256")
