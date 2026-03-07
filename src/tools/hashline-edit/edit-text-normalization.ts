@@ -44,9 +44,25 @@ export function stripLinePrefixes(lines: string[]): string[] {
 
 export function toNewLines(input: string | string[]): string[] {
   if (Array.isArray(input)) {
-    return stripLinePrefixes(input)
+    return stripLinePrefixes(input.map(line => {
+      // Fallback for arrays where the LLM appended literal '\n' to each line unnecessarily
+      if (typeof line === 'string' && line.endsWith('\\n') && !line.includes('\n')) {
+        return line.slice(0, -2)
+      }
+      return line
+    }))
   }
-  return stripLinePrefixes(input.split("\n"))
+  
+  let text = input
+  if (typeof text === 'string') {
+    // If the LLM sent a single giant string with escaped '\n' instead of real newlines
+    if (!text.includes('\n') && text.includes('\\n')) {
+      // Handle escaped tabs too, often accompanying escaped newlines
+      text = text.replace(/\\n/g, '\n').replace(/\\t/g, '\t')
+    }
+  }
+  
+  return stripLinePrefixes(text.split("\n"))
 }
 
 export function restoreLeadingIndent(templateLine: string, line: string): string {
