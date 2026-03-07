@@ -2,7 +2,7 @@ import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool"
 
 import { DEFAULT_MAX_SYMBOLS } from "./constants"
 import { formatDocumentSymbol, formatSymbolInfo } from "./lsp-formatters"
-import { withLspClient } from "./lsp-client-wrapper"
+import { withLspClient, LspNotConfiguredError } from "./lsp-client-wrapper"
 import type { DocumentSymbol, SymbolInfo } from "./types"
 
 export const lsp_symbols: ToolDefinition = tool({
@@ -70,6 +70,9 @@ export const lsp_symbols: ToolDefinition = tool({
         return lines.join("\n")
       }
     } catch (e) {
+      if (e instanceof LspNotConfiguredError) {
+        return "No symbols found (Unsupported file type / No LSP server configured)"
+      }
       return `Error: ${e instanceof Error ? e.message : String(e)}`
     }
   },

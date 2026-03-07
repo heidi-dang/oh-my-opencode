@@ -1,7 +1,7 @@
 import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool"
 
 import { formatApplyResult, formatPrepareRenameResult } from "./lsp-formatters"
-import { withLspClient } from "./lsp-client-wrapper"
+import { withLspClient, LspNotConfiguredError } from "./lsp-client-wrapper"
 import { applyWorkspaceEdit } from "./workspace-edit"
 import type { PrepareRenameDefaultBehavior, PrepareRenameResult, WorkspaceEdit } from "./types"
 
@@ -23,6 +23,9 @@ export const lsp_prepare_rename: ToolDefinition = tool({
       const output = formatPrepareRenameResult(result)
       return output
     } catch (e) {
+      if (e instanceof LspNotConfiguredError) {
+        return "Cannot rename (Unsupported file type / No LSP server configured)"
+      }
       const output = `Error: ${e instanceof Error ? e.message : String(e)}`
       return output
     }
@@ -46,6 +49,9 @@ export const lsp_rename: ToolDefinition = tool({
       const output = formatApplyResult(result)
       return output
     } catch (e) {
+      if (e instanceof LspNotConfiguredError) {
+        return "Cannot rename (Unsupported file type / No LSP server configured)"
+      }
       const output = `Error: ${e instanceof Error ? e.message : String(e)}`
       return output
     }
