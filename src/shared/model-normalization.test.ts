@@ -108,16 +108,27 @@ describe("normalizeModelID", () => {
 		})
 	})
 
-	describe("#given model with multiple dot-numbers", () => {
-		test("#when normalizeModelID is called with model.1.2 #then returns model-1-2", () => {
+	describe("#given minimax model", () => {
+		test("#when normalizeModelID is called with minimax-m2.5 #then returns MiniMax-M2.5", () => {
 			// given
-			const input = "model.1.2"
+			const input = "minimax-m2.5"
 
 			// when
 			const result = normalizeModelID(input)
 
 			// then
-			expect(result).toBe("model-1-2")
+			expect(result).toBe("MiniMax-M2.5")
+		})
+
+		test("#when normalizeModelID is called with opencode-go/minimax-m2.5 #then returns opencode-go/MiniMax-M2.5", () => {
+			// given
+			const input = "opencode-go/minimax-m2.5"
+
+			// when
+			const result = normalizeModelID(input)
+
+			// then
+			expect(result).toBe("opencode-go/MiniMax-M2.5")
 		})
 	})
 })
