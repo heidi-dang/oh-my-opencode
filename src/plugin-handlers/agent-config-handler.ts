@@ -18,6 +18,8 @@ import { reorderAgentsByPriority } from "./agent-priority-order";
 import { remapAgentKeysToDisplayNames } from "./agent-key-remapper";
 import { buildPrometheusAgentConfig } from "./prometheus-agent-config-builder";
 import { buildPlanDemoteConfig } from "./plan-model-inheritance";
+import { getMainSessionID } from "../features/claude-code-session-state/state";
+import { getSessionModel } from "../shared/session-model-state";
 
 type AgentConfigRecord = Record<string, Record<string, unknown> | undefined> & {
   build?: Record<string, unknown>;
@@ -74,7 +76,21 @@ export async function applyAgentConfig(params: {
 
   const browserProvider =
     params.pluginConfig.browser_automation_engine?.provider ?? "playwright";
-  const currentModel = params.config.model as string | undefined;
+  
+  let currentModel = params.config.model as string | undefined;
+
+  // Persistence: If model selection is missing (e.g., following turn), try to restore from session state
+  if (!currentModel) {
+    const mainSessionID = getMainSessionID();
+    if (mainSessionID) {
+      const sessionModel = getSessionModel(mainSessionID);
+      if (sessionModel) {
+        currentModel = `${sessionModel.providerID}/${sessionModel.modelID}`;
+        log("[agent-config-handler] Restoring currentModel from session state:", currentModel);
+      }
+    }
+  }
+
   const disabledSkills = new Set<string>(params.pluginConfig.disabled_skills ?? []);
   const useTaskSystem = params.pluginConfig.experimental?.task_system ?? false;
   const disableOmoEnv = params.pluginConfig.experimental?.disable_omo_env ?? false;
