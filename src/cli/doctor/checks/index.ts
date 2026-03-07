@@ -11,6 +11,7 @@ import { checkProgress } from "./progress"
 import { checkToolContract } from "./tool-contract"
 import { checkEditAtomicity } from "./edit-atomicity"
 import { checkIssueResolutionWorkflow } from "./issue-resolution"
+import { checkToolMetadataContract } from "./tool-metadata"
 
 export type { CheckDefinition }
 export * from "./model-resolution-types"
@@ -68,6 +69,11 @@ export function getAllCheckDefinitions(): CheckDefinition[] {
       id: "issue-resolution",
       name: "Issue Resolution Workflow",
       check: checkIssueResolutionWorkflow,
+    },
+    {
+      id: checkToolMetadataContract.id,
+      name: checkToolMetadataContract.name,
+      check: checkToolMetadataContract.check,
     },
   ]
 }

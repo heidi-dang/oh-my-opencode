@@ -22,7 +22,8 @@ const SUSPICIOUS_PHRASES = [
     { phrase: "successfully committed", tool: "git_safe" },
     { phrase: "task completed", tool: "complete_task" },
     { phrase: "task complete", tool: "complete_task" },
-    { phrase: "work finished", tool: "complete_task" }
+    { phrase: "work finished", tool: "complete_task" },
+    { phrase: "todos cleared", tool: "complete_task" }
 ]
 
 export function createRuntimeEnforcementHook(_ctx: PluginInput) {
@@ -34,6 +35,42 @@ export function createRuntimeEnforcementHook(_ctx: PluginInput) {
             // Mark the start of a new completion flow verification.
             // This ensures entries from previous turns/flows in the same session are ignored.
             ledger.startNewFlow()
+
+            // 1. Redact False Success Claims
+            // If an assistant message claimed success but the actual tool execution failed
+            // (e.g., contract violation or issue resolution guard), we proactively redact
+            // the LLM's text so it doesn't render the false positive in the UI or let the
+            // LLM think it succeeded in future turns.
+            for (let i = 0; i < output.messages.length - 1; i++) {
+                const msg = output.messages[i]
+                if (msg.info.role === "assistant") {
+                    const nextMsg = output.messages[i + 1]
+                    if (nextMsg.info.role === "user") {
+                        // Check if the user message contains a tool failure for the assistant's tool
+                        const hasFailureText = nextMsg.parts.some((p: any) => 
+                            p.type === "text" && (
+                                p.text?.includes("[Tool Contract Violation]") ||
+                                p.text?.includes("[ERROR] STRICT ISSUE") ||
+                                p.text?.includes("[Tool Contract Enforcer] Tool execution explicitly failed") ||
+                                p.text?.includes("Exception in ")
+                            )
+                        )
+
+                        if (hasFailureText) {
+                            // Redact affirmative/suspicious phrases in the assistant's text parts
+                            for (const part of msg.parts) {
+                                if (part.type === "text" && typeof part.text === "string") {
+                                    const lowerText = part.text.toLowerCase()
+                                    const hasSuspiciousClaim = SUSPICIOUS_PHRASES.some(sp => lowerText.includes(sp.phrase))
+                                    if (hasSuspiciousClaim || lowerText.includes("success") || lowerText.includes("completed")) {
+                                        part.text = `[REDACTED: False success claim invalidated by tool failure]\n\nI attempted to claim completion, but the underlying tool failed its execution or verification constraints. I must correct my approach.`
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
             const assistantMessages = output.messages.filter(m => m.info.role === "assistant")
             if (assistantMessages.length === 0) return
