@@ -24,6 +24,7 @@ import { isInsideTmux } from "../../shared/tmux"
 import {
   shouldRetryError,
   hasMoreFallbacks,
+  isUnsupportedModelError,
 } from "../../shared/model-error-classifier"
 import {
   POLLING_INTERVAL_MS,
@@ -912,7 +913,13 @@ export class BackgroundManager {
       if (this.tryFallbackRetry(task, errorInfo, "session.error")) return
 
       // Original error handling (no retry)
-      const errorMsg = errorMessage ?? "Session error"
+      const isUnsupported = isUnsupportedModelError(props?.error)
+      const modelLabel = task.model
+        ? `${task.model.providerID}/${task.model.modelID}`
+        : "the selected model"
+      const errorMsg = isUnsupported
+        ? `Model not supported: ${modelLabel} is not available on this provider. Task blocked.`
+        : (errorMessage ?? "Session error")
       const canRetry =
         shouldRetryError(errorInfo) &&
         !!task.fallbackChain &&

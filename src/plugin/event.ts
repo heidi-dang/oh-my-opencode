@@ -17,7 +17,7 @@ import {
 } from "../hooks/model-fallback/hook";
 import { resetMessageCursor } from "../shared";
 import { log } from "../shared/logger";
-import { shouldRetryError } from "../shared/model-error-classifier";
+import { shouldRetryError, isUnsupportedModelError } from "../shared/model-error-classifier";
 import { clearSessionModel, setSessionModel } from "../shared/session-model-state";
 import { deleteSessionTools } from "../shared/session-tools-store";
 import { compiler } from "../runtime/plan-compiler";
@@ -416,6 +416,41 @@ export function createEventHandler(args: {
         const errorName = extractErrorName(error);
         const errorMessage = extractErrorMessage(error);
         const errorInfo = { name: errorName, message: errorMessage };
+
+        // Detect unsupported model errors (e.g. GitHub Copilot model_not_supported)
+        // These need special handling: richer message and deterministic fallback or block
+        const unsupportedModel = isUnsupportedModelError(error) ||
+          (typeof errorMessage === "string" && errorMessage.toLowerCase().includes("not supported"))
+
+        if (unsupportedModel && sessionID) {
+          const lastKnown = lastKnownModelBySession.get(sessionID)
+          const modelLabel = lastKnown
+            ? `${lastKnown.providerID}/${lastKnown.modelID}`
+            : "the selected model"
+
+          if (isModelFallbackEnabled && shouldRetryError(errorInfo)) {
+            // Fallback will fire below — log and continue
+            log("[event] Unsupported model detected, fallback chain will fire:", { sessionID, modelLabel })
+          } else {
+            // No fallback available — surface a clear blocked message
+            log("[event] Unsupported model with no fallback, session blocked:", { sessionID, modelLabel })
+            try {
+              await (pluginContext.client as any).tui?.showToast?.({
+                path: { id: sessionID },
+                body: {
+                  title: "Model not supported",
+                  description: `${modelLabel} is not supported by this provider. Please select a different model.`,
+                  variant: "error",
+                },
+              })
+            } catch {
+              // tui.showToast not available — swallow
+            }
+            // Abort the stuck session so OpenCode shows a terminal error state
+            await pluginContext.client.session.abort({ path: { id: sessionID } }).catch(() => {})
+            return
+          }
+        }
 
         // First, try session recovery for internal errors (thinking blocks, tool results, etc.)
         if (hooks.sessionRecovery?.isRecoverableError(error)) {

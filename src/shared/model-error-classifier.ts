@@ -50,10 +50,62 @@ const RETRYABLE_MESSAGE_PATTERNS = [
   "timeout",
   "service unavailable",
   "internal_server_error",
+  "not supported",
+  "model_not_supported",
   "503",
   "502",
   "504",
 ]
+
+/**
+ * Error codes that unambiguously identify an unsupported/invalid model error.
+ * These come from provider APIs (e.g. GitHub Copilot code: "model_not_supported").
+ */
+const UNSUPPORTED_MODEL_CODES = new Set([
+  "model_not_supported",
+  "model_not_found",
+  "unsupported_model",
+])
+
+/**
+ * Returns true when the error is a deterministic "this model is not available on this provider" error.
+ * Used to emit richer UI messages and to distinguish unsupported-model from transient failures.
+ */
+export function isUnsupportedModelError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false
+  const rec = error as Record<string, unknown>
+
+  // Direct code field
+  if (typeof rec.code === "string" && UNSUPPORTED_MODEL_CODES.has(rec.code)) return true
+
+  // Nested under data / error
+  const data = rec.data
+  if (data && typeof data === "object") {
+    const dataRec = data as Record<string, unknown>
+    if (typeof dataRec.code === "string" && UNSUPPORTED_MODEL_CODES.has(dataRec.code)) return true
+    const nested = dataRec.error
+    if (nested && typeof nested === "object") {
+      const nestedRec = nested as Record<string, unknown>
+      if (typeof nestedRec.code === "string" && UNSUPPORTED_MODEL_CODES.has(nestedRec.code)) return true
+    }
+  }
+
+  // Try to parse responseBody string (GitHub Copilot embeds JSON)
+  if (typeof rec.responseBody === "string") {
+    try {
+      const parsed = JSON.parse(rec.responseBody) as Record<string, unknown>
+      const innerError = parsed.error
+      if (innerError && typeof innerError === "object") {
+        const innerRec = innerError as Record<string, unknown>
+        if (typeof innerRec.code === "string" && UNSUPPORTED_MODEL_CODES.has(innerRec.code)) return true
+      }
+    } catch {
+      // non-JSON body — ignore
+    }
+  }
+
+  return false
+}
 
 export interface ErrorInfo {
   name?: string

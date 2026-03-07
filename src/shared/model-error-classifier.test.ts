@@ -3,7 +3,7 @@ import { describe, expect, test, beforeEach, afterEach, spyOn } from "bun:test"
 import { mkdirSync, rmSync, writeFileSync, existsSync } from "node:fs"
 import { join } from "node:path"
 import * as dataPath from "./data-path"
-import { shouldRetryError, selectFallbackProvider } from "./model-error-classifier"
+import { shouldRetryError, selectFallbackProvider, isUnsupportedModelError } from "./model-error-classifier"
 
 const TEST_CACHE_DIR = join(import.meta.dir, "__test-cache__")
 
@@ -72,5 +72,52 @@ describe("model-error-classifier", () => {
 
     //#then
     expect(provider).toBe("anthropic")
+  })
+
+  test("shouldRetryError returns true for GitHub Copilot model_not_supported message", () => {
+    //#given
+    const error = { name: "APIError", message: "The requested model is not supported." }
+
+    //#when
+    const result = shouldRetryError(error)
+
+    //#then
+    expect(result).toBe(true)
+  })
+
+  test("isUnsupportedModelError detects code in GitHub Copilot responseBody", () => {
+    //#given
+    const error = {
+      name: "APIError",
+      data: {
+        message: "The requested model is not supported.",
+        statusCode: 400,
+        responseBody: JSON.stringify({
+          error: {
+            message: "The requested model is not supported.",
+            code: "model_not_supported",
+            param: "model",
+            type: "invalid_request_error",
+          },
+        }),
+      },
+    }
+
+    //#when
+    const result = isUnsupportedModelError(error.data)
+
+    //#then
+    expect(result).toBe(true)
+  })
+
+  test("isUnsupportedModelError returns false for non-model-related errors", () => {
+    //#given
+    const error = { name: "RateLimitError", message: "Rate limit exceeded" }
+
+    //#when
+    const result = isUnsupportedModelError(error)
+
+    //#then
+    expect(result).toBe(false)
   })
 })

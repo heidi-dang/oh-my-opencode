@@ -49,8 +49,22 @@ export function resolveModelPipeline(
 
   const normalizedUiModel = normalizeModel(intent?.uiSelectedModel)
   if (normalizedUiModel) {
-    log("Model resolved via UI selection", { model: normalizedUiModel })
-    return { model: normalizedUiModel, provenance: "override" }
+    // When we have an availability cache, validate the UI-selected model before returning.
+    // This prevents unsupported models from reaching the runtime where they cause stuck-Queued states.
+    if (availableModels.size > 0) {
+      const parts = normalizedUiModel.split("/")
+      const providerHint = parts.length >= 2 ? [parts[0]] : undefined
+      const match = fuzzyMatchModel(normalizedUiModel, availableModels, providerHint)
+      if (match) {
+        log("Model resolved via UI selection (availability confirmed)", { model: match })
+        return { model: match, provenance: "override" }
+      }
+      log("UI-selected model not available, falling through to fallback chain", { model: normalizedUiModel })
+      // Do NOT return — fall through to category-default / fallback chain
+    } else {
+      log("Model resolved via UI selection (no cache, first run)", { model: normalizedUiModel })
+      return { model: normalizedUiModel, provenance: "override" }
+    }
   }
 
   const normalizedSessionModel = normalizeModel(intent?.sessionModel)
