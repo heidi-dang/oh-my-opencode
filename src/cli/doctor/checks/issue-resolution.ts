@@ -15,22 +15,16 @@ export async function checkIssueResolutionWorkflow(): Promise<CheckResult> {
   const issues: DoctorIssue[] = []
 
   // 1. Tool Registration Check
-  if (!DETERMINISTIC_TOOLS["report_issue_verification"]) {
-    issues.push({
-      severity: "error",
-      title: "Missing Tool",
-      description: "report_issue_verification tool is missing from deterministic registry",
-      fix: "Ensure report_issue_verification is registered in src/runtime/tools/registry.ts",
-    })
-  }
-
-  if (!DETERMINISTIC_TOOLS["complete_task"]) {
-    issues.push({
-      severity: "error",
-      title: "Missing Tool",
-      description: "complete_task tool is missing from deterministic registry",
-      fix: "Ensure complete_task is registered in src/runtime/tools/registry.ts",
-    })
+  const requiredTools = ["report_issue_verification", "complete_task", "gh_safe", "query_ledger"]
+  for (const toolName of requiredTools) {
+    if (!DETERMINISTIC_TOOLS[toolName]) {
+      issues.push({
+        severity: "error",
+        title: "Missing Tool",
+        description: `${toolName} tool is missing from deterministic registry`,
+        fix: `Ensure ${toolName} is registered in src/runtime/tools/registry.ts`,
+      })
+    }
   }
 
   // 2. Persistence Check

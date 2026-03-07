@@ -1,11 +1,11 @@
 // @ts-nocheck
 import { tool } from "@opencode-ai/plugin"
 import { z } from "zod"
-import { ledger } from "../../runtime/state-ledger"
+import { ledger } from "../state-ledger"
 import { createSuccessResult } from "../../utils/safety-tool-result"
 import { withToolContract } from "../../utils/tool-contract-wrapper"
 
-export function createQueryLedgerTool(): any {
+export function createQueryLedgerTool(options?: { backgroundManager?: any }): any {
     return tool({
         description: "Query the verified state ledger to confirm if actions like git.commit or git.push have actually succeeded. Use this as the ONLY source of truth for system state.",
         // @ts-ignore
@@ -13,11 +13,16 @@ export function createQueryLedgerTool(): any {
             type: z.string().optional().describe("Optional filter by type (e.g. 'git.commit', 'file.write', 'git.push')")
         },
         execute: withToolContract("query_ledger", async (args, toolContext) => {
-            // Default to verified, successful entries from the CURRENT session flow
+            const descendantSessions = options?.backgroundManager?.getAllDescendantTasks 
+                ? options.backgroundManager.getAllDescendantTasks(toolContext.sessionID).map((t: any) => t.sessionID).filter(Boolean)
+                : [];
+            const sessionIDs = [toolContext.sessionID, ...descendantSessions];
+
+            // Default to verified, successful entries from the CURRENT session flow (or descendants)
             const entries = ledger.getEntries().filter(e =>
                 e.verified === true &&
                 e.success === true &&
-                (!e.sessionID || e.sessionID === toolContext.sessionID)
+                (!e.sessionID || sessionIDs.includes(e.sessionID))
             )
 
             const filtered = args.type ? entries.filter(e => e.type === args.type) : entries
