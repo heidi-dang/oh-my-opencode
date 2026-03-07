@@ -28,18 +28,19 @@ export { createInteractiveBashSessionHook } from "./interactive-bash-session";
 export { createThinkingBlockValidatorHook } from "./thinking-block-validator";
 export { createCategorySkillReminderHook } from "./category-skill-reminder";
 export { createRalphLoopHook, type RalphLoopHook } from "./ralph-loop";
-export { createNoSisyphusGptHook } from "./no-sisyphus-gpt";
-export { createNoHephaestusNonGptHook } from "./no-hephaestus-non-gpt";
 export { createAutoSlashCommandHook } from "./auto-slash-command";
 export { createEditErrorRecoveryHook } from "./edit-error-recovery";
 
-export { createPrometheusMdOnlyHook } from "./prometheus-md-only";
-export { createSisyphusJuniorNotepadHook } from "./sisyphus-junior-notepad";
-export { createTaskResumeInfoHook } from "./task-resume-info";
-export { createStartWorkHook } from "./start-work";
+export { createPrometheusMdOnlyHook } from "./prometheus-md-only"
+export { createSisyphusJuniorNotepadHook } from "./sisyphus-junior-notepad"
+export { createNoSisyphusGptHook } from "./no-sisyphus-gpt"
+export { createNoHephaestusNonGptHook } from "./no-hephaestus-non-gpt"
+export { createQuestionLabelTruncatorHook } from "./question-label-truncator"
+export { createTaskResumeInfoHook } from "./task-resume-info"
+export { createRunStateWatchdogHook } from "./run-state-watchdog"
+export { createStartWorkHook } from "./start-work"
 export { createAtlasHook } from "./atlas";
 export { createDelegateTaskRetryHook } from "./delegate-task-retry";
-export { createQuestionLabelTruncatorHook } from "./question-label-truncator";
 export { createStopContinuationGuardHook, type StopContinuationGuard } from "./stop-continuation-guard";
 export { createCompactionContextInjector } from "./compaction-context-injector";
 export { createCompactionTodoPreserverHook } from "./compaction-todo-preserver";

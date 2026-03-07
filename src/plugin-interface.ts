@@ -62,10 +62,14 @@ export function createPluginInterface(args: {
       hooks,
     }),
 
-    "tool.execute.before": createToolExecuteBeforeHandler({
-      ctx,
-      hooks,
-    }),
+    "tool.execute.before": async (input: any, output: any) => {
+        await (hooks as any).runStateWatchdog?.["tool.execute.before"]?.(input)
+        const handler = createToolExecuteBeforeHandler({
+            ctx,
+            hooks,
+        })
+        return handler(input, output)
+    },
 
     "tool.execute.after": createToolExecuteAfterHandler({
       hooks,

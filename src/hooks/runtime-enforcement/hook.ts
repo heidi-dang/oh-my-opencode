@@ -72,7 +72,44 @@ export function createRuntimeEnforcementHook(_ctx: PluginInput) {
                 }
             }
 
+            // 2. Synthetic Terminal Message Injection
+            // If the last assistant message in the transcript ended on a tool call with NO text,
+            // the LLM basically ran "silent". We must guarantee a closing statement exists.
             const assistantMessages = output.messages.filter(m => m.info.role === "assistant")
+            if (assistantMessages.length > 0) {
+                const lastAssistant = assistantMessages[assistantMessages.length - 1]
+                const textParts = lastAssistant.parts.filter(p => p.type === "text")
+                const toolParts = lastAssistant.parts.filter(p => p.type === "tool")
+                
+                // If it had tool parts but zero text parts, it was silent.
+                if (toolParts.length > 0 && textParts.length === 0) {
+                    // Check if it's terminal (e.g. called complete_task, or is the absolute last thing before user)
+                    const isTerminalTool = toolParts.some((p: any) => p.toolName === "complete_task" || p.toolName === "git_safe")
+                    if (isTerminalTool) {
+                        lastAssistant.parts.push({
+                            id: `prt_synthetic_${Date.now()}`,
+                            sessionID: lastAssistant.info.sessionID,
+                            messageID: lastAssistant.info.id,
+                            type: "text",
+                            text: "[System: Synthetic Terminal Summary] Task Completed or Terminal state reached. The agent ended on a tool execution without explicitly printing a summary."
+                        } as any)
+                    } else if (
+                        assistantMessages.length > 0 && 
+                        output.messages[output.messages.length - 1].info.role === "user" &&
+                        output.messages[output.messages.length - 1].parts.some((p: any) => p.text?.includes("[Runtime Fallback]") || p.text?.includes("Error:"))
+                    ) {
+                        // If the LLM stopped and it was a runtime error
+                        lastAssistant.parts.push({
+                            id: `prt_synthetic_${Date.now()}`,
+                            sessionID: lastAssistant.info.sessionID,
+                            messageID: lastAssistant.info.id,
+                            type: "text",
+                            text: "[System: Synthetic Terminal Summary] Task Stopped. An internal or runtime error interrupted the agent before it could print a summary."
+                        } as any)
+                    }
+                }
+            }
+
             if (assistantMessages.length === 0) return
 
             const lastAssistant = assistantMessages[assistantMessages.length - 1]
@@ -86,7 +123,7 @@ export function createRuntimeEnforcementHook(_ctx: PluginInput) {
                     let actuallyExecuted = false;
 
                     // Check if the current message calls the tool
-                    if (lastAssistant.parts.some((p: any) => p.type === "toolInvocation" && p.toolName === check.tool)) {
+                    if (lastAssistant.parts.some((p: any) => p.type === "tool" && p.toolName === check.tool)) {
                         actuallyExecuted = true;
                     } else {
                         // Check backwards for the tool call in the current completion flow
@@ -96,7 +133,7 @@ export function createRuntimeEnforcementHook(_ctx: PluginInput) {
                                 // Reached an actual user instruction, stop looking backwards. This isolates the check to the *current completion flow*.
                                 break;
                             }
-                            if (msg.info.role === "assistant" && msg.parts.some((p: any) => p.type === "toolInvocation" && p.toolName === check.tool)) {
+                            if (msg.info.role === "assistant" && msg.parts.some((p: any) => p.type === "tool" && p.toolName === check.tool)) {
                                 actuallyExecuted = true;
                                 break;
                             }

@@ -6,6 +6,7 @@ import type { SubagentSessionCreatedEvent } from "./features/background-agent"
 import { BackgroundManager } from "./features/background-agent"
 import { SkillMcpManager } from "./features/skill-mcp-manager"
 import { initTaskToastManager } from "./features/task-toast-manager"
+import { RunStateWatchdogManager } from "./features/run-state-watchdog"
 import { TmuxSessionManager } from "./features/tmux-subagent"
 import { createConfigHandler } from "./plugin-handlers"
 import { log } from "./shared"
@@ -14,6 +15,7 @@ export type Managers = {
   tmuxSessionManager: TmuxSessionManager
   backgroundManager: BackgroundManager
   skillMcpManager: SkillMcpManager
+  runStateWatchdogManager: RunStateWatchdogManager
   configHandler: ReturnType<typeof createConfigHandler>
 }
 
@@ -65,6 +67,9 @@ export function createManagers(args: {
   initTaskToastManager(ctx.client)
 
   const skillMcpManager = new SkillMcpManager()
+  
+  const runStateWatchdogManager = new RunStateWatchdogManager(ctx.client)
+  runStateWatchdogManager.start()
 
   const configHandler = createConfigHandler({
     ctx: { directory: ctx.directory, client: ctx.client },
@@ -76,6 +81,7 @@ export function createManagers(args: {
     tmuxSessionManager,
     backgroundManager,
     skillMcpManager,
+    runStateWatchdogManager,
     configHandler,
   }
 }
