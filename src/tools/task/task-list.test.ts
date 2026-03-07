@@ -17,6 +17,17 @@ describe("createTaskList", () => {
     }
   })
 
+  const MOCK_CTX = {
+    messageID: "msg-123",
+    agent: "sisyphus",
+    directory: process.cwd(),
+    worktree: "",
+    metadata: () => {},
+    ask: async () => {},
+    abort: new AbortController().signal,
+  }
+
+
   afterEach(() => {
     if (existsSync(taskDir)) {
       rmSync(taskDir, { recursive: true })
@@ -29,15 +40,14 @@ describe("createTaskList", () => {
       sisyphus: {
         tasks: {
           storage_path: join(testProjectDir, ".sisyphus/tasks"),
-      claude_code_compat: true,
-          claude_code_compat: false,
+          claude_code_compat: true,
         },
       },
     }
     const tool = createTaskList(config)
 
     //#when
-    const result = await tool.execute({}, { sessionID: "test-session" })
+    const result = await tool.execute({}, { sessionID: "test-session", ...MOCK_CTX })
 
     //#then
     const parsed = JSON.parse(result)
@@ -72,15 +82,14 @@ describe("createTaskList", () => {
       sisyphus: {
         tasks: {
           storage_path: join(testProjectDir, ".sisyphus/tasks"),
-      claude_code_compat: true,
-          claude_code_compat: false,
+          claude_code_compat: true,
         },
       },
     }
     const tool = createTaskList(config)
 
     //#when
-    const result = await tool.execute({}, { sessionID: "test-session" })
+    const result = await tool.execute({}, { sessionID: "test-session", ...MOCK_CTX })
 
     //#then
     const parsed = JSON.parse(result)
@@ -117,14 +126,14 @@ describe("createTaskList", () => {
          tasks: {
            storage_path: join(testProjectDir, ".sisyphus/tasks"),
       claude_code_compat: true,
-           claude_code_compat: false,
+           
          },
        },
      }
      const tool = createTaskList(config)
 
      //#when
-     const result = await tool.execute({}, { sessionID: "test-session" })
+     const result = await tool.execute({}, { sessionID: "test-session", ...MOCK_CTX })
 
      //#then
      const parsed = JSON.parse(result)
@@ -152,14 +161,14 @@ describe("createTaskList", () => {
          tasks: {
            storage_path: join(testProjectDir, ".sisyphus/tasks"),
       claude_code_compat: true,
-           claude_code_compat: false,
+           
          },
        },
      }
      const tool = createTaskList(config)
 
      //#when
-     const result = await tool.execute({}, { sessionID: "test-session" })
+     const result = await tool.execute({}, { sessionID: "test-session", ...MOCK_CTX })
 
      //#then
      const parsed = JSON.parse(result)
@@ -217,14 +226,14 @@ describe("createTaskList", () => {
          tasks: {
            storage_path: join(testProjectDir, ".sisyphus/tasks"),
       claude_code_compat: true,
-           claude_code_compat: false,
+           
          },
        },
      }
      const tool = createTaskList(config)
 
      //#when
-     const result = await tool.execute({}, { sessionID: "test-session" })
+     const result = await tool.execute({}, { sessionID: "test-session", ...MOCK_CTX })
 
      //#then
      const parsed = JSON.parse(result)
@@ -261,14 +270,14 @@ describe("createTaskList", () => {
          tasks: {
            storage_path: join(testProjectDir, ".sisyphus/tasks"),
       claude_code_compat: true,
-           claude_code_compat: false,
+           
          },
        },
      }
      const tool = createTaskList(config)
 
      //#when
-     const result = await tool.execute({}, { sessionID: "test-session" })
+     const result = await tool.execute({}, { sessionID: "test-session", ...MOCK_CTX })
 
      //#then
      const parsed = JSON.parse(result)
@@ -294,14 +303,14 @@ describe("createTaskList", () => {
          tasks: {
            storage_path: join(testProjectDir, ".sisyphus/tasks"),
       claude_code_compat: true,
-           claude_code_compat: false,
+           
          },
        },
      }
      const tool = createTaskList(config)
 
      //#when
-     const result = await tool.execute({}, { sessionID: "test-session" })
+     const result = await tool.execute({}, { sessionID: "test-session", ...MOCK_CTX })
 
      //#then
      const parsed = JSON.parse(result)
@@ -327,14 +336,14 @@ describe("createTaskList", () => {
          tasks: {
            storage_path: join(testProjectDir, ".sisyphus/tasks"),
       claude_code_compat: true,
-           claude_code_compat: false,
+           
          },
        },
      }
      const tool = createTaskList(config)
 
      //#when
-     const result = await tool.execute({}, { sessionID: "test-session" })
+     const result = await tool.execute({}, { sessionID: "test-session", ...MOCK_CTX })
 
      //#then
      const parsed = JSON.parse(result)

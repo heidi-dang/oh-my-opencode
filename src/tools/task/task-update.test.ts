@@ -11,7 +11,6 @@ const TEST_CONFIG = {
     tasks: {
       storage_path: TEST_STORAGE,
       claude_code_compat: true,
-      claude_code_compat: true,
     },
   },
 }
@@ -19,10 +18,6 @@ const TEST_SESSION_ID = "test-session-123"
 const TEST_ABORT_CONTROLLER = new AbortController()
 const TEST_CONTEXT = {
   sessionID: TEST_SESSION_ID,
-  directory: process.cwd(),
-  worktree: "",
-  metadata: () => {},
-  ask: async () => {},
   messageID: "test-message-123",
   agent: "test-agent",
   abort: TEST_ABORT_CONTROLLER.signal,

@@ -15,8 +15,7 @@ const TEST_DIR_ABS = join(process.cwd(), TEST_DIR)
 function makeConfig(storagePath: string): Partial<OhMyOpenCodeConfig> {
   return {
     sisyphus: {
-      tasks: { storage_path: storagePath, claude_code_compat: false },
-      claude_code_compat: true,
+      tasks: { storage_path: storagePath, claude_code_compat: true },
     },
   }
 }

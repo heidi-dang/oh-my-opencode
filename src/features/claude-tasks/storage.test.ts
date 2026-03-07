@@ -107,8 +107,7 @@ describe("getTaskDir", () => {
       sisyphus: {
         tasks: {
           storage_path: "/tmp/custom-task-path",
-      claude_code_compat: true,
-          claude_code_compat: false,
+          claude_code_compat: true,
         },
       },
     }
@@ -126,8 +125,7 @@ describe("getTaskDir", () => {
       sisyphus: {
         tasks: {
           storage_path: ".custom/tasks",
-      claude_code_compat: true,
-          claude_code_compat: false,
+          claude_code_compat: true,
         },
       },
     }
@@ -267,8 +265,7 @@ describe("listTaskFiles", () => {
     //#given
     const config: Partial<OhMyOpenCodeConfig> = {
       new_task_system_enabled: false,
-      sisyphus: { tasks: { storage_path: TEST_DIR, claude_code_compat: false } }
-      claude_code_compat: true,
+      sisyphus: { tasks: { storage_path: TEST_DIR, claude_code_compat: true } },
     }
 
     //#when
@@ -282,8 +279,7 @@ describe("listTaskFiles", () => {
     //#given
     const config: Partial<OhMyOpenCodeConfig> = {
       new_task_system_enabled: false,
-      sisyphus: { tasks: { storage_path: TEST_DIR, claude_code_compat: false } }
-      claude_code_compat: true,
+      sisyphus: { tasks: { storage_path: TEST_DIR, claude_code_compat: true } },
     }
     mkdirSync(TEST_DIR_ABS, { recursive: true })
     writeFileSync(join(TEST_DIR_ABS, "other.json"), "{}", "utf-8")
@@ -299,8 +295,7 @@ describe("listTaskFiles", () => {
     //#given
     const config: Partial<OhMyOpenCodeConfig> = {
       new_task_system_enabled: false,
-      sisyphus: { tasks: { storage_path: TEST_DIR, claude_code_compat: false } }
-      claude_code_compat: true,
+      sisyphus: { tasks: { storage_path: TEST_DIR, claude_code_compat: true } },
     }
     mkdirSync(TEST_DIR_ABS, { recursive: true })
     writeFileSync(join(TEST_DIR_ABS, "T-abc123.json"), "{}", "utf-8")
@@ -321,8 +316,7 @@ describe("listTaskFiles", () => {
     //#given
     const config: Partial<OhMyOpenCodeConfig> = {
       new_task_system_enabled: false,
-      sisyphus: { tasks: { storage_path: TEST_DIR, claude_code_compat: false } }
-      claude_code_compat: true,
+      sisyphus: { tasks: { storage_path: TEST_DIR, claude_code_compat: true } },
     }
     mkdirSync(TEST_DIR_ABS, { recursive: true })
     writeFileSync(join(TEST_DIR_ABS, "T-test-id.json"), "{}", "utf-8")
