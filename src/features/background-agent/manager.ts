@@ -450,12 +450,105 @@ export class BackgroundManager {
   }
 
   findBySession(sessionID: string): BackgroundTask | undefined {
-    for (const task of this.tasks.values()) {
-      if (task.sessionID === sessionID) {
-        return task
+    return Array.from(this.tasks.values()).find((t) => t.sessionID === sessionID)
+  }
+
+  /**
+   * Checks if a session has any running or pending sub-tasks (recursively).
+   */
+  hasActiveDescendants(sessionID: string): boolean {
+    const tasksByParent = new Map<string, BackgroundTask[]>()
+    for (const t of this.tasks.values()) {
+      const parent = t.parentSessionID
+      if (!tasksByParent.has(parent)) tasksByParent.set(parent, [])
+      tasksByParent.get(parent)!.push(t)
+    }
+
+    const queue = [sessionID]
+    const seen = new Set<string>([sessionID])
+
+    while (queue.length > 0) {
+      const currentID = queue.shift()!
+      const children = tasksByParent.get(currentID) ?? []
+      for (const child of children) {
+        if (child.status === "running" || child.status === "pending") return true
+        if (child.sessionID && !seen.has(child.sessionID)) {
+          seen.add(child.sessionID)
+          queue.push(child.sessionID)
+        }
       }
     }
-    return undefined
+    return false
+  }
+
+  /**
+   * Returns the total count of running or pending sub-tasks for a session (recursively).
+   */
+  getActiveDescendantCount(sessionID: string): number {
+    const tasksByParent = new Map<string, BackgroundTask[]>()
+    for (const t of this.tasks.values()) {
+      const parent = t.parentSessionID
+      if (!tasksByParent.has(parent)) tasksByParent.set(parent, [])
+      tasksByParent.get(parent)!.push(t)
+    }
+
+    let count = 0
+    const queue = [sessionID]
+    const seen = new Set<string>([sessionID])
+    const activeSeen = new Set<string>()
+
+    while (queue.length > 0) {
+      const currentID = queue.shift()!
+      const children = tasksByParent.get(currentID) ?? []
+      for (const child of children) {
+        if (child.status === "running" || child.status === "pending") {
+          if (!activeSeen.has(child.id)) {
+            activeSeen.add(child.id)
+            count++
+          }
+        }
+        if (child.sessionID && !seen.has(child.sessionID)) {
+          seen.add(child.sessionID)
+          queue.push(child.sessionID)
+        }
+      }
+    }
+    return count
+  }
+
+  /**
+   * Returns the descriptions of all active sub-tasks for a session (recursively).
+   */
+  getActiveDescendantDescriptions(sessionID: string): string[] {
+    const tasksByParent = new Map<string, BackgroundTask[]>()
+    for (const t of this.tasks.values()) {
+      const parent = t.parentSessionID
+      if (!tasksByParent.has(parent)) tasksByParent.set(parent, [])
+      tasksByParent.get(parent)!.push(t)
+    }
+
+    const descriptions: string[] = []
+    const queue = [sessionID]
+    const seen = new Set<string>([sessionID])
+    const activeSeen = new Set<string>()
+
+    while (queue.length > 0) {
+      const currentID = queue.shift()!
+      const children = tasksByParent.get(currentID) ?? []
+      for (const child of children) {
+        if (child.status === "running" || child.status === "pending") {
+          if (!activeSeen.has(child.id)) {
+            activeSeen.add(child.id)
+            descriptions.push(child.description)
+          }
+        }
+        if (child.sessionID && !seen.has(child.sessionID)) {
+          seen.add(child.sessionID)
+          queue.push(child.sessionID)
+        }
+      }
+    }
+    return descriptions
   }
 
   private getConcurrencyKeyFromInput(input: LaunchInput): string {

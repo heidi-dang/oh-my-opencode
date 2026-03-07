@@ -339,6 +339,21 @@ export function createEventHandler(args: {
       const sessionID = props?.sessionID as string | undefined;
       const status = props?.status as { type?: string; attempt?: number; message?: string; next?: number } | undefined;
 
+      if (sessionID && status?.type === "idle") {
+        const backgroundManager = managers.backgroundManager;
+        if (backgroundManager.hasActiveDescendants(sessionID)) {
+          const count = backgroundManager.getActiveDescendantCount(sessionID);
+          const descriptions = backgroundManager.getActiveDescendantDescriptions(sessionID);
+
+          // Redirect to "waiting" status to prevent premature "completed" state
+          status.type = "waiting";
+          const subagentText = count === 1 ? "1 sub-agent" : `${count} sub-agents`;
+          status.message = `Waiting for ${subagentText} to finish: ${descriptions.join(", ")}`;
+
+          log("[event] Main agent waiting for sub-agents:", { sessionID, count, descriptions });
+        }
+      }
+
       if (sessionID && status?.type === "retry" && isModelFallbackEnabled) {
         try {
           const retryMessage = typeof status.message === "string" ? status.message : "";
