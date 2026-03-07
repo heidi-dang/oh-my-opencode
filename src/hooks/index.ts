@@ -56,6 +56,7 @@ export { createSemanticLoopGuardHook } from "./semantic-loop-guard"
 export { createRuntimeEnforcementHook } from "./runtime-enforcement"
 export { createPlanEnforcementHook } from "./plan-enforcement"
 export { createToolContractHook } from "./tool-contract"
+export { createEditSafeguardHook } from "./edit-safeguard/hook"
 export { createXaiUsagePatchHook } from "./xai-usage-patch/hook"
 
 

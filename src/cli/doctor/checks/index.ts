@@ -9,6 +9,7 @@ import { checkPlanCompiler } from "./plan-compiler"
 import { checkDefaultConfig } from "./default-config"
 import { checkProgress } from "./progress"
 import { checkToolContract } from "./tool-contract"
+import { checkEditAtomicity } from "./edit-atomicity"
 
 export type { CheckDefinition }
 export * from "./model-resolution-types"
@@ -58,9 +59,9 @@ export function getAllCheckDefinitions(): CheckDefinition[] {
       check: checkProgress,
     },
     {
-      id: "TOOL_CONTRACT",
-      name: "Tool Contract Compliance",
-      check: checkToolContract,
+      id: CHECK_IDS.EDIT_ATOMICITY,
+      name: CHECK_NAMES[CHECK_IDS.EDIT_ATOMICITY],
+      check: checkEditAtomicity.check,
     },
   ]
 }
