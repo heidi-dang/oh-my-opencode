@@ -5,6 +5,7 @@ import { tool } from "@opencode-ai/plugin"
 import { z } from "zod"
 import { VERIFICATION_COMMANDS } from "../../agents/runtime/verify-action"
 import { createSuccessResult, createFailureResult } from "../../utils/safety-tool-result"
+import { storeToolMetadata } from "../../features/tool-metadata-store"
 
 export function createVerifyTool(): any {
     return tool({
@@ -21,6 +22,7 @@ export function createVerifyTool(): any {
             if (!config || !config.command) {
                 const result = createFailureResult(`Unknown verification action or missing command: ${args.action}`);
                 toolContext.metadata({ title: "Verify Error", ...result })
+                if (toolContext.callID) storeToolMetadata(toolContext.sessionID, toolContext.callID, { title: "Verify Error", metadata: result as any });
                 return result.message
             }
 
@@ -67,12 +69,20 @@ export function createVerifyTool(): any {
                     ...result
                 })
 
+                if (toolContext.callID) {
+                    storeToolMetadata(toolContext.sessionID, toolContext.callID, {
+                        title: `Verify: ${config.name}`,
+                        metadata: result as any
+                    })
+                }
+
                 return isSuccess
                     ? `Verification SUCCESS. (Output: ${stdoutText.trim()})`
                     : `Verification FAILED. ${config.failureMessage} (Output: ${stdoutText.trim()})`
             } catch (e: any) {
                 const result = createFailureResult(`Execution failed: ${e.message}`);
                 toolContext.metadata({ title: `Verify Error`, ...result })
+                if (toolContext.callID) storeToolMetadata(toolContext.sessionID, toolContext.callID, { title: `Verify Error`, metadata: result as any });
                 return result.message
             }
         }

@@ -4,6 +4,7 @@ import * as path from "path"
 import { tool } from "@opencode-ai/plugin"
 import { z } from "zod"
 import { createSuccessResult, createFailureResult } from "../../utils/safety-tool-result"
+import { storeToolMetadata } from "../../features/tool-metadata-store"
 
 export function createFsSafeTool(): any {
     return tool({
@@ -62,13 +63,29 @@ export function createFsSafeTool(): any {
                     ...result
                 })
 
+                if (context.callID) {
+                    storeToolMetadata(context.sessionID, context.callID, {
+                        title: `fs ${operation}`,
+                        metadata: result as any
+                    })
+                }
+
                 return `Successfully executed ${operation} on ${filePath}`
             } catch (err: any) {
                 const result = createFailureResult(`Failed: ${err.message}`);
-                context.metadata({
+                const meta = {
                     title: `fs ${args.operation} error`,
+                    metadata: result as any
+                };
+                context.metadata({
+                    title: meta.title,
                     ...result
                 })
+
+                if (context.callID) {
+                    storeToolMetadata(context.sessionID, context.callID, meta)
+                }
+
                 return result.message
             }
         }

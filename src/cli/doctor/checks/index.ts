@@ -8,6 +8,7 @@ import { checkFork } from "./fork"
 import { checkPlanCompiler } from "./plan-compiler"
 import { checkDefaultConfig } from "./default-config"
 import { checkProgress } from "./progress"
+import { checkToolContract } from "./tool-contract"
 
 export type { CheckDefinition }
 export * from "./model-resolution-types"
@@ -55,6 +56,11 @@ export function getAllCheckDefinitions(): CheckDefinition[] {
       id: CHECK_IDS.PROGRESS,
       name: CHECK_NAMES[CHECK_IDS.PROGRESS],
       check: checkProgress,
+    },
+    {
+      id: "TOOL_CONTRACT",
+      name: "Tool Contract Compliance",
+      check: checkToolContract,
     },
   ]
 }

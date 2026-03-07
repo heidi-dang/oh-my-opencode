@@ -3,6 +3,7 @@ import { tool } from "@opencode-ai/plugin"
 import { z } from "zod"
 import { compiler } from "../plan-compiler"
 import { createSuccessResult } from "../../utils/safety-tool-result"
+import { storeToolMetadata } from "../../features/tool-metadata-store"
 
 export function createSubmitPlanTool(): any {
     return tool({
@@ -28,6 +29,13 @@ export function createSubmitPlanTool(): any {
                 title: "Plan Submitted",
                 ...result
             })
+
+            if (toolContext.callID) {
+                storeToolMetadata(toolContext.sessionID, toolContext.callID, {
+                    title: "Plan Submitted",
+                    metadata: result as any
+                })
+            }
 
             const active = compiler.getActiveStep(toolContext.sessionID)
             return `Plan successfully compiled into an executable graph (including implicit verification nodes).\n\nCURRENT FORCED STEP: ${active?.action} (ID: ${active?.id}).\nDo not execute any other tools until this step is complete.`
@@ -56,6 +64,13 @@ export function createMarkStepCompleteTool(): any {
                 ...result
             })
 
+            if (toolContext.callID) {
+                storeToolMetadata(toolContext.sessionID, toolContext.callID, {
+                    title: `Step ${args.id} Complete`,
+                    metadata: result as any
+                })
+            }
+
             const active = compiler.getActiveStep(toolContext.sessionID)
             if (!active) {
                 return `Step ${args.id} marked complete. The plan graph is now fully exhausted. You may report final success to the user.`
@@ -82,6 +97,13 @@ export function createUnlockPlanTool(): any {
                 title: "Plan Unlocked",
                 ...result
             })
+
+            if (toolContext.callID) {
+                storeToolMetadata(toolContext.sessionID, toolContext.callID, {
+                    title: "Plan Unlocked",
+                    metadata: result as any
+                })
+            }
 
             return "The deterministic execution plan has been cleared for this session. You are now in freestyle mode."
         }
