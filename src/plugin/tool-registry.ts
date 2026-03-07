@@ -146,6 +146,7 @@ export function createToolRegistry(args: {
     unlock_plan: DETERMINISTIC_TOOLS["unlock_plan"](),
     query_ledger: DETERMINISTIC_TOOLS["query_ledger"](),
     complete_task: DETERMINISTIC_TOOLS["complete_task"](),
+    report_issue_verification: DETERMINISTIC_TOOLS["report_issue_verification"](),
   }
 
   const filteredTools = filterDisabledTools(allTools, pluginConfig.disabled_tools)

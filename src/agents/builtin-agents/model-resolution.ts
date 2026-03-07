@@ -1,19 +1,28 @@
-import { resolveModelPipeline } from "../../shared"
+import { resolveModelPipeline, modelResolutionTracker } from "../../shared"
 import { transformModelForProvider } from "../../shared/provider-model-id-transform"
 
 export function applyModelResolution(input: {
   uiSelectedModel?: string
+  sessionModel?: string
   userModel?: string
   requirement?: { fallbackChain?: { providers: string[]; model: string; variant?: string }[] }
   availableModels: Set<string>
   systemDefaultModel?: string
+  contextID?: string
 }) {
-  const { uiSelectedModel, userModel, requirement, availableModels, systemDefaultModel } = input
-  return resolveModelPipeline({
-    intent: { uiSelectedModel, userModel },
+  const { uiSelectedModel, sessionModel, userModel, requirement, availableModels, systemDefaultModel, contextID } = input
+  
+  const request = {
+    intent: { uiSelectedModel, sessionModel, userModel },
     constraints: { availableModels },
     policy: { fallbackChain: requirement?.fallbackChain, systemDefaultModel },
-  })
+  }
+
+  if (contextID) {
+    return modelResolutionTracker.resolve(contextID, request)
+  }
+
+  return resolveModelPipeline(request)
 }
 
 export function getFirstFallbackModel(requirement?: {

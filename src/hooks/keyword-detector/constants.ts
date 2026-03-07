@@ -5,10 +5,12 @@ export const INLINE_CODE_PATTERN = /`[^`]+`/g
 export { isPlannerAgent, getUltraworkMessage } from "./ultrawork"
 export { SEARCH_PATTERN, SEARCH_MESSAGE } from "./search"
 export { ANALYZE_PATTERN, ANALYZE_MESSAGE } from "./analyze"
+export { ISSUE_PATTERN, ISSUE_MESSAGE } from "./issue"
 
 import { getUltraworkMessage } from "./ultrawork"
 import { SEARCH_PATTERN, SEARCH_MESSAGE } from "./search"
 import { ANALYZE_PATTERN, ANALYZE_MESSAGE } from "./analyze"
+import { ISSUE_PATTERN, ISSUE_MESSAGE } from "./issue"
 
 export type KeywordDetector = {
   pattern: RegExp
@@ -27,5 +29,9 @@ export const KEYWORD_DETECTORS: KeywordDetector[] = [
   {
     pattern: ANALYZE_PATTERN,
     message: ANALYZE_MESSAGE,
+  },
+  {
+    pattern: ISSUE_PATTERN,
+    message: ISSUE_MESSAGE,
   },
 ]

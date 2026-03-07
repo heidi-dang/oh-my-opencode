@@ -5,6 +5,7 @@ import { tool } from "@opencode-ai/plugin"
 import { z } from "zod"
 import { createSuccessResult, createFailureResult } from "../../utils/safety-tool-result"
 import { storeToolMetadata } from "../../features/tool-metadata-store"
+import { withToolContract } from "../../utils/tool-contract-wrapper"
 
 export function createFsSafeTool(): any {
     return tool({
@@ -15,7 +16,7 @@ export function createFsSafeTool(): any {
             filePath: z.string().describe("Absolute or relative path to the file/directory."),
             content: z.string().optional().describe("File content (only used if operation is 'write')."),
         },
-        execute: async (args, context) => {
+        execute: withToolContract("fs_safe", async (args, context) => {
             try {
                 const { operation, filePath, content } = args
                 const fullPath = path.resolve(context.directory || process.cwd(), filePath)
@@ -88,6 +89,6 @@ export function createFsSafeTool(): any {
 
                 return result.message
             }
-        }
+        })
     })
 }

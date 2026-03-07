@@ -9,6 +9,10 @@ import { checkPlanCompiler } from "./plan-compiler"
 import { checkDefaultConfig } from "./default-config"
 import { checkProgress } from "./progress"
 import { checkToolContract } from "./tool-contract"
+import { checkEditAtomicity } from "./edit-atomicity"
+import { checkIssueResolutionWorkflow } from "./issue-resolution"
+import { checkToolMetadataContract } from "./tool-metadata"
+import { checkRunStateWatchdog } from "./run-state-watchdog"
 
 export type { CheckDefinition }
 export * from "./model-resolution-types"
@@ -58,9 +62,30 @@ export function getAllCheckDefinitions(): CheckDefinition[] {
       check: checkProgress,
     },
     {
+      id: CHECK_IDS.EDIT_ATOMICITY,
+      name: CHECK_NAMES[CHECK_IDS.EDIT_ATOMICITY],
+      check: checkEditAtomicity.check,
+    },
+    {
+      id: "issue-resolution",
+      name: "Issue Resolution Workflow",
+      check: checkIssueResolutionWorkflow,
+    },
+    {
+      id: checkToolMetadataContract.id,
+      name: checkToolMetadataContract.name,
+      check: checkToolMetadataContract.check,
+    },
+    {
+      id: checkRunStateWatchdog.id,
+      name: checkRunStateWatchdog.name,
+      check: checkRunStateWatchdog.check,
+    },
+    {
       id: "TOOL_CONTRACT",
       name: "Tool Contract Compliance",
       check: checkToolContract,
     },
   ]
 }
+

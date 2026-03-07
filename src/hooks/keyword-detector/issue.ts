@@ -1,0 +1,2 @@
+export const ISSUE_PATTERN = /\b(error|bug|failing|broken|crash|exception|traceback|not working|issue|fix this|check this error)\b/i
+export const ISSUE_MESSAGE = "Strict Issue Resolution Workflow activated. I must reproduce the issue, capture the error signature, apply a fix, and run post-fix verification. I will use the `report_issue_verification` tool to track my progress and provide proof of reproducibility and resolution before concluding."

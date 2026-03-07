@@ -26,6 +26,7 @@ export const CHECK_IDS = {
   DEFAULT_CONFIG: "default-config",
   PLAN_COMPILER: "plan-compiler",
   PROGRESS: "progress",
+  EDIT_ATOMICITY: "edit-atomicity",
 } as const
 
 export const CHECK_NAMES: Record<string, string> = {
@@ -37,6 +38,7 @@ export const CHECK_NAMES: Record<string, string> = {
   [CHECK_IDS.DEFAULT_CONFIG]: "Default Config",
   [CHECK_IDS.PLAN_COMPILER]: "Plan Compiler",
   [CHECK_IDS.PROGRESS]: "Subagent Progress",
+  [CHECK_IDS.EDIT_ATOMICITY]: "Edit Atomicity & Validation",
 } as const
 
 export const EXIT_CODES = {

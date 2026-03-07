@@ -37,6 +37,7 @@ export * from "./model-resolver"
 export { normalizeModel, normalizeModelID } from "./model-normalization"
 export { normalizeFallbackModels } from "./model-resolver"
 export { resolveModelPipeline } from "./model-resolution-pipeline"
+export { modelResolutionTracker } from "./model-resolution-tracker"
 export type {
   ModelResolutionRequest,
   ModelResolutionProvenance,

@@ -6,6 +6,7 @@ import {
   fetchAvailableModels,
   readConnectedProvidersCache,
   resolveModelPipeline,
+  modelResolutionTracker,
 } from "../shared";
 import { resolveCategoryConfig } from "./category-config-resolver";
 
@@ -26,8 +27,9 @@ export async function buildPrometheusAgentConfig(params: {
   configAgentPlan: Record<string, unknown> | undefined;
   pluginPrometheusOverride: PrometheusOverride | undefined;
   userCategories: Record<string, CategoryConfig> | undefined;
-  currentModel: string | undefined;
-}): Promise<Record<string, unknown>> {
+  uiSelectedModel: string | undefined;
+  sessionModel: string | undefined;
+} & Record<string, unknown>): Promise<Record<string, unknown>> {
   const categoryConfig = params.pluginPrometheusOverride?.category
     ? resolveCategoryConfig(params.pluginPrometheusOverride.category, params.userCategories)
     : undefined;
@@ -38,9 +40,10 @@ export async function buildPrometheusAgentConfig(params: {
     connectedProviders: connectedProviders ?? undefined,
   });
 
-  const modelResolution = resolveModelPipeline({
+  const modelResolution = modelResolutionTracker.resolve("prometheus", {
     intent: {
-      uiSelectedModel: params.currentModel,
+      uiSelectedModel: params.uiSelectedModel,
+      sessionModel: params.sessionModel,
       userModel: params.pluginPrometheusOverride?.model ?? categoryConfig?.model,
     },
     constraints: { availableModels },

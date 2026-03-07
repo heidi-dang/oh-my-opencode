@@ -1,5 +1,6 @@
 export const subagentSessions = new Set<string>()
 export const syncSubagentSessions = new Set<string>()
+export const issueModeSessions = new Set<string>()
 
 let _mainSessionID: string | undefined
 
@@ -16,6 +17,7 @@ export function _resetForTesting(): void {
   _mainSessionID = undefined
   subagentSessions.clear()
   syncSubagentSessions.clear()
+  issueModeSessions.clear()
   sessionAgentMap.clear()
 }
 
@@ -37,4 +39,16 @@ export function getSessionAgent(sessionID: string): string | undefined {
 
 export function clearSessionAgent(sessionID: string): void {
   sessionAgentMap.delete(sessionID)
+}
+
+export function setSessionIssueMode(sessionID: string): void {
+  issueModeSessions.add(sessionID)
+}
+
+export function isSessionIssueMode(sessionID: string): boolean {
+  return issueModeSessions.has(sessionID)
+}
+
+export function clearSessionIssueMode(sessionID: string): void {
+  issueModeSessions.delete(sessionID)
 }

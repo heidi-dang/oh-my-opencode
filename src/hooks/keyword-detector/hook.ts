@@ -10,6 +10,7 @@ import {
   getMainSessionID,
   getSessionAgent,
   subagentSessions,
+  setSessionIssueMode,
 } from "../../features/claude-code-session-state"
 import type { ContextCollector } from "../../features/context-injector"
 
@@ -60,14 +61,36 @@ export function createKeywordDetectorHook(ctx: PluginInput, _collector?: Context
       const isNonMainSession = mainSessionID && input.sessionID !== mainSessionID
 
       if (isNonMainSession) {
-        detectedKeywords = detectedKeywords.filter((k) => k.type === "ultrawork")
+        detectedKeywords = detectedKeywords.filter((k) => k.type === "ultrawork" || k.type === "issue")
         if (detectedKeywords.length === 0) {
-          log(`[keyword-detector] Skipping non-ultrawork keywords in non-main session`, {
+          log(`[keyword-detector] Skipping keywords in non-main session`, {
             sessionID: input.sessionID,
             mainSessionID,
           })
           return
         }
+      }
+
+      const hasIssue = detectedKeywords.some((k) => k.type === "issue")
+      if (hasIssue) {
+        log(`[keyword-detector] Issue workflow activated`, { sessionID: input.sessionID })
+        setSessionIssueMode(input.sessionID)
+        
+        ctx.client.tui
+          .showToast({
+            body: {
+              title: "Issue Resolution Mode",
+              message: "Strict verification required before completion.",
+              variant: "warning" as const,
+              duration: 3000,
+            },
+          })
+          .catch((err) =>
+            log(`[keyword-detector] Failed to show toast`, {
+              error: err,
+              sessionID: input.sessionID,
+            })
+          )
       }
 
       const hasUltrawork = detectedKeywords.some((k) => k.type === "ultrawork")

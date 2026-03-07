@@ -26,6 +26,7 @@ import {
   createPreemptiveCompactionHook,
   createRuntimeFallbackHook,
   createXaiUsagePatchHook,
+  createRunStateWatchdogHook,
 } from "../../hooks"
 import { createAnthropicEffortHook } from "../../hooks/anthropic-effort"
 import {
@@ -62,16 +63,18 @@ export type SessionHooks = {
   anthropicEffort: ReturnType<typeof createAnthropicEffortHook> | null
   runtimeFallback: ReturnType<typeof createRuntimeFallbackHook> | null
   xaiUsagePatch: ReturnType<typeof createXaiUsagePatchHook> | null
+  runStateWatchdog: ReturnType<typeof createRunStateWatchdogHook> | null
 }
 
 export function createSessionHooks(args: {
   ctx: PluginContext
   pluginConfig: OhMyOpenCodeConfig
   modelCacheState: ModelCacheState
+  runStateWatchdogManager: any
   isHookEnabled: (hookName: HookName) => boolean
   safeHookEnabled: boolean
 }): SessionHooks {
-  const { ctx, pluginConfig, modelCacheState, isHookEnabled, safeHookEnabled } = args
+  const { ctx, pluginConfig, modelCacheState, runStateWatchdogManager, isHookEnabled, safeHookEnabled } = args
   const safeHook = <T>(hookName: HookName, factory: () => T): T | null =>
     safeCreateHook(hookName, factory, { enabled: safeHookEnabled })
 
@@ -266,6 +269,8 @@ export function createSessionHooks(args: {
 
   const xaiUsagePatch = safeHook("xai-usage-patch", () => createXaiUsagePatchHook())
 
+  const runStateWatchdog = safeHook("run-state-watchdog" as any, () => createRunStateWatchdogHook(runStateWatchdogManager))
+
   return {
     contextWindowMonitor,
     preemptiveCompaction,
@@ -291,5 +296,6 @@ export function createSessionHooks(args: {
     anthropicEffort,
     runtimeFallback,
     xaiUsagePatch,
+    runStateWatchdog,
   }
 }

@@ -19,6 +19,7 @@ import {
   createRuntimeEnforcementHook,
   createPlanEnforcementHook,
   createSemanticLoopGuardHook,
+  createEditSafeguardHook,
 } from "../../hooks"
 import {
   getOpenCodeVersion,
@@ -45,6 +46,7 @@ export type ToolGuardHooks = {
   runtimeEnforcement: ReturnType<typeof createRuntimeEnforcementHook> | null
   planEnforcement: ReturnType<typeof createPlanEnforcementHook> | null
   semanticLoopGuard: ReturnType<typeof createSemanticLoopGuardHook> | null
+  editSafeguard: ReturnType<typeof createEditSafeguardHook> | null
 }
 
 export function createToolGuardHooks(args: {
@@ -126,6 +128,7 @@ export function createToolGuardHooks(args: {
   const runtimeEnforcement = safeHook("runtime-enforcement", () => createRuntimeEnforcementHook(ctx))
   const planEnforcement = safeHook("plan-enforcement", () => createPlanEnforcementHook(ctx))
   const semanticLoopGuard = safeHook("semantic-loop-guard", () => createSemanticLoopGuardHook(ctx))
+  const editSafeguard = safeHook("edit-safeguard", () => createEditSafeguardHook(ctx))
 
   return {
     commentChecker,
@@ -144,5 +147,6 @@ export function createToolGuardHooks(args: {
     runtimeEnforcement,
     planEnforcement,
     semanticLoopGuard,
+    editSafeguard,
   }
 }
