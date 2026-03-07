@@ -144,7 +144,11 @@ export function logEventVerbose(ctx: RunContext, payload: EventPayload): void {
     case "session.error": {
       const errorProps = props as SessionErrorProps | undefined
       const errorMsg = serializeError(errorProps?.error)
-      console.error(pc.red(`${sessionTag} SESSION.ERROR: ${errorMsg}`))
+      if (errorMsg.includes("[Semantic Loop Guard]")) {
+        console.error(pc.green(`${sessionTag} ${errorMsg}`))
+      } else {
+        console.error(pc.red(`${sessionTag} SESSION.ERROR: ${errorMsg}`))
+      }
       break
     }
 

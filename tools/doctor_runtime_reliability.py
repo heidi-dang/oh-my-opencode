@@ -52,6 +52,34 @@ def run_doctor():
                 else:
                     print(f"[PASS] {tool_path} uses safety-tool-result helper.")
 
+    # Check for Loop Guard Recovery Wiring
+    print("\nChecking Loop Guard recovery wiring...")
+    compiler_path = "src/runtime/plan-compiler.ts"
+    hook_path = "src/hooks/semantic-loop-guard/hook.ts"
+    
+    if os.path.exists(compiler_path):
+        with open(compiler_path, "r") as f:
+            compiler_content = f.read()
+        if "injectForcedReplan" not in compiler_content:
+            print(f"[FAIL] {compiler_path} missing 'injectForcedReplan' method.")
+            all_pass = False
+        else:
+            print(f"[PASS] {compiler_path} has 'injectForcedReplan' method.")
+
+    if os.path.exists(hook_path):
+        with open(hook_path, "r") as f:
+            hook_content = f.read()
+        if "compiler.injectForcedReplan" not in hook_content:
+            print(f"[FAIL] {hook_path} does not call 'compiler.injectForcedReplan'.")
+            all_pass = False
+        else:
+            print(f"[PASS] {hook_path} calls 'compiler.injectForcedReplan' on block.")
+        if "variant: \"success\"" not in hook_content:
+            print(f"[FAIL] {hook_path} does not use 'success' variant for green toast.")
+            all_pass = False
+        else:
+            print(f"[PASS] {hook_path} uses 'success' variant for safety message.")
+
     if all_pass:
         print("\n[RESULT] 10/10 Reliability Architecture: Verified.")
         sys.exit(0)
