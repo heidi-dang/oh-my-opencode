@@ -82,22 +82,26 @@ export function createRuntimeEnforcementHook(_ctx: PluginInput) {
                 const toolParts = lastAssistant.parts.filter(p => p.type === "tool")
                 
                 const combinedText = textParts.map((p: any) => p.text || "").join("")
-                const isSilent = toolParts.length > 0 && combinedText.trim().length < 10
+                const isSilent = toolParts.length > 0 && combinedText.trim().length < 50 // Increased threshold
                 const isRedacted = combinedText.includes("[REDACTED: False success claim]")
+                const endsOnTool = lastAssistant.parts.length > 0 && lastAssistant.parts[lastAssistant.parts.length - 1].type === "tool"
 
-                if (isSilent || isRedacted) {
+                if (isSilent || isRedacted || endsOnTool) {
                     const isTerminalTool = toolParts.some((p: any) => p.toolName === "complete_task" || p.toolName === "git_safe")
+                    const isVerificationTool = toolParts.some((p: any) => p.toolName === "report_issue_verification" || p.toolName === "verify_action")
                     
                     let syntheticText = ""
                     if (isRedacted) {
-                        syntheticText = "\n\n[System: Verification Failed] The agent attempted to finish but failed the required verification gates. It must now correct the state and retry."
+                        syntheticText = "\n\n[SYSTEM: VERIFICATION FAILED] The agent attempted to claim completion but failed required safety or verification gates. Final state is UNSTABLE."
                     } else if (isTerminalTool) {
-                        syntheticText = "\n\n[System: Terminal Summary] Task Completed or Terminal state reached. (Synthetic injection for visibility)"
-                    } else {
-                        syntheticText = "\n\n[System: Stalled or Silent] The agent performed actions but did not provide a concluding summary for this turn."
+                        syntheticText = "\n\n[SYSTEM: TERMINAL STATE] The agent executed a completion or safety tool. Turn concluding."
+                    } else if (isVerificationTool) {
+                        syntheticText = "\n\n[SYSTEM: VERIFICATION LOGGED] The agent recorded progress in the strict verification workflow."
+                    } else if (isSilent) {
+                        syntheticText = "\n\n[SYSTEM: STALLED OR SILENT TURN] The agent performed actions but did not provide a concluding summary."
                     }
 
-                    if (syntheticText) {
+                    if (syntheticText && !combinedText.includes(syntheticText)) {
                         lastAssistant.parts.push({
                             id: `prt_synthetic_${Date.now()}`,
                             sessionID: lastAssistant.info.sessionID,

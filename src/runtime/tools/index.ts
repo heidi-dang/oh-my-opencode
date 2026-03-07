@@ -1,7 +1,8 @@
 export { createGitSafeTool } from "./git-safe"
 export { createFsSafeTool } from "./fs-safe"
 export { createVerifyTool } from "./verify"
-export { createSubmitPlanTool, createMarkStepCompleteTool } from "./plan"
+export { createSubmitPlanTool, createMarkStepCompleteTool, createUnlockPlanTool } from "./plan"
 export { createQueryLedgerTool } from "./query-ledger"
 export { createCompleteTaskTool } from "./complete-task"
-
+export { createGhSafeTool } from "./gh-safe"
+export { createReportIssueVerificationTool } from "./report-issue-verification"

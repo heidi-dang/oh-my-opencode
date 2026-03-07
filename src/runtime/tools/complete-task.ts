@@ -1,15 +1,14 @@
 // @ts-nocheck
 import { tool } from "@opencode-ai/plugin"
 import { z } from "zod"
-import { ledger } from "../../runtime/state-ledger"
+import { ledger } from "../state-ledger"
 import { createSuccessResult, createFailureResult } from "../../utils/safety-tool-result"
 import { isSessionIssueMode } from "../../features/claude-code-session-state"
 import { getIssueState } from "../../features/issue-resolution/state"
 import { withToolContract } from "../../utils/tool-contract-wrapper"
 import { normalizeSDKResponse } from "../../shared/normalize-sdk-response"
-import { withToolContract } from "../../utils/tool-contract-wrapper"
 
-export function createCompleteTaskTool(client?: any): any {
+export function createCompleteTaskTool(options?: { client?: any, backgroundManager?: any }): any {
     return tool({
         description: "Signal that the task is complete. The runtime will compose the final verified state report. DO NOT output your own summary, just call this tool.",
         // @ts-ignore
@@ -17,8 +16,10 @@ export function createCompleteTaskTool(client?: any): any {
             message: z.string().describe("Optional short note about what was done. Do not include PR URLs or commit hashes here.")
         },
         execute: withToolContract("complete_task", async (args, toolContext) => {
-            const sessionID = toolContext.sessionID
+            const client = options?.client;
+            const sessionID = toolContext.sessionID;
             
+            // Check for incomplete todos if client is available
             if (client) {
                 try {
                     const todosRes = await client.session.todo({
@@ -55,11 +56,15 @@ export function createCompleteTaskTool(client?: any): any {
             }
 
             // Filter strictly: verified, successful, state changes, and only in THIS session flow
+            const descendantSessions = options?.backgroundManager?.getAllDescendantTasks 
+                ? options.backgroundManager.getAllDescendantTasks(toolContext.sessionID).map((t: any) => t.sessionID).filter(Boolean)
+                : [];
+            const sessionIDs = [toolContext.sessionID, ...descendantSessions];
+
             const entries = ledger.getEntries().filter(e =>
                 e.verified === true &&
                 e.success === true &&
-                e.changedState === true &&
-                (!e.sessionID || e.sessionID === toolContext.sessionID)
+                (!e.sessionID || sessionIDs.includes(e.sessionID))
             )
 
             // Compile verifiable evidence report
