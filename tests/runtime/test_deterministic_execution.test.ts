@@ -1,6 +1,7 @@
+import { describe, test, expect, beforeEach } from "bun:test"
 import { ActionValidator } from "../../src/agents/runtime/action-validator"
 import { detectLoop } from "../../src/agents/runtime/loop-guard"
-import { stateLedger } from "../../src/agents/runtime/state-ledger"
+import { ledger } from "../../src/runtime/state-ledger"
 
 /**
  * Deterministic Execution Tests
@@ -16,7 +17,7 @@ describe("Deterministic Reliability Runtime", () => {
 
     beforeEach(() => {
         // Clear ledger state
-        stateLedger.entries = []
+        ledger.clear()
     })
 
     test("ActionValidator: Rejects non-schema text output", () => {
@@ -49,17 +50,18 @@ describe("Deterministic Reliability Runtime", () => {
 
 
     test("StateLedger: Records entries correctly", () => {
-        stateLedger.push({
-            type: "git_safe",
-            key: "origin/main",
-            success: true,
-            verified: true,
-            changedState: true,
-            stdout: "Pushed",
-            stderr: ""
-        })
-        expect(stateLedger.getEntries().length).toBe(1)
-        expect(stateLedger.getEntries()[0].type).toBe("git_safe")
+        ledger.record(
+            "git.commit", // type
+            "origin/main", // key
+            true, // success
+            true, // verified
+            true, // changedState
+            "Pushed", // stdout
+            undefined, // metadata
+            undefined // sessionID
+        )
+        expect(ledger.getEntries().length).toBe(1)
+        expect(ledger.getEntries()[0].type).toBe("git.commit")
     })
 
 })

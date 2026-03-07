@@ -1,32 +1,16 @@
-/// <reference types="bun-types" />
+import { describe, it, expect, spyOn, beforeEach, afterEach, afterAll, mock } from "bun:test"
+import * as logger from "../shared/logger"
 
-import { describe, it, expect, mock, beforeEach, afterEach } from "bun:test"
+const logSpy = spyOn(logger, "log").mockImplementation(() => { })
 
 const ANTHROPIC_CONTEXT_ENV_KEY = "ANTHROPIC_1M_CONTEXT"
 const VERTEX_CONTEXT_ENV_KEY = "VERTEX_ANTHROPIC_1M_CONTEXT"
 
-const originalAnthropicContextEnv = process.env[ANTHROPIC_CONTEXT_ENV_KEY]
-const originalVertexContextEnv = process.env[VERTEX_CONTEXT_ENV_KEY]
+const envSnapshot = { ...process.env }
 
 function resetContextLimitEnv(): void {
-  if (originalAnthropicContextEnv === undefined) {
-    delete process.env[ANTHROPIC_CONTEXT_ENV_KEY]
-  } else {
-    process.env[ANTHROPIC_CONTEXT_ENV_KEY] = originalAnthropicContextEnv
-  }
-
-  if (originalVertexContextEnv === undefined) {
-    delete process.env[VERTEX_CONTEXT_ENV_KEY]
-  } else {
-    process.env[VERTEX_CONTEXT_ENV_KEY] = originalVertexContextEnv
-  }
+  process.env = { ...envSnapshot }
 }
-
-const logMock = mock(() => {})
-
-mock.module("../shared/logger", () => ({
-  log: logMock,
-}))
 
 const { createPreemptiveCompactionHook } = await import("./preemptive-compaction")
 
@@ -54,7 +38,7 @@ function setupImmediateTimeouts(): () => void {
     return 1 as unknown as ReturnType<typeof setTimeout>
   }) as typeof setTimeout
 
-  globalThis.clearTimeout = (() => {}) as typeof clearTimeout
+  globalThis.clearTimeout = (() => { }) as typeof clearTimeout
 
   return () => {
     globalThis.setTimeout = originalSetTimeout
@@ -67,9 +51,14 @@ describe("preemptive-compaction", () => {
 
   beforeEach(() => {
     ctx = createMockCtx()
-    logMock.mockClear()
+    logSpy.mockClear()
     delete process.env[ANTHROPIC_CONTEXT_ENV_KEY]
     delete process.env[VERTEX_CONTEXT_ENV_KEY]
+  })
+
+  afterAll(() => {
+    logSpy.mockRestore()
+    resetContextLimitEnv()
   })
 
   afterEach(() => {
@@ -278,7 +267,7 @@ describe("preemptive-compaction", () => {
     )
 
     //#then
-    expect(logMock).toHaveBeenCalledWith("[preemptive-compaction] Compaction failed", {
+    expect(logSpy).toHaveBeenCalledWith("[preemptive-compaction] Compaction failed", {
       sessionID,
       error: String(summarizeError),
     })
@@ -368,7 +357,7 @@ describe("preemptive-compaction", () => {
     const sessionID = "ses_timeout"
 
     ctx.client.session.summarize
-      .mockImplementationOnce(() => new Promise(() => {}))
+      .mockImplementationOnce(() => new Promise(() => { }))
       .mockResolvedValueOnce({})
 
     try {
@@ -406,7 +395,7 @@ describe("preemptive-compaction", () => {
 
       //#then
       expect(ctx.client.session.summarize).toHaveBeenCalledTimes(2)
-      expect(logMock).toHaveBeenCalledWith("[preemptive-compaction] Compaction failed", {
+      expect(logSpy).toHaveBeenCalledWith("[preemptive-compaction] Compaction failed", {
         sessionID,
         error: expect.stringContaining("Compaction summarize timed out"),
       })

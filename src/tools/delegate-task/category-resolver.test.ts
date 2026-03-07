@@ -30,7 +30,7 @@ describe("resolveCategoryExecution", () => {
 	test("returns clear error when category exists but required model is not available", async () => {
 		//#given
 		const args = {
-			category: "deep",
+			category: "artistry",
 			prompt: "test prompt",
 			description: "Test task",
 			run_in_background: false,
@@ -47,7 +47,7 @@ describe("resolveCategoryExecution", () => {
 
 		//#then
 		expect(result.error).toBeDefined()
-		expect(result.error).toContain("deep")
+		expect(result.error).toContain("artistry")
 		expect(result.error).toMatch(/model.*not.*available|requires.*model/i)
 		expect(result.error).not.toContain("Unknown category")
 	})

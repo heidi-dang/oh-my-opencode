@@ -2,7 +2,7 @@ import type { AgentConfig } from "@opencode-ai/sdk"
 import type { AgentOverrides } from "../types"
 import type { CategoryConfig } from "../../config/schema"
 import type { AvailableAgent, AvailableCategory, AvailableSkill } from "../types";
-import { AGENT_MODEL_REQUIREMENTS, isAnyProviderConnected } from "../../shared"
+import { AGENT_MODEL_REQUIREMENTS, isAnyFallbackModelAvailable } from "../../shared"
 import { createHephaestusAgent } from "../hephaestus"
 import { applyEnvironmentContext } from "./environment-context"
 import { applyCategoryOverride, mergeAgentConfig } from "./agent-overrides"
@@ -43,13 +43,13 @@ export function maybeCreateHephaestusConfig(input: {
   const hephaestusRequirement = AGENT_MODEL_REQUIREMENTS["hephaestus"]
   const hasHephaestusExplicitConfig = hephaestusOverride !== undefined
 
-  const hasRequiredProvider =
-    !hephaestusRequirement?.requiresProvider ||
+  const meetsAnyModelRequirement =
+    !hephaestusRequirement?.requiresAnyModel ||
     hasHephaestusExplicitConfig ||
     isFirstRunNoCache ||
-    isAnyProviderConnected(hephaestusRequirement.requiresProvider, availableModels)
+    isAnyFallbackModelAvailable(hephaestusRequirement.fallbackChain, availableModels)
 
-  if (!hasRequiredProvider) return undefined
+  if (!meetsAnyModelRequirement) return undefined
 
   let hephaestusResolution = applyModelResolution({
     userModel: hephaestusOverride?.model,

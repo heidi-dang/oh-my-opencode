@@ -29,7 +29,10 @@ export function createQueryLedgerTool(): any {
 
             toolContext.metadata({
                 title: "Query Ledger",
-                ...result
+                metadata: {
+                    ...result,
+                    recordCount: filtered.length
+                }
             })
 
             if (filtered.length === 0) {

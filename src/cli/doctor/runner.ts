@@ -1,7 +1,7 @@
 import type { DoctorOptions, DoctorResult, CheckDefinition, CheckResult, DoctorSummary } from "./types"
-import { getAllCheckDefinitions, gatherSystemInfo, gatherToolsSummary } from "./checks"
+import * as checks from "./checks"
 import { EXIT_CODES } from "./constants"
-import { formatDoctorOutput, formatJsonOutput } from "./formatter"
+import * as formatter from "./formatter"
 
 export async function runCheck(check: CheckDefinition): Promise<CheckResult> {
   const start = performance.now()
@@ -38,11 +38,11 @@ export function determineExitCode(results: CheckResult[]): number {
 export async function runDoctor(options: DoctorOptions): Promise<DoctorResult> {
   const start = performance.now()
 
-  const allChecks = getAllCheckDefinitions()
+  const allChecks = checks.getAllCheckDefinitions()
   const [results, systemInfo, tools] = await Promise.all([
     Promise.all(allChecks.map(runCheck)),
-    gatherSystemInfo(),
-    gatherToolsSummary(),
+    checks.gatherSystemInfo(),
+    checks.gatherToolsSummary(),
   ])
 
   const duration = performance.now() - start
@@ -58,9 +58,9 @@ export async function runDoctor(options: DoctorOptions): Promise<DoctorResult> {
   }
 
   if (options.json) {
-    console.log(formatJsonOutput(doctorResult))
+    console.log(formatter.formatJsonOutput(doctorResult))
   } else {
-    console.log(formatDoctorOutput(doctorResult, options.mode))
+    console.log(formatter.formatDoctorOutput(doctorResult, options.mode))
   }
 
   return doctorResult

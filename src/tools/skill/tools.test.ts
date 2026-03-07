@@ -9,18 +9,8 @@ import type { Tool as McpTool } from "@modelcontextprotocol/sdk/types.js"
 
 const originalReadFileSync = fs.readFileSync.bind(fs)
 
-mock.module("node:fs", () => ({
-  ...fs,
-  readFileSync: (path: string, encoding?: string) => {
-    if (typeof path === "string" && path.includes("/skills/")) {
-      return `---
-description: Test skill description
----
-Test skill body content`
-    }
-    return originalReadFileSync(path, encoding as BufferEncoding)
-  },
-}))
+// Remove global mock.module which interferes with other tests in the same process
+
 
 afterAll(() => {
   mock.restore()
@@ -63,11 +53,23 @@ const mockContext: ToolContext = {
   directory: "/test",
   worktree: "/test",
   abort: new AbortController().signal,
-  metadata: () => {},
-  ask: async () => {},
+  metadata: () => { },
+  ask: async () => { },
 }
 
 describe("skill tool - synchronous description", () => {
+  beforeEach(() => {
+    spyOn(fs, "readFileSync").mockImplementation(((path: string, encoding?: string) => {
+      if (typeof path === "string" && path.includes("/skills/")) {
+        return `---
+description: Test skill description
+---
+Test skill body content`
+      }
+      return originalReadFileSync(path, encoding as BufferEncoding)
+    }) as any)
+  })
+
   it("includes available_items immediately when skills are pre-provided", () => {
     // given
     const loadedSkills = [createMockSkill("test-skill")]

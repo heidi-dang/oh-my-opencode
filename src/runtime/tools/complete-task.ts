@@ -42,9 +42,12 @@ export function createCompleteTaskTool(): any {
 
             toolContext.metadata({
                 title: "Task Completed",
-                ...result,
-                sessionID: toolContext.sessionID,
-                entries: entries.length
+                metadata: {
+                    ...result,
+                    sessionID: toolContext.sessionID,
+                    entries: entries.length,
+                    success: result.success
+                }
             })
 
             return `[RUNTIME AUTHORIZATION]\n\n${report}\n\nYou may now conclude your response using EXACTLY this report as your final output.`

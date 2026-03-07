@@ -17,8 +17,7 @@ import type {
 } from "./types"
 import type { LoadedSkill } from "../../features/opencode-skill-loader"
 
-const sessionProcessedCommands = new Set<string>()
-const sessionProcessedCommandExecutions = new Set<string>()
+
 
 export interface AutoSlashCommandHookOptions {
   skills?: LoadedSkill[]
@@ -27,6 +26,9 @@ export interface AutoSlashCommandHookOptions {
 }
 
 export function createAutoSlashCommandHook(options?: AutoSlashCommandHookOptions) {
+  const sessionProcessedCommands = new Set<string>()
+  const sessionProcessedCommandExecutions = new Set<string>()
+
   const executorOptions: ExecutorOptions = {
     skills: options?.skills,
     pluginsEnabled: options?.pluginsEnabled,

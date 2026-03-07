@@ -1,21 +1,17 @@
-import { describe, it, expect, mock, beforeEach } from "bun:test"
+import { describe, it, expect, mock, spyOn, beforeEach, afterAll } from "bun:test"
 import type { ClaudeHooksConfig } from "./types"
 import type { StopContext } from "./stop"
+import * as commandExecutor from "../../shared/command-executor"
+import * as logger from "../../shared/logger"
 
-const mockExecuteHookCommand = mock(() =>
+const executeHookCommandSpy = spyOn(commandExecutor, "executeHookCommand").mockImplementation(() =>
   Promise.resolve({ exitCode: 0, stdout: "", stderr: "" })
 )
+const executeCommandSpy = spyOn(commandExecutor, "executeCommand").mockImplementation(() => Promise.resolve({ exitCode: 0, stdout: "", stderr: "" }))
+const resolveCommandsInTextSpy = spyOn(commandExecutor, "resolveCommandsInText").mockImplementation(() => ({} as any))
 
-mock.module("../../shared/command-executor", () => ({
-  executeHookCommand: mockExecuteHookCommand,
-  executeCommand: mock(),
-  resolveCommandsInText: mock(),
-}))
-
-mock.module("../../shared/logger", () => ({
-  log: () => {},
-  getLogFilePath: () => "/tmp/test.log",
-}))
+const logSpy = spyOn(logger, "log").mockImplementation(() => { })
+const getLogFilePathSpy = spyOn(logger, "getLogFilePath").mockReturnValue("/tmp/test.log")
 
 const { executeStopHooks } = await import("./stop")
 
@@ -33,8 +29,8 @@ function createConfig(stopHooks: ClaudeHooksConfig["Stop"]): ClaudeHooksConfig {
 
 describe("executeStopHooks", () => {
   beforeEach(() => {
-    mockExecuteHookCommand.mockReset()
-    mockExecuteHookCommand.mockImplementation(() =>
+    executeHookCommandSpy.mockReset()
+    executeHookCommandSpy.mockImplementation(() =>
       Promise.resolve({ exitCode: 0, stdout: "", stderr: "" })
     )
   })
@@ -48,7 +44,7 @@ describe("executeStopHooks", () => {
     const result = await executeStopHooks(ctx, config)
 
     expect(result.block).toBe(false)
-    expect(mockExecuteHookCommand).not.toHaveBeenCalled()
+    expect(executeHookCommandSpy).not.toHaveBeenCalled()
   })
 
   it("#given null config #when stop hooks called #then returns non-blocking", async () => {
@@ -57,7 +53,7 @@ describe("executeStopHooks", () => {
     const result = await executeStopHooks(ctx, null)
 
     expect(result.block).toBe(false)
-    expect(mockExecuteHookCommand).not.toHaveBeenCalled()
+    expect(executeHookCommandSpy).not.toHaveBeenCalled()
   })
 
   it("#given empty stop hooks #when stop hooks called #then returns non-blocking", async () => {
@@ -74,7 +70,7 @@ describe("executeStopHooks", () => {
     const config = createConfig([
       { matcher: "*", hooks: [{ type: "command", command: "exit 2" }] },
     ])
-    mockExecuteHookCommand.mockResolvedValueOnce({
+    executeHookCommandSpy.mockResolvedValueOnce({
       exitCode: 2,
       stdout: "",
       stderr: "blocked reason",
@@ -91,7 +87,7 @@ describe("executeStopHooks", () => {
     const config = createConfig([
       { matcher: "*", hooks: [{ type: "command", command: "blocker" }] },
     ])
-    mockExecuteHookCommand.mockResolvedValueOnce({
+    executeHookCommandSpy.mockResolvedValueOnce({
       exitCode: 0,
       stdout: JSON.stringify({ decision: "block", reason: "must fix" }),
       stderr: "",
@@ -109,7 +105,7 @@ describe("executeStopHooks", () => {
       { matcher: "*", hooks: [{ type: "command", command: "hook-a" }] },
       { matcher: "*", hooks: [{ type: "command", command: "hook-b" }] },
     ])
-    mockExecuteHookCommand
+    executeHookCommandSpy
       .mockResolvedValueOnce({
         exitCode: 0,
         stdout: JSON.stringify({ suppressOutput: true }),
@@ -124,7 +120,7 @@ describe("executeStopHooks", () => {
     const result = await executeStopHooks(ctx, config)
 
     expect(result.block).toBe(false)
-    expect(mockExecuteHookCommand).toHaveBeenCalledTimes(2)
+    expect(executeHookCommandSpy).toHaveBeenCalledTimes(2)
   })
 
   it("#given first hook returns stdin passthrough JSON #when multiple hooks #then executes all hooks", async () => {
@@ -138,7 +134,7 @@ describe("executeStopHooks", () => {
       { matcher: "*", hooks: [{ type: "command", command: "check-console-log" }] },
       { matcher: "*", hooks: [{ type: "command", command: "task-complete-notify" }] },
     ])
-    mockExecuteHookCommand
+    executeHookCommandSpy
       .mockResolvedValueOnce({
         exitCode: 0,
         stdout: JSON.stringify(stdinPassthrough),
@@ -153,7 +149,7 @@ describe("executeStopHooks", () => {
     const result = await executeStopHooks(ctx, config)
 
     expect(result.block).toBe(false)
-    expect(mockExecuteHookCommand).toHaveBeenCalledTimes(2)
+    expect(executeHookCommandSpy).toHaveBeenCalledTimes(2)
   })
 
   it("#given first hook blocks #when multiple hooks #then stops at blocking hook", async () => {
@@ -162,7 +158,7 @@ describe("executeStopHooks", () => {
       { matcher: "*", hooks: [{ type: "command", command: "blocker" }] },
       { matcher: "*", hooks: [{ type: "command", command: "notifier" }] },
     ])
-    mockExecuteHookCommand.mockResolvedValueOnce({
+    executeHookCommandSpy.mockResolvedValueOnce({
       exitCode: 0,
       stdout: JSON.stringify({ decision: "block", reason: "fix first" }),
       stderr: "",
@@ -171,7 +167,7 @@ describe("executeStopHooks", () => {
     const result = await executeStopHooks(ctx, config)
 
     expect(result.block).toBe(true)
-    expect(mockExecuteHookCommand).toHaveBeenCalledTimes(1)
+    expect(executeHookCommandSpy).toHaveBeenCalledTimes(1)
   })
 
   it("#given hook with non-JSON stdout #when stop hooks called #then continues to next hook", async () => {
@@ -180,7 +176,7 @@ describe("executeStopHooks", () => {
       { matcher: "*", hooks: [{ type: "command", command: "hook-a" }] },
       { matcher: "*", hooks: [{ type: "command", command: "hook-b" }] },
     ])
-    mockExecuteHookCommand
+    executeHookCommandSpy
       .mockResolvedValueOnce({
         exitCode: 0,
         stdout: "not json",
@@ -195,6 +191,6 @@ describe("executeStopHooks", () => {
     const result = await executeStopHooks(ctx, config)
 
     expect(result.block).toBe(false)
-    expect(mockExecuteHookCommand).toHaveBeenCalledTimes(2)
+    expect(executeHookCommandSpy).toHaveBeenCalledTimes(2)
   })
 })
