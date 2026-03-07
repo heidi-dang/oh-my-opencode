@@ -5,6 +5,10 @@ import { createLookAt } from "./tools"
 describe("createLookAt unhandled error resilience", () => {
   const createToolContext = (): ToolContext => ({
     sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
     messageID: "parent-message",
     agent: "sisyphus",
     directory: "/project",

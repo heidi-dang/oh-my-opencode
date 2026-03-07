@@ -57,6 +57,10 @@ describe("prometheus-md-only", () => {
       const input = {
         tool: "Write",
         sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
         callID: "call-1",
       }
       const output = {
@@ -76,6 +80,10 @@ describe("prometheus-md-only", () => {
       const input = {
         tool: "Write",
         sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
         callID: "call-1",
       }
       const output = {
@@ -95,6 +103,10 @@ describe("prometheus-md-only", () => {
       const input = {
         tool: "Write",
         sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
         callID: "call-1",
       }
       const output = {
@@ -114,6 +126,10 @@ describe("prometheus-md-only", () => {
       const input = {
         tool: "Write",
         sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
         callID: "call-1",
       }
       const output = {
@@ -133,6 +149,10 @@ describe("prometheus-md-only", () => {
       const input = {
         tool: "Write",
         sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
         callID: "call-1",
       }
       const output = {
@@ -152,6 +172,10 @@ describe("prometheus-md-only", () => {
       const input = {
         tool: "Write",
         sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
         callID: "call-1",
       }
       const output = {
@@ -176,6 +200,10 @@ describe("prometheus-md-only", () => {
       const input = {
         tool: "Write",
         sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
         callID: "call-1",
       }
       const output = {
@@ -194,6 +222,10 @@ describe("prometheus-md-only", () => {
       const input = {
         tool: "Write",
         sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
         callID: "call-1",
       }
       const output = {
@@ -212,6 +244,10 @@ describe("prometheus-md-only", () => {
       const input = {
         tool: "Write",
         sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
         callID: "call-1",
       }
       const output: { args: Record<string, unknown>; message?: string } = {
@@ -234,6 +270,10 @@ describe("prometheus-md-only", () => {
       const input = {
         tool: "Write",
         sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
         callID: "call-1",
       }
       const output: { args: Record<string, unknown>; message?: string } = {
@@ -253,6 +293,10 @@ describe("prometheus-md-only", () => {
       const input = {
         tool: "Write",
         sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
         callID: "call-1",
       }
       const output = {
@@ -271,6 +315,10 @@ describe("prometheus-md-only", () => {
       const input = {
         tool: "Edit",
         sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
         callID: "call-1",
       }
       const output = {
@@ -289,6 +337,10 @@ describe("prometheus-md-only", () => {
       const input = {
         tool: "bash",
         sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
         callID: "call-1",
       }
       const output = {
@@ -307,6 +359,10 @@ describe("prometheus-md-only", () => {
       const input = {
         tool: "Read",
         sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
         callID: "call-1",
       }
       const output = {
@@ -325,6 +381,10 @@ describe("prometheus-md-only", () => {
       const input = {
         tool: "Write",
         sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
         callID: "call-1",
       }
       const output = {
@@ -343,6 +403,10 @@ describe("prometheus-md-only", () => {
       const input = {
         tool: "task",
         sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
         callID: "call-1",
       }
       const output = {
@@ -363,6 +427,10 @@ describe("prometheus-md-only", () => {
       const input = {
         tool: "task",
         sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
         callID: "call-1",
       }
       const output = {
@@ -382,6 +450,10 @@ describe("prometheus-md-only", () => {
       const input = {
         tool: "call_omo_agent",
         sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
         callID: "call-1",
       }
       const output = {
@@ -401,6 +473,10 @@ describe("prometheus-md-only", () => {
       const input = {
         tool: "task",
         sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
         callID: "call-1",
       }
       const promptWithWarning = `Some prompt ${SYSTEM_DIRECTIVE_PREFIX} already here`
@@ -428,6 +504,10 @@ describe("prometheus-md-only", () => {
       const input = {
         tool: "Write",
         sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
         callID: "call-1",
       }
       const output = {
@@ -446,6 +526,10 @@ describe("prometheus-md-only", () => {
       const input = {
         tool: "task",
         sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
         callID: "call-1",
       }
       const originalPrompt = "Implement this feature"
@@ -498,6 +582,10 @@ describe("prometheus-md-only", () => {
       const input = {
         tool: "Write",
         sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
         callID: "call-1",
       }
       const output = {
@@ -531,6 +619,10 @@ describe("prometheus-md-only", () => {
       const input = {
         tool: "Write",
         sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
         callID: "call-1",
       }
       const output = {
@@ -564,6 +656,10 @@ describe("prometheus-md-only", () => {
       const input = {
         tool: "Write",
         sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
         callID: "call-1",
       }
       const output = {
@@ -609,6 +705,10 @@ describe("prometheus-md-only", () => {
        const input = {
          tool: "Write",
          sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
          callID: "call-1",
        }
        const output = {
@@ -628,6 +728,10 @@ describe("prometheus-md-only", () => {
        const input = {
          tool: "Write",
          sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
          callID: "call-1",
        }
        const output = {
@@ -647,6 +751,10 @@ describe("prometheus-md-only", () => {
        const input = {
          tool: "Write",
          sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
          callID: "call-1",
        }
        const output = {
@@ -666,6 +774,10 @@ describe("prometheus-md-only", () => {
        const input = {
          tool: "Write",
          sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
          callID: "call-1",
        }
        const output = {
@@ -685,6 +797,10 @@ describe("prometheus-md-only", () => {
        const input = {
          tool: "Write",
          sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
          callID: "call-1",
        }
        const output = {
@@ -704,6 +820,10 @@ describe("prometheus-md-only", () => {
        const input = {
          tool: "Write",
          sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
          callID: "call-1",
        }
        const output = {
@@ -723,6 +843,10 @@ describe("prometheus-md-only", () => {
        const input = {
          tool: "Write",
          sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
          callID: "call-1",
        }
        const output = {
@@ -743,6 +867,10 @@ describe("prometheus-md-only", () => {
        const input = {
          tool: "Write",
          sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
          callID: "call-1",
        }
        const output = {
@@ -762,6 +890,10 @@ describe("prometheus-md-only", () => {
        const input = {
          tool: "Write",
          sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
          callID: "call-1",
        }
        const output = {
@@ -781,6 +913,10 @@ describe("prometheus-md-only", () => {
        const input = {
          tool: "Write",
          sessionID: TEST_SESSION_ID,
+  directory: process.cwd(),
+  worktree: "",
+  metadata: () => {},
+  ask: async () => {},
          callID: "call-1",
        }
        const output = {

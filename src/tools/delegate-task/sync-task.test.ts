@@ -78,6 +78,10 @@ describe("executeSyncTask - cleanup on error paths", () => {
 
     const mockCtx = {
       sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
       callID: "call-123",
       metadata: () => {},
     }
@@ -100,6 +104,10 @@ describe("executeSyncTask - cleanup on error paths", () => {
     //#when - executeSyncTask with fetchSyncResult failing
     const result = await executeSyncTask(args, mockCtx, mockExecutorCtx, {
       sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
     }, "test-agent", undefined, undefined, undefined, undefined, deps)
 
     //#then - should return error and cleanup resources
@@ -128,6 +136,10 @@ describe("executeSyncTask - cleanup on error paths", () => {
 
     const mockCtx = {
       sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
       callID: "call-123",
       metadata: () => {},
     }
@@ -150,6 +162,10 @@ describe("executeSyncTask - cleanup on error paths", () => {
     //#when - executeSyncTask with pollSyncSession failing
     const result = await executeSyncTask(args, mockCtx, mockExecutorCtx, {
       sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
     }, "test-agent", undefined, undefined, undefined, undefined, deps)
 
     //#then - should return error and cleanup resources
@@ -178,6 +194,10 @@ describe("executeSyncTask - cleanup on error paths", () => {
 
     const mockCtx = {
       sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
       callID: "call-123",
       metadata: () => {},
     }
@@ -200,6 +220,10 @@ describe("executeSyncTask - cleanup on error paths", () => {
     //#when - executeSyncTask completes successfully
     const result = await executeSyncTask(args, mockCtx, mockExecutorCtx, {
       sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
     }, "test-agent", undefined, undefined, undefined, undefined, deps)
 
     //#then - should complete and cleanup resources

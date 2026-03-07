@@ -35,6 +35,10 @@ describe("createLookAt with image_data", () => {
 
     const toolContext: ToolContext = {
       sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
       messageID: "parent-message",
       agent: "sisyphus",
       directory: "/project",
@@ -88,6 +92,10 @@ describe("createLookAt with image_data", () => {
 
     const toolContext: ToolContext = {
       sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
       messageID: "parent-message",
       agent: "sisyphus",
       directory: "/project",

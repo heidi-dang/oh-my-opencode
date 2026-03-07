@@ -64,7 +64,7 @@ describe("createAnthropicContextWindowLimitRecoveryHook", () => {
     try {
       const { createAnthropicContextWindowLimitRecoveryHook } = await import("./recovery-hook")
       const ctx = { client: mockClient, directory: "/tmp" } as PluginInput
-      const hook = createAnthropicContextWindowLimitRecoveryHook(ctx, { experimental })
+      const hook = createAnthropicContextWindowLimitRecoveryHook(ctx, { experimental, pluginConfig: {} as any })
 
       // first error triggers compaction (setTimeout runs immediately due to mock)
       await hook.event({
@@ -107,7 +107,7 @@ describe("createAnthropicContextWindowLimitRecoveryHook", () => {
 
     const { createAnthropicContextWindowLimitRecoveryHook } = await import("./recovery-hook")
     const ctx = { client: mockClient, directory: "/tmp" } as PluginInput
-    const hook = createAnthropicContextWindowLimitRecoveryHook(ctx)
+    const hook = createAnthropicContextWindowLimitRecoveryHook(ctx, { pluginConfig: {} as any })
 
     //#when - single error (no compaction in progress)
     await hook.event({

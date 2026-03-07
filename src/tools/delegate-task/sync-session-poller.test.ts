@@ -7,6 +7,10 @@ function createMockCtx(aborted = false) {
   if (aborted) controller.abort()
   return {
     sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
     messageID: "parent-message",
     agent: "test-agent",
     abort: controller.signal,

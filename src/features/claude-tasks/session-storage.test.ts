@@ -16,6 +16,7 @@ function makeConfig(storagePath: string): Partial<OhMyOpenCodeConfig> {
   return {
     sisyphus: {
       tasks: { storage_path: storagePath, claude_code_compat: false },
+      claude_code_compat: true,
     },
   }
 }

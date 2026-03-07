@@ -54,6 +54,10 @@ describe("executeUnstableAgentTask timeout handling", () => {
       args,
       {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         metadata: () => Promise.resolve(),
       },
@@ -64,6 +68,10 @@ describe("executeUnstableAgentTask timeout handling", () => {
       },
       {
         sessionID: "parent-session",
+      directory: "/tmp",
+      worktree: "",
+      metadata: () => {},
+      ask: async () => {},
         messageID: "parent-message",
         model: "gpt-test",
         agent: "test-agent",

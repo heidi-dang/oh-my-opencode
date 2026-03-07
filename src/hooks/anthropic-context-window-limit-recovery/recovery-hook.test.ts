@@ -71,7 +71,7 @@ describe("createAnthropicContextWindowLimitRecoveryHook", () => {
     //#given
     const { restore, getClearTimeoutCalls } = setupDelayedTimeoutMocks()
     const { createAnthropicContextWindowLimitRecoveryHook } = await import("./recovery-hook")
-    const hook = createAnthropicContextWindowLimitRecoveryHook(createMockContext())
+    const hook = createAnthropicContextWindowLimitRecoveryHook(createMockContext(), { pluginConfig: {} as any })
 
     try {
       //#when
