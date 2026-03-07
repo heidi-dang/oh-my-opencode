@@ -4,6 +4,7 @@ import { createVerifyTool } from "./verify";
 import { createSubmitPlanTool, createMarkStepCompleteTool, createUnlockPlanTool } from "./plan";
 import { createQueryLedgerTool } from "./query-ledger";
 import { createCompleteTaskTool } from "./complete-task";
+import { createReportIssueVerificationTool } from "./report-issue-verification";
 
 /**
  * Centralized Deterministic Tool Registry
@@ -20,7 +21,8 @@ export const DETERMINISTIC_TOOLS: Record<string, () => any> = {
     "mark_step_complete": createMarkStepCompleteTool,
     "unlock_plan": createUnlockPlanTool,
     "query_ledger": createQueryLedgerTool,
-    "complete_task": createCompleteTaskTool
+    "complete_task": createCompleteTaskTool,
+    "report_issue_verification": createReportIssueVerificationTool
 };
 
 export function getToolFromRegistry(name: string) {

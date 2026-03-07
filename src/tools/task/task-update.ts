@@ -10,6 +10,8 @@ import {
   acquireLock,
 } from "../../features/claude-tasks/storage";
 import { syncTaskTodoUpdate } from "./todo-sync";
+import { isSessionIssueMode } from "../../features/claude-code-session-state";
+import { getIssueState } from "../../features/issue-resolution/state";
 
 const TASK_ID_PATTERN = /^T-[A-Za-z0-9-]+$/;
 
@@ -79,6 +81,18 @@ async function handleUpdate(
     const taskId = parseTaskId(validatedArgs.id);
     if (!taskId) {
       return JSON.stringify({ error: "invalid_task_id" });
+    }
+
+    if (validatedArgs.status === "completed") {
+      if (isSessionIssueMode(context.sessionID)) {
+        const issueState = getIssueState(context.sessionID);
+        if (!issueState.reproduced || !issueState.fixApplied || !issueState.reproAfterPassed) {
+          return JSON.stringify({
+            error: "verification_required",
+            message: `[ERROR] STRICT ISSUE RESOLUTION MODE ACTIVE.\n\nYou cannot mark this task as complete until you have explicitly verified the fix.\n\nCurrent Verification State:\n- Reproduced: ${issueState.reproduced}\n- Fix Applied: ${issueState.fixApplied}\n- Repro After Fix Passed: ${issueState.reproAfterPassed}\n\nYou MUST use the 'report_issue_verification' tool to truthfully log your progress as you perform each step. If you only performed static reasoning without live verification, change the status to something else like 'pending' with an updated description, but do NOT mark it 'completed'.`
+          });
+        }
+      }
     }
 
     const taskDir = getTaskDir(config);

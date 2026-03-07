@@ -4,6 +4,8 @@ import { z } from "zod"
 import { ledger } from "../../runtime/state-ledger"
 import { createSuccessResult } from "../../utils/safety-tool-result"
 import { storeToolMetadata } from "../../features/tool-metadata-store"
+import { isSessionIssueMode } from "../../features/claude-code-session-state"
+import { getIssueState } from "../../features/issue-resolution/state"
 
 export function createCompleteTaskTool(): any {
     return tool({
@@ -13,6 +15,15 @@ export function createCompleteTaskTool(): any {
             message: z.string().describe("Optional short note about what was done. Do not include PR URLs or commit hashes here.")
         },
         execute: async (args, toolContext) => {
+            const sessionID = toolContext.sessionID
+            
+            if (isSessionIssueMode(sessionID)) {
+                const issueState = getIssueState(sessionID)
+                if (!issueState.reproduced || !issueState.fixApplied || !issueState.reproAfterPassed) {
+                    return `[ERROR] STRICT ISSUE RESOLUTION MODE ACTIVE.\n\nYou cannot mark this task as complete until you have explicitly verified the fix.\n\nCurrent Verification State:\n- Reproduced: ${issueState.reproduced}\n- Fix Applied: ${issueState.fixApplied}\n- Repro After Fix Passed: ${issueState.reproAfterPassed}\n\nYou MUST use the 'report_issue_verification' tool to truthfully log your progress as you perform each step. If you only performed static reasoning without live verification, your state is incomplete.`
+                }
+            }
+
             // Filter strictly: verified, successful, state changes, and only in THIS session flow
             const entries = ledger.getEntries().filter(e =>
                 e.verified === true &&
