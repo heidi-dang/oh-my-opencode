@@ -4,7 +4,6 @@ import { z } from "zod"
 import { getIssueState, updateIssueState } from "../../features/issue-resolution/state"
 import { isSessionIssueMode } from "../../features/claude-code-session-state"
 import { createSuccessResult } from "../../utils/safety-tool-result"
-import { storeToolMetadata } from "../../features/tool-metadata-store"
 import { withToolContract } from "../../utils/tool-contract-wrapper"
 
 export function createReportIssueVerificationTool(): any {
@@ -31,21 +30,13 @@ export function createReportIssueVerificationTool(): any {
                 message: `Verification state updated.`
             });
 
-            const meta = {
+            toolContext.metadata({
                 title: "Issue Verification Update",
                 ...result,
                 sessionID,
                 state: newState
-            };
+            })
 
-            toolContext.metadata(meta)
-
-            if (toolContext.callID) {
-                storeToolMetadata(sessionID, toolContext.callID, {
-                    title: meta.title,
-                    metadata: meta
-                })
-            }
             let response = `[VERIFICATION LOGGED]\n\nCurrent Verification State:\n- Reproduced: ${newState.reproduced}\n- Error Signature: ${newState.errorSignatureBefore ?? "None"}\n- Fix Applied: ${newState.fixApplied}\n- Repro After Fix Passed: ${newState.reproAfterPassed}\n- Nearby Checks Passed: ${newState.failureModeChecksPassed}\n\n`
             
             if (isSessionIssueMode(sessionID)) {

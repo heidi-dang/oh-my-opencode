@@ -3,7 +3,7 @@ import { spawn } from "bun"
 import { tool } from "@opencode-ai/plugin"
 import { z } from "zod"
 import { createSuccessResult, createFailureResult } from "../../utils/safety-tool-result"
-import { storeToolMetadata } from "../../features/tool-metadata-store"
+import { withToolContract } from "../../utils/tool-contract-wrapper"
 
 export function createGitSafeTool(): any {
     return tool({
@@ -12,16 +12,14 @@ export function createGitSafeTool(): any {
         args: {
             command: z.string().describe("The git command without the 'git ' prefix (e.g. 'commit -m \"msg\"', 'push origin main')"),
         },
-        execute: async (args: any, context) => {
+        execute: withToolContract("git_safe", async (args: any, context) => {
             let commandArgs: string[] = []
             try {
                 commandArgs = (args.command as string).match(/([^\\"]\S*|".+?")\s*/g)?.map((s: string) => s.trim().replace(/^"(.*)"$/, '$1')) || []
 
                 if (commandArgs.length === 0) {
                     const result = createFailureResult("No command provided");
-                    const meta = { title: "Git Exec Error", metadata: result as any };
-                    context.metadata({ title: meta.title, ...result })
-                    if (context.callID) storeToolMetadata(context.sessionID, context.callID, meta);
+                    context.metadata({ title: "Git Exec Error", ...result })
                     return result.message
                 }
 
@@ -57,28 +55,17 @@ export function createGitSafeTool(): any {
                     stateChange: stateChangePayload || undefined
                 });
 
-                const meta = {
-                    title: `git ${commandArgs[0]}`,
-                    metadata: result as any
-                };
-
                 context.metadata({
-                    title: meta.title,
+                    title: `git ${commandArgs[0]}`,
                     ...result
                 })
-
-                if (context.callID) {
-                    storeToolMetadata(context.sessionID, context.callID, meta);
-                }
 
                 return `Exit Code: ${exitCode}\n\nSTDOUT:\n${stdoutText}\n\nSTDERR:\n${stderrText}`
             } catch (e: any) {
                 const result = createFailureResult(`JSON parse error on args or execution failed: ${e.message}`);
-                const meta = { title: "Git Exec Error", metadata: result as any };
-                context.metadata({ title: meta.title, ...result })
-                if (context.callID) storeToolMetadata(context.sessionID, context.callID, meta);
+                context.metadata({ title: "Git Exec Error", ...result })
                 return result.message
             }
-        }
+        })
     })
 }
