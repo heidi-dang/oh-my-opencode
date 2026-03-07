@@ -7,8 +7,8 @@ import { createFailureResult } from "./safety-tool-result";
  * or returns early. This prevents the runtime `[Tool Contract Violation]`
  * from being triggered by malformed tool returns.
  * 
- * It also guarantees that success paths always have 'success: true' and 'verified: true'
- * in the metadata, and ensures metadata is stored for hook retrieval.
+ * It ensures metadata is stored for hook retrieval and flattens nested metadata,
+ * but no longer auto-fills success/verified status.
  */
 export function withToolContract(
     toolName: string,
@@ -32,12 +32,9 @@ export function withToolContract(
                     flattened = { ...rest, ...metadata };
                 }
 
-                // 2. Strong guarantee for success/verified
-                // If it's a safety-critical tool and success is not explicitly false, assume true
-                if (safetyCriticalTools.includes(toolName)) {
-                    if (flattened.success === undefined) flattened.success = true;
-                    if (flattened.verified === undefined) flattened.verified = true;
-                }
+                // 2. [REMOVED] Strong guarantee for success/verified
+                // We no longer auto-fill these to force developer correctness.
+                // Safety-critical tools MUST explicitly report their status.
             }
             
             lastMetadata = flattened;
@@ -58,15 +55,9 @@ export function withToolContract(
         try {
             executionMessage = await executeFn(args, context)
 
-            // 4. Final Hard Guarantee: If tool finished but NEVER called metadata, inject it.
-            if (!metadataCalled && safetyCriticalTools.includes(toolName)) {
-                context.metadata({
-                    title: `${toolName} (Auto-Success)`,
-                    success: true,
-                    verified: true,
-                    autoInjected: true
-                });
-            }
+            // 4. [REMOVED] Final Hard Guarantee
+            // We no longer inject success if the tool failed to call metadata.
+            // This ensures that missing metadata is caught as a contract violation (if applicable).
         } catch (error: any) {
             const result = createFailureResult(`Exception in ${toolName}: ${error.message}`)
             const meta = {
