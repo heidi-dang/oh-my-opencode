@@ -70,7 +70,6 @@ export function createGhSafeTool(): any {
                     });
                 }
 
-                const isStateChanging = ["pr", "issue", "branch", "repo"].includes(commandArgs[0])
                 const result = createSuccessResult({
                     verified: !isStateChanging,
                     changedState: success && isStateChanging,
@@ -84,7 +83,7 @@ export function createGhSafeTool(): any {
 
                 return `Exit Code: ${exitCode}\n\nSTDOUT:\n${stdoutText}\n\nSTDERR:\n${stderrText}`
             } catch (e: any) {
-                const result = createFailureResult(`Execution failed: ${e.message}`);
+                const result = createFailureResult(`GH execution failed: ${e.message}`);
                 context.metadata({ title: "GH Exec Error", ...result })
                 return result.message
             }
