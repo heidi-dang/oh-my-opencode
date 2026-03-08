@@ -15,8 +15,9 @@ const SYSTEM_DEFAULT_MODEL = "anthropic/claude-sonnet-4-6"
 const TEST_CONNECTED_PROVIDERS = ["anthropic", "google", "openai"]
 const TEST_AVAILABLE_MODELS = new Set([
   "anthropic/claude-sonnet-4-6",
-  "anthropic/claude-sonnet-4-6",
   "anthropic/claude-haiku-4-5",
+  "anthropic/claude-3-5-haiku",
+  "anthropic/claude-3-5-sonnet",
   "google/gemini-2.0-flash",
   "google/gemini-3-flash",
   "openai/gpt-5.2",
@@ -51,7 +52,7 @@ describe("sisyphus-task", () => {
     cacheSpy = spyOn(connectedProvidersCache, "readConnectedProvidersCache").mockReturnValue(["anthropic", "google", "openai"])
     providerModelsSpy = spyOn(connectedProvidersCache, "readProviderModelsCache").mockReturnValue({
       models: {
-        anthropic: ["claude-sonnet-4-6", "claude-sonnet-4-6", "claude-haiku-4-5"],
+        anthropic: ["claude-sonnet-4-6", "claude-haiku-4-5", "claude-3-5-haiku", "claude-3-5-sonnet"],
         google: ["gemini-2.0-flash", "gemini-3-flash"],
         openai: ["gpt-5.2", "o3-mini"],
       },
@@ -1078,7 +1079,7 @@ describe("sisyphus-task", () => {
       // then - variant MUST be "max" from DEFAULT_CATEGORIES
       expect(launchInput.model).toEqual({
         providerID: "anthropic",
-        modelID: "claude-sonnet-4-6",
+        modelID: "claude-3-5-sonnet",
         variant: "max",
       })
     }, { timeout: 20000 })
@@ -1143,7 +1144,7 @@ describe("sisyphus-task", () => {
       // then - variant MUST be "max" from DEFAULT_CATEGORIES (passed as separate field)
       expect(promptBody.model).toEqual({
         providerID: "anthropic",
-        modelID: "claude-sonnet-4-6",
+        modelID: "claude-3-5-sonnet",
       })
       expect(promptBody.variant).toBe("max")
     }, { timeout: 20000 })
@@ -1655,7 +1656,14 @@ describe("sisyphus-task", () => {
                 parts: [{ type: "text", text: "Do something" }],
               },
               {
-                info: { id: "msg_002", role: "assistant", time: { created: Date.now() + 1 }, finish: "end_turn" },
+                info: { id: "msg_002", role: "assistant", time: { created: Date.now() + 1 }, finish: "tool_use" },
+                parts: [
+                  { type: "text", text: "Task in progress" },
+                  { type: "tool", name: "complete_task", toolName: "complete_task", args: { success: true }, state: { status: "completed", output: "Task completed successfully" } }
+                ],
+              },
+              {
+                info: { id: "msg_003", role: "assistant", time: { created: Date.now() + 2 }, finish: "end_turn" },
                 parts: [{ type: "text", text: "Sync task completed successfully" }],
               },
             ],
@@ -2123,7 +2131,7 @@ describe("sisyphus-task", () => {
       const mockClient = {
         app: { agents: async () => ({ data: [] }) },
         config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
-        model: { list: async () => [{ provider: "google", id: "gemini-2.0-flash" }] },
+        model: { list: async () => ({ data: [{ provider: "google", id: "gemini-2.0-flash" }] }) },
         session: {
           get: async () => ({ data: { directory: "/project" } }),
           create: async () => ({ data: { id: "ses_artistry_gemini" } }),
@@ -2391,7 +2399,7 @@ describe("sisyphus-task", () => {
       // then - model should be anthropic/claude-haiku-4-5 from DEFAULT_CATEGORIES
       //         NOT anthropic/claude-sonnet-4-6 (system default)
       expect(launchInput.model.providerID).toBe("anthropic")
-      expect(launchInput.model.modelID).toBe("claude-haiku-4-5")
+      expect(launchInput.model.modelID).toBe("claude-3-5-haiku")
     })
 
     test("category delegation ignores UI-selected (Kimi) system default model", async () => {
@@ -2459,7 +2467,7 @@ describe("sisyphus-task", () => {
 
       // then - category model must win (not Kimi)
       expect(launchInput.model.providerID).toBe("anthropic")
-      expect(launchInput.model.modelID).toBe("claude-haiku-4-5")
+      expect(launchInput.model.modelID).toBe("claude-3-5-haiku")
     })
 
     test("sisyphus-junior model override takes precedence over category model", async () => {

@@ -98,7 +98,7 @@ const DEFAULT_CATEGORY_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {
   ultrabrain: {
     fallbackChain: [
       { providers: ["openai", "opencode"], model: "o3-mini", variant: "xhigh" },
-      { providers: ["google", "github-copilot", "opencode"], model: "gemini-1.5-pro", variant: "high" },
+      { providers: ["google", "github-copilot", "opencode"], model: "gemini-2.0-flash", variant: "high" },
       { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-3-5-sonnet", variant: "max" },
     ],
   },
@@ -112,11 +112,11 @@ const DEFAULT_CATEGORY_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {
   },
   artistry: {
     fallbackChain: [
-      { providers: ["google", "github-copilot", "opencode"], model: "gemini-1.5-pro", variant: "high" },
+      { providers: ["google", "github-copilot", "opencode"], model: "gemini-2.0-flash", variant: "high" },
       { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-3-5-sonnet", variant: "max" },
       { providers: ["openai", "github-copilot", "opencode"], model: "gpt-4o" },
     ],
-    requiresModel: "gemini-1.5-pro",
+    requiresModel: "gemini-2.0-flash",
   },
   quick: {
     fallbackChain: [

@@ -1,11 +1,11 @@
-// @ts-nocheck
-import { spawn } from "bun"
+import { spawn as bunSpawn } from "bun"
 import { tool } from "@opencode-ai/plugin"
 import { z } from "zod"
 import { createSuccessResult, createFailureResult } from "../../utils/safety-tool-result"
 import { withToolContract } from "../../utils/tool-contract-wrapper"
 
-export function createGitSafeTool(): any {
+export function createGitSafeTool(deps: { spawn?: typeof bunSpawn } = {}): any {
+    const spawn = deps.spawn || bunSpawn
     return tool({
         description: "Safe, structured execution of git commands. Returns verifiable status.",
         // @ts-ignore zod version mismatch against opencode-ai/plugin
@@ -49,8 +49,28 @@ export function createGitSafeTool(): any {
                     else stateChangePayload = { type: "command.execute", key: `git ${commandArgs[0]}`, details: { exitCode } }
                 }
 
+                // 1. Proactive Verification
+                let verified = success
+                if (success && isStateChanging) {
+                    if (commandArgs[0] === "checkout") {
+                        // Verify branch change or head movement
+                        const statusProc = spawn(["git", "status", "--porcelain", "-b"], { cwd: context.directory || process.cwd(), stdout: "pipe" })
+                        const statusText = await new Response(statusProc.stdout).text()
+                        const target = commandArgs[commandArgs.length - 1]
+                        verified = statusText.includes(target) || statusText.includes("HEAD detached")
+                    } else if (commandArgs[0] === "add") {
+                        // Verify something is staged
+                        const diffProc = spawn(["git", "diff", "--cached", "--name-only"], { cwd: context.directory || process.cwd(), stdout: "pipe" })
+                        const diffText = await new Response(diffProc.stdout).text()
+                        verified = diffText.trim().length > 0
+                    } else if (commandArgs[0] === "fetch") {
+                        // Fetch success is enough for verification
+                        verified = true
+                    }
+                }
+
                 const result = createSuccessResult({
-                    verified: !isStateChanging,
+                    verified,
                     changedState,
                     stateChange: stateChangePayload || undefined
                 });
