@@ -9,6 +9,10 @@ export async function verifyTaskCompletionState(
     const response = await client.session.messages({
       path: { id: sessionID },
     })
+    
+    if (response === null || response === undefined) {
+      throw new Error("SDK returned null or undefined session messages")
+    }
 
     const messages = normalizeSDKResponse(
       response,
@@ -80,7 +84,10 @@ export async function verifyTaskCompletionState(
 
     return true
   } catch (error) {
-    log("[verifyTaskCompletionState] Error verifying task completion state, defaulting to true:", error)
-    return true
+    // FAIL-CLOSED: Any error during verification means we cannot confirm completion.
+    // Default to false (not complete) - this ensures rejected completions stay rejected
+    // even when we cannot verify the state.
+    log("[verifyTaskCompletionState] Error verifying task completion state, fail-closed:", error)
+    return false
   }
 }

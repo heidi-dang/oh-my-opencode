@@ -44,6 +44,16 @@ export {
   createTaskUpdateTool,
 } from "./task"
 export { createHashlineEditTool } from "./hashline-edit"
+export { createTestCoverageAnalyzer } from "./test-coverage-analyzer"
+export { createZodSchemaInfer } from "./zod-schema-infer"
+export { createDependencyGraph } from "./dependency-graph"
+export { createPrDrafter } from "./pr-drafter"
+export { createModuleHealthCheck } from "./module-health-check"
+export { createEnvValidator } from "./env-validator"
+export { createMcpServerScaffolder } from "./mcp-server-scaffolder"
+export { createPerformanceBenchmarker } from "./performance-benchmarker"
+export { createApiContractVerifier } from "./api-contract-verifier"
+export { createMermaidToImage } from "./mermaid-to-image"
 
 export function createBackgroundTools(manager: BackgroundManager, client: OpencodeClient): Record<string, ToolDefinition> {
   const outputManager: BackgroundOutputManager = manager

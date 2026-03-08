@@ -1,6 +1,6 @@
 import pc from "picocolors"
 import type { RunContext, Todo, ChildSession, SessionStatus } from "./types"
-import { normalizeSDKResponse, verifyTaskCompletionState } from "../../shared"
+import { normalizeSDKResponse, verifyTaskCompletionState, isStopActive } from "../../shared"
 import {
   getContinuationState,
   type ContinuationState,
@@ -8,6 +8,12 @@ import {
 
 export async function checkCompletionConditions(ctx: RunContext): Promise<boolean> {
   try {
+    // 1. Check if stop/cancel is active - BLOCK completion
+    if (isStopActive(ctx.directory, ctx.sessionID)) {
+      logWaiting(ctx, "stop/cancel is active - continuation was stopped")
+      return false
+    }
+
     const continuationState = getContinuationState(ctx.directory, ctx.sessionID)
 
     if (continuationState.hasActiveHookMarker) {

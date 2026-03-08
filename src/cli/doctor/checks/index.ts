@@ -13,6 +13,7 @@ import { checkEditAtomicity } from "./edit-atomicity"
 import { checkIssueResolutionWorkflow } from "./issue-resolution"
 import { checkToolMetadataContract } from "./tool-metadata"
 import { checkRunStateWatchdog } from "./run-state-watchdog"
+import { checkCompletionStateEnforcement } from "./completion-enforcement"
 
 export type { CheckDefinition }
 export * from "./model-resolution-types"
@@ -86,6 +87,11 @@ export function getAllCheckDefinitions(): CheckDefinition[] {
       name: "Tool Contract Compliance",
       check: checkToolContract,
     },
+    {
+      id: "COMPLETION_STATE_ENFORCEMENT",
+      name: "Completion State Enforcement",
+      check: checkCompletionStateEnforcement,
+      critical: true,
+    },
   ]
 }
-
