@@ -6,10 +6,7 @@ import { compiler } from "../../runtime/plan-compiler";
 describe("Semantic Loop Guard Recovery", () => {
     beforeEach(() => {
         // Reset singleton states
-        // @ts-ignore accessing private for test reset
-        compiler.graph = [];
-        // @ts-ignore
-        compiler.currentStepIndex = -1;
+        compiler.resetAll();
 
         // Clear ledger
         // @ts-ignore
@@ -33,6 +30,10 @@ describe("Semantic Loop Guard Recovery", () => {
 
         const tool = "bash_safe";
         const args = { command: "ls -la" };
+
+        compiler.submit(sessionID, [
+            { id: "step_1", action: "bash_safe", dependencies: [] }
+        ]);
 
         // 1st attempt
         await hook["tool.execute.before"]({ tool, sessionID, callID: "1" }, { args });
@@ -61,7 +62,7 @@ describe("Semantic Loop Guard Recovery", () => {
         expect(toastCalls[0].body.title).toBe("Safety Guard Active");
 
         // Verify compiler has a forced replan step
-        const activeStep = compiler.getActiveStep("forced_replan" as any);
+        const activeStep = compiler.getActiveStep(sessionID);
         expect(activeStep).not.toBeNull();
         expect(activeStep?.action).toBe("submit_plan");
         expect(activeStep?.id).toContain("forced_replan_");
