@@ -1,5 +1,5 @@
 import type { OhMyOpenCodeConfig } from "../config"
-import { AGENT_MODEL_REQUIREMENTS, CATEGORY_MODEL_REQUIREMENTS } from "./model-requirements"
+import { getAgentRequirement, getCategoryRequirement } from "./model-requirements"
 
 export function resolveAgentVariant(
   config: OhMyOpenCodeConfig,
@@ -48,13 +48,13 @@ export function resolveVariantForModel(
     return agentOverride.variant
   }
 
-  const agentRequirement = AGENT_MODEL_REQUIREMENTS[agentName]
+  const agentRequirement = getAgentRequirement(config, agentName)
   if (agentRequirement) {
     return findVariantInChain(agentRequirement.fallbackChain, currentModel)
   }
   const categoryName = agentOverride?.category
   if (categoryName) {
-    const categoryRequirement = CATEGORY_MODEL_REQUIREMENTS[categoryName]
+    const categoryRequirement = getCategoryRequirement(config, categoryName)
     if (categoryRequirement) {
       return findVariantInChain(categoryRequirement.fallbackChain, currentModel)
     }

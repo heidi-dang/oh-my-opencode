@@ -59,9 +59,10 @@ export function createGhSafeTool(): any {
                     });
                 }
 
+                const isStateChanging = ["pr", "issue", "branch", "repo"].includes(commandArgs[0])
                 const result = createSuccessResult({
-                    verified: true,
-                    changedState: success && ["pr", "issue", "branch", "repo"].includes(commandArgs[0]),
+                    verified: !isStateChanging,
+                    changedState: success && isStateChanging,
                     stateChange: prURL ? { type: "git.pr", key: prURL, details: { url: prURL } } : undefined
                 });
 

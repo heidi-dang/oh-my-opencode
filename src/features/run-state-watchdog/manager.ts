@@ -98,21 +98,28 @@ export class RunStateWatchdogManager {
           openTodos: ctx.openTodos
         })
         
-        // Render a toast to show it's still ticking
+        // Elevation to Hard Termination
+        log(`[RunStateWatchdog] TERMINATING stalled session ${sessionID}.`)
+        this.client.session.abort({
+          path: { id: sessionID },
+        }).catch((err: any) => {
+          log(`[RunStateWatchdog] Failed to abort stalled session ${sessionID}`, { error: String(err) })
+        })
+
+        // Render a toast to show termination
         const tuiClient = this.client as any
         if (tuiClient.tui?.showToast) {
           tuiClient.tui.showToast({
             body: {
-              title: "Task Status",
-              message: ctx.currentState === "waiting" ? "Waiting for response..." : "Still working / verifying...",
-              variant: "info",
-              duration: 3000
+              title: "Task Aborted",
+              message: "Session terminated due to inactivity / stall detection.",
+              variant: "error",
+              duration: 5000
             }
           }).catch(() => {})
         }
         
-        // Touch the activity so we don't spam toasts
-        ctx.lastActivityAt = now
+        this.activeSessions.delete(sessionID)
       }
     }
   }

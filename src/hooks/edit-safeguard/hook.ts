@@ -2,6 +2,7 @@ import { existsSync, readFileSync, writeFileSync } from "fs"
 import { spawnSync } from "child_process"
 import type { Hooks, PluginInput } from "@opencode-ai/plugin"
 import { log } from "../../shared"
+import { readTracker } from "../../shared/read-permission-tracker"
 
 /**
  * Edit Safeguard Hook
@@ -18,20 +19,39 @@ import { log } from "../../shared"
 const FAILURE_PATTERNS = [
     "oldstring not found",
     "oldstring found multiple times",
-    "oldstring and newstring must be different"
+    "oldstring and newstring must be different",
+    "verification failed",
+    "failed to find expected lines"
 ]
 
 export function createEditSafeguardHook(ctx: PluginInput): Hooks {
     const backups = new Map<string, string>()
 
+    function getFilePath(toolName: string, args: any): string | undefined {
+        if (toolName === "edit") return args.filePath
+        if (toolName === "apply_patch") return args.path || args.filePath
+        return undefined
+    }
+
     return {
         "tool.execute.before": async (input, output) => {
             const toolName = input.tool?.toLowerCase()
-            if (toolName !== "edit") return
+            const isEditTool = toolName === "edit" || toolName === "apply_patch"
+            if (!isEditTool) return
 
-            const args = output.args as { filePath?: string }
-            const filePath = args.filePath
+            const filePath = getFilePath(toolName, output.args)
             if (!filePath) return
+
+            // Read-Before-Write Enforcement
+            if (!readTracker.hasRead(input.sessionID, filePath) && existsSync(filePath)) {
+                log("[edit-safeguard] REJECTED: Read-before-write violation", { filePath, sessionID: input.sessionID })
+                throw new Error(
+                    `[Edit Discipline Violation] Path REJECTED: ${filePath}\n` +
+                    `You attempted to edit or patch a file that you have not read in the current session.\n` +
+                    `The rule is path-specific: you MUST read the exact target file path before attempting to edit or overwrite it.\n` +
+                    `Reading a different file or a grep snippet does not count.`
+                )
+            }
 
             try {
                 if (existsSync(filePath)) {
@@ -45,10 +65,10 @@ export function createEditSafeguardHook(ctx: PluginInput): Hooks {
 
         "tool.execute.after": async (input, output) => {
             const toolName = input.tool?.toLowerCase()
-            if (toolName !== "edit") return
+            const isEditTool = toolName === "edit" || toolName === "apply_patch"
+            if (!isEditTool) return
 
-            const args = output.metadata?.args as { filePath?: string }
-            const filePath = args?.filePath
+            const filePath = getFilePath(toolName, output.metadata?.args || {})
             if (!filePath) return
 
             const backupKey = `${input.sessionID}:${input.callID}:${filePath}`
@@ -77,10 +97,17 @@ export function createEditSafeguardHook(ctx: PluginInput): Hooks {
                 writeFileSync(filePath, originalContent)
                 log("[edit-safeguard] Reverted partial mutation after " + resultOutput, { filePath })
                 output.output += "\n\n[SAFEGUARD] Reverted partial mutation to prevent corruption."
+            }
+
+            // Case 2: Failure pattern detected - provide recovery instructions
+            if (hasFailurePattern) {
+                output.output += 
+                    `\n\n**ACTION REQUIRED**: The edit or patch verification failed. This usually means the file content has drifted or the match block is incorrect.\n` +
+                    `You MUST run 'read_file' (or equivalent) on '${filePath}' to synchronize your context with the real file contents, and then regenerate your edit/patch from the exact lines found in the file.`
                 return
             }
 
-            // Case 2: Edit claimed "success" or is silent, but we need to validate syntax
+            // Case 3: Edit claimed "success" or is silent, but we need to validate syntax
             if (!hasFailurePattern && contentChanged) {
                 if (filePath.endsWith(".py")) {
                     const isValid = validatePythonSyntax(filePath)

@@ -40,6 +40,12 @@ export const AgentOverrideConfigSchema = z.object({
   textVerbosity: z.enum(["low", "medium", "high"]).optional(),
   /** Provider-specific options. Passed directly to OpenCode SDK. */
   providerOptions: z.record(z.string(), z.unknown()).optional(),
+  /** Require a specific model for this agent. Agent will be disabled if model is unavailable. */
+  requires_model: z.string().optional(),
+  /** If true, require at least one fallback model to be available. */
+  requires_any_model: z.boolean().optional(),
+  /** Only activate agent when any of these providers are connected. */
+  requires_provider: z.array(z.string()).optional(),
   /** Per-message ultrawork override model/variant when ultrawork keyword is detected. */
   ultrawork: z
     .object({

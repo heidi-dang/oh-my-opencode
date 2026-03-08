@@ -18,7 +18,7 @@ export function createToolContractHook(_ctx: PluginInput) {
             const result = output.output
             const args = output.metadata?.args
             // Apply strict contract enforcement to our core safety tools
-            const safetyCritical = ["git_safe", "fs_safe", "verify_action", "complete_task"]
+            const safetyCritical = ["git_safe", "fs_safe", "verify_action", "complete_task", "query_ledger", "report_issue_verification"]
             if (safetyCritical.includes(input.tool)) {
                 // The tool might return metadata directly in output, or nested in output.metadata
                 // or even in output.result (based on some past patterns)
@@ -49,7 +49,7 @@ export function createToolContractHook(_ctx: PluginInput) {
 
                 // 3. Verification Enforcement
                 if (verified === false) {
-                    throw new Error(`[Tool Contract Violation] Tool ${input.tool} executed but was NOT verified. Hallucination risk! Aborting for safety.`)
+                    throw new Error(`[Verification Unconfirmed] Tool ${input.tool} executed but system state could not be verified. Success not confirmed.`)
                 }
 
                 // 4. Metadata Integrity (ChangedState)

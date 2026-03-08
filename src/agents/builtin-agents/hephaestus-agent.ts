@@ -2,11 +2,12 @@ import type { AgentConfig } from "@opencode-ai/sdk"
 import type { AgentOverrides } from "../types"
 import type { CategoryConfig } from "../../config/schema"
 import type { AvailableAgent, AvailableCategory, AvailableSkill } from "../types";
-import { AGENT_MODEL_REQUIREMENTS, isAnyFallbackModelAvailable, log } from "../../shared"
+import { getAgentRequirement, isAnyFallbackModelAvailable, log } from "../../shared"
 import { createHephaestusAgent } from "../hephaestus"
 import { applyEnvironmentContext } from "./environment-context"
 import { applyCategoryOverride, mergeAgentConfig } from "./agent-overrides"
 import { applyModelResolution, getFirstFallbackModel } from "./model-resolution"
+import type { OhMyOpenCodeConfig } from "../../config"
 
 export function maybeCreateHephaestusConfig(input: {
   disabledAgents: string[]
@@ -23,6 +24,7 @@ export function maybeCreateHephaestusConfig(input: {
   directory?: string
   useTaskSystem: boolean
   disableOmoEnv?: boolean
+  pluginConfig: OhMyOpenCodeConfig
 }): AgentConfig | undefined {
   const {
     disabledAgents,
@@ -39,12 +41,17 @@ export function maybeCreateHephaestusConfig(input: {
     directory,
     useTaskSystem,
     disableOmoEnv = false,
+    pluginConfig,
   } = input
 
   if (disabledAgents.includes("hephaestus")) return undefined
 
+  // ... (rest of the code will be updated in next chunk)
+
+  if (disabledAgents.includes("hephaestus")) return undefined
+
   const hephaestusOverride = agentOverrides["hephaestus"]
-  const hephaestusRequirement = AGENT_MODEL_REQUIREMENTS["hephaestus"]
+  const hephaestusRequirement = getAgentRequirement(pluginConfig, "hephaestus")
   const hasHephaestusExplicitConfig = hephaestusOverride !== undefined
 
   const meetsAnyModelRequirement =

@@ -3,11 +3,12 @@ import type { BuiltinAgentName, AgentOverrides, AgentPromptMetadata } from "../t
 import type { CategoryConfig, GitMasterConfig } from "../../config/schema"
 import type { BrowserAutomationProvider } from "../../config/schema"
 import type { AvailableAgent } from "../types";
-import { AGENT_MODEL_REQUIREMENTS, isModelAvailable } from "../../shared"
+import { getAgentRequirement, isModelAvailable } from "../../shared"
 import { buildAgent, isFactory } from "../agent-builder"
 import { applyOverrides } from "./agent-overrides"
 import { applyEnvironmentContext } from "./environment-context"
 import { applyModelResolution } from "./model-resolution"
+import type { OhMyOpenCodeConfig } from "../../config"
 
 export function collectPendingBuiltinAgents(input: {
   agentSources: Record<BuiltinAgentName, import("../agent-builder").AgentSource>
@@ -25,6 +26,7 @@ export function collectPendingBuiltinAgents(input: {
   disabledSkills?: Set<string>
   useTaskSystem?: boolean
   disableOmoEnv?: boolean
+  pluginConfig: OhMyOpenCodeConfig
 }): { pendingAgentConfigs: Map<string, AgentConfig>; availableAgents: AvailableAgent[] } {
   const {
     agentSources,
@@ -41,6 +43,7 @@ export function collectPendingBuiltinAgents(input: {
     availableModels,
     disabledSkills,
     disableOmoEnv = false,
+    pluginConfig,
   } = input
 
   const availableAgents: AvailableAgent[] = []
@@ -56,7 +59,7 @@ export function collectPendingBuiltinAgents(input: {
 
     const override = agentOverrides[agentName]
       ?? Object.entries(agentOverrides).find(([key]) => key.toLowerCase() === agentName.toLowerCase())?.[1]
-    const requirement = AGENT_MODEL_REQUIREMENTS[agentName]
+    const requirement = getAgentRequirement(pluginConfig, agentName)
 
     // Check if agent requires a specific model
     if (requirement?.requiresModel && availableModels) {

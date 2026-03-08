@@ -50,7 +50,7 @@ export function createGitSafeTool(): any {
                 }
 
                 const result = createSuccessResult({
-                    verified: true,
+                    verified: !isStateChanging,
                     changedState,
                     stateChange: stateChangePayload || undefined
                 });

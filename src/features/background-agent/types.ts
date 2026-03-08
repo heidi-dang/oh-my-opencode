@@ -57,6 +57,8 @@ export interface BackgroundTask {
   lastMsgCount?: number
   /** Number of consecutive polls with stable message count */
   stablePolls?: number
+  /** Files affected by this task (collected from sub-agent session) */
+  affectedFiles?: string[]
 }
 
 export interface LaunchInput {

@@ -2,11 +2,12 @@ import type { AgentConfig } from "@opencode-ai/sdk"
 import type { AgentOverrides } from "../types"
 import type { CategoriesConfig, CategoryConfig } from "../../config/schema"
 import type { AvailableAgent, AvailableCategory, AvailableSkill } from "../types";
-import { AGENT_MODEL_REQUIREMENTS, isAnyFallbackModelAvailable } from "../../shared"
+import { AGENT_MODEL_REQUIREMENTS, getAgentRequirement, isAnyFallbackModelAvailable } from "../../shared"
 import { applyEnvironmentContext } from "./environment-context"
 import { applyOverrides } from "./agent-overrides"
 import { applyModelResolution, getFirstFallbackModel } from "./model-resolution"
 import { createSisyphusAgent } from "../sisyphus"
+import type { OhMyOpenCodeConfig } from "../../config"
 
 import { BuiltinAgentName, AgentFactory } from "../types"
 
@@ -28,6 +29,7 @@ export function maybeCreatePrimaryAgentConfig(input: {
   userCategories?: CategoriesConfig
   useTaskSystem: boolean
   disableOmoEnv?: boolean
+  pluginConfig: OhMyOpenCodeConfig
 }): AgentConfig | undefined {
   const {
     agentName,
@@ -46,10 +48,11 @@ export function maybeCreatePrimaryAgentConfig(input: {
     directory,
     useTaskSystem,
     disableOmoEnv = false,
+    pluginConfig,
   } = input
 
   const override = agentOverrides[agentName]
-  const requirement = AGENT_MODEL_REQUIREMENTS[agentName]
+  const requirement = getAgentRequirement(pluginConfig, agentName)
   const hasExplicitConfig = override !== undefined
   const meetsAnyModelRequirement =
     !requirement?.requiresAnyModel ||

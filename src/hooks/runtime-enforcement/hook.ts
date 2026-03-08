@@ -23,7 +23,10 @@ const SUSPICIOUS_PHRASES = [
     { phrase: "task completed", tool: "complete_task" },
     { phrase: "task complete", tool: "complete_task" },
     { phrase: "work finished", tool: "complete_task" },
-    { phrase: "todos cleared", tool: "complete_task" }
+    { phrase: "todos cleared", tool: "complete_task" },
+    { phrase: "done.", tool: "complete_task" },
+    { phrase: "fixed.", tool: "complete_task" },
+    { phrase: "resolved.", tool: "complete_task" }
 ]
 
 export function createRuntimeEnforcementHook(_ctx: PluginInput) {
@@ -51,19 +54,26 @@ export function createRuntimeEnforcementHook(_ctx: PluginInput) {
                             p.type === "text" && (
                                 p.text?.includes("[Tool Contract Violation]") ||
                                 p.text?.includes("[ERROR] STRICT ISSUE") ||
+                                p.text?.includes("[Edit Discipline Violation]") ||
                                 p.text?.includes("[Tool Contract Enforcer] Tool execution explicitly failed") ||
                                 p.text?.includes("Exception in ")
                             )
                         )
 
                         if (hasFailureText) {
+                            const isVerificationFailure = nextMsg.parts.some((p: any) => p.text?.includes("[Verification Unconfirmed]"))
+
                             // Redact affirmative/suspicious phrases in the assistant's text parts
                             for (const part of msg.parts) {
                                 if (part.type === "text" && typeof part.text === "string") {
                                     const lowerText = part.text.toLowerCase()
                                     const hasSuspiciousClaim = SUSPICIOUS_PHRASES.some(sp => lowerText.includes(sp.phrase))
                                     if (hasSuspiciousClaim || lowerText.includes("success") || lowerText.includes("completed")) {
-                                        part.text = `[REDACTED: False success claim invalidated by tool failure]\n\nI attempted to claim completion, but the underlying tool failed its execution or verification constraints. I must correct my approach.`
+                                        if (isVerificationFailure) {
+                                            part.text = `[REDACTED: Attempted but unverified]\n\nI attempted to perform the action, but system state verification could not confirm the outcome. Success is not yet guaranteed.`
+                                        } else {
+                                            part.text = `[REDACTED: False success claim invalidated by tool failure]\n\nI attempted to claim completion, but the underlying tool failed its execution or verification constraints. I must correct my approach.`
+                                        }
                                     }
                                 }
                             }
@@ -89,9 +99,12 @@ export function createRuntimeEnforcementHook(_ctx: PluginInput) {
                 if (isSilent || isRedacted || endsOnTool) {
                     const isTerminalTool = toolParts.some((p: any) => p.toolName === "complete_task" || p.toolName === "git_safe")
                     const isVerificationTool = toolParts.some((p: any) => p.toolName === "report_issue_verification" || p.toolName === "verify_action")
+                    const isVerificationFailure = combinedText.includes("[REDACTED: Attempted but unverified]")
                     
                     let syntheticText = ""
-                    if (isRedacted) {
+                    if (isVerificationFailure) {
+                        syntheticText = "\n\n[SYSTEM: ATTEMPTED BUT UNVERIFIED] The action was performed but verification failed or was inconclusive. Final state is UNCONFIRMED."
+                    } else if (isRedacted) {
                         syntheticText = "\n\n[SYSTEM: VERIFICATION FAILED] The agent attempted to claim completion but failed required safety or verification gates. Final state is UNSTABLE."
                     } else if (isTerminalTool) {
                         syntheticText = "\n\n[SYSTEM: TERMINAL STATE] The agent executed a completion or safety tool. Turn concluding."

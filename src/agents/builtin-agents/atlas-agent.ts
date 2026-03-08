@@ -2,10 +2,11 @@ import type { AgentConfig } from "@opencode-ai/sdk"
 import type { AgentOverrides } from "../types"
 import type { CategoriesConfig, CategoryConfig } from "../../config/schema"
 import type { AvailableAgent, AvailableSkill } from "../types";
-import { AGENT_MODEL_REQUIREMENTS } from "../../shared"
+import { getAgentRequirement } from "../../shared"
 import { applyOverrides } from "./agent-overrides"
 import { applyModelResolution } from "./model-resolution"
 import { createAtlasAgent } from "../atlas"
+import type { OhMyOpenCodeConfig } from "../../config"
 
 export function maybeCreateAtlasConfig(input: {
   disabledAgents: string[]
@@ -20,6 +21,7 @@ export function maybeCreateAtlasConfig(input: {
   directory?: string
   userCategories?: CategoriesConfig
   useTaskSystem?: boolean
+  pluginConfig: OhMyOpenCodeConfig
 }): AgentConfig | undefined {
   const {
     disabledAgents,
@@ -33,12 +35,13 @@ export function maybeCreateAtlasConfig(input: {
     mergedCategories,
     directory,
     userCategories,
+    pluginConfig,
   } = input
 
   if (disabledAgents.includes("atlas")) return undefined
 
   const orchestratorOverride = agentOverrides["atlas"]
-  const atlasRequirement = AGENT_MODEL_REQUIREMENTS["atlas"]
+  const atlasRequirement = getAgentRequirement(pluginConfig, "atlas")
 
   const atlasResolution = applyModelResolution({
     uiSelectedModel: orchestratorOverride?.model ? undefined : uiSelectedModel,
