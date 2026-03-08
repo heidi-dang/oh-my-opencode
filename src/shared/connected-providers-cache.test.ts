@@ -37,7 +37,7 @@ describe("updateConnectedProvidersCache", () => {
 								name: "OpenAI",
 								env: [],
 								models: {
-									"gpt-5.3-codex": { id: "gpt-5.3-codex", name: "GPT-5.3 Codex" },
+									"o3-mini": { id: "o3-mini", name: "GPT-5.3 Codex" },
 									"gpt-5.2": { id: "gpt-5.2", name: "GPT-5.2" },
 								},
 							},
@@ -64,7 +64,7 @@ describe("updateConnectedProvidersCache", () => {
 		expect(cache).not.toBeNull()
 		expect(cache!.connected).toEqual(["openai", "anthropic"])
 		expect(cache!.models).toEqual({
-			openai: ["gpt-5.3-codex", "gpt-5.2"],
+			openai: ["o3-mini", "gpt-5.2"],
 			anthropic: ["claude-opus-4-6", "claude-sonnet-4-6"],
 		})
 	})
