@@ -13,17 +13,16 @@ const readProviderModelsCacheSpy = spyOn(connectedProvidersCache, "readProviderM
 const transformModelForProviderSpy = spyOn(providerModelTransform, "transformModelForProvider").mockImplementation((provider: string, model: string) => {
   if (provider === "github-copilot") {
     return model
-      .replace("claude-opus-4-6", "claude-opus-4.6")
-      .replace("claude-sonnet-4-6", "claude-sonnet-4.6")
+      .replace("claude-3-5-sonnet", "claude-3.5-sonnet")
       .replace("claude-sonnet-4-5", "claude-sonnet-4.5")
-      .replace("claude-haiku-4-5", "claude-haiku-4.5")
+      .replace("claude-3-5-haiku", "claude-3.5-haiku")
       .replace("claude-sonnet-4", "claude-sonnet-4")
-      .replace(/gemini-3\.1-pro(?!-)/g, "gemini-3.1-pro-preview")
+      .replace(/gemini-3\.1-pro(?!-)/g, "gemini-2.0-flash-preview")
       .replace(/gemini-3-flash(?!-)/g, "gemini-3-flash-preview")
   }
   if (provider === "google") {
     return model
-      .replace(/gemini-3\.1-pro(?!-)/g, "gemini-3.1-pro-preview")
+      .replace(/gemini-3\.1-pro(?!-)/g, "gemini-2.0-flash-preview")
       .replace(/gemini-3-flash(?!-)/g, "gemini-3-flash-preview")
   }
   return model
@@ -61,13 +60,13 @@ describe("model fallback hook", () => {
       "ses_model_fallback_main",
       "Sisyphus (Ultraworker)",
       "anthropic",
-      "claude-opus-4-6-thinking",
+      "claude-3-5-sonnet-thinking",
     )
     expect(set).toBe(true)
 
     const output = {
       message: {
-        model: { providerID: "anthropic", modelID: "claude-opus-4-6-thinking" },
+        model: { providerID: "anthropic", modelID: "claude-3-5-sonnet-thinking" },
         variant: "max",
       },
       parts: [{ type: "text", text: "continue" }],
@@ -82,7 +81,7 @@ describe("model fallback hook", () => {
     //#then
     expect(output.message["model"]).toEqual({
       providerID: "anthropic",
-      modelID: "claude-opus-4-6",
+      modelID: "claude-3-5-sonnet",
     })
   })
 
@@ -97,12 +96,12 @@ describe("model fallback hook", () => {
     const sessionID = "ses_model_fallback_main"
 
     expect(
-      setPendingModelFallback(sessionID, "Sisyphus (Ultraworker)", "anthropic", "claude-opus-4-6-thinking"),
+      setPendingModelFallback(sessionID, "Sisyphus (Ultraworker)", "anthropic", "claude-3-5-sonnet-thinking"),
     ).toBe(true)
 
     const firstOutput = {
       message: {
-        model: { providerID: "anthropic", modelID: "claude-opus-4-6-thinking" },
+        model: { providerID: "anthropic", modelID: "claude-3-5-sonnet-thinking" },
         variant: "max",
       },
       parts: [{ type: "text", text: "continue" }],
@@ -114,17 +113,17 @@ describe("model fallback hook", () => {
     //#then
     expect(firstOutput.message["model"]).toEqual({
       providerID: "anthropic",
-      modelID: "claude-opus-4-6",
+      modelID: "claude-3-5-sonnet",
     })
 
     //#when - second error re-arms fallback and should advance to next entry
     expect(
-      setPendingModelFallback(sessionID, "Sisyphus (Ultraworker)", "anthropic", "claude-opus-4-6"),
+      setPendingModelFallback(sessionID, "Sisyphus (Ultraworker)", "anthropic", "claude-3-5-sonnet"),
     ).toBe(true)
 
     const secondOutput = {
       message: {
-        model: { providerID: "anthropic", modelID: "claude-opus-4-6" },
+        model: { providerID: "anthropic", modelID: "claude-3-5-sonnet" },
       },
       parts: [{ type: "text", text: "continue" }],
     }
@@ -132,8 +131,8 @@ describe("model fallback hook", () => {
 
     //#then - chain should progress to entry[1], not repeat entry[0]
     expect(secondOutput.message["model"]).toEqual({
-      providerID: "zai-coding-plan",
-      modelID: "glm-5",
+      providerID: "opencode",
+      modelID: "big-pickle",
     })
     expect((secondOutput.message as any)["variant"]).toBeUndefined()
   })
@@ -156,13 +155,13 @@ describe("model fallback hook", () => {
       "ses_model_fallback_toast",
       "Sisyphus (Ultraworker)",
       "anthropic",
-      "claude-opus-4-6-thinking",
+      "claude-3-5-sonnet-thinking",
     )
     expect(set).toBe(true)
 
     const output = {
       message: {
-        model: { providerID: "anthropic", modelID: "claude-opus-4-6-thinking" },
+        model: { providerID: "anthropic", modelID: "claude-3-5-sonnet-thinking" },
         variant: "max",
       },
       parts: [{ type: "text", text: "continue" }],
@@ -190,20 +189,20 @@ describe("model fallback hook", () => {
 
     // Set a custom fallback chain that routes through github-copilot
     setSessionFallbackChain(sessionID, [
-      { providers: ["github-copilot"], model: "claude-sonnet-4-6" },
+      { providers: ["github-copilot"], model: "claude-3-5-sonnet" },
     ])
 
     const set = setPendingModelFallback(
       sessionID,
       "Atlas (Plan Executor)",
       "github-copilot",
-      "claude-sonnet-4-6",
+      "claude-3-5-sonnet",
     )
     expect(set).toBe(true)
 
     const output = {
       message: {
-        model: { providerID: "github-copilot", modelID: "claude-sonnet-4-6" },
+        model: { providerID: "github-copilot", modelID: "claude-3-5-sonnet" },
       },
       parts: [{ type: "text", text: "continue" }],
     }
@@ -214,7 +213,7 @@ describe("model fallback hook", () => {
     //#then — model name should be transformed from hyphen to dot notation
     expect(output.message["model"]).toEqual({
       providerID: "github-copilot",
-      modelID: "claude-sonnet-4.6",
+      modelID: "claude-3.5-sonnet",
     })
 
     clearPendingModelFallback(sessionID)
