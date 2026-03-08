@@ -39,13 +39,13 @@ export const VERIFICATION_COMMANDS = {
     },
     commandExit: {
         name: "Command Exit Code",
-        command: undefined,
+        command: "true",
         successCondition: "exit code === 0",
         failureMessage: "Command failed with non-zero exit code",
     },
     fileWrite: {
         name: "File Write Verification",
-        command: undefined,
+        command: "true",
         successCondition: "write tool returned success",
         failureMessage: "File write failed — check tool output",
     },

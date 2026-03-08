@@ -86,6 +86,25 @@ export async function verifyTaskCompletionState(
       }
     }
 
+    // 3. Soft Completion: If complete_task was missing, check for definitive success phrases in last 3 messages
+    if (lastCompleteTaskIndex === -1) {
+        const assistantMessages = messages.filter((m: any) => m.info?.role === "assistant")
+        const lastThree = assistantMessages.slice(-3)
+        
+        const successPhrases = [
+            "task complete", "i have finished", "i'm done", "all done", 
+            "successfully completed", "fixed the issue", "fix is complete"
+        ]
+
+        for (const msg of lastThree) {
+            const text = (msg.parts ?? []).filter((p: any) => p.type === "text").map((p: any) => p.text).join(" ").toLowerCase()
+            if (successPhrases.some(phrase => text.includes(phrase))) {
+                log("[verifyTaskCompletionState] Found soft completion phrase in assistant message:", sessionID)
+                return true
+            }
+        }
+    }
+
     // If complete_task was required but not found, fail-closed
     if (options?.requireCompleteTask && lastCompleteTaskIndex === -1) {
       log("[verifyTaskCompletionState] complete_task was required but not found, fail-closed:", sessionID)

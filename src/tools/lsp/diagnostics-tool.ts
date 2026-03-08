@@ -47,7 +47,10 @@ export const lsp_diagnostics: ToolDefinition = tool({
       return output
     } catch (e) {
       if (e instanceof LspNotConfiguredError) {
-        return "No diagnostics found (Unsupported file type / No LSP server configured)"
+        const isCommonType = args.filePath.endsWith(".json") || args.filePath.endsWith(".txt") || args.filePath.endsWith(".md")
+        return isCommonType
+          ? `LSP Diagnostics not available for ${args.filePath.split('.').pop()} files. Skipping diagnostics check.`
+          : "Error: LSP not configured for this file type."
       }
       const output = `Error: ${e instanceof Error ? e.message : String(e)}`
       throw new Error(output)

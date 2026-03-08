@@ -12,7 +12,8 @@ export const EDIT_ERROR_PATTERNS = [
   "hunk failed",
   "no exact match",
   "refused to edit",
-  "hash mismatch"
+  "hash mismatch",
+  "position tag was wrong"
 ] as const
 
 /**

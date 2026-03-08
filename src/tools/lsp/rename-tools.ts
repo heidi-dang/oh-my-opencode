@@ -50,7 +50,10 @@ export const lsp_rename: ToolDefinition = tool({
       return output
     } catch (e) {
       if (e instanceof LspNotConfiguredError) {
-        return "Cannot rename (Unsupported file type / No LSP server configured)"
+        const isCommonType = args.filePath.endsWith(".json") || args.filePath.endsWith(".txt") || args.filePath.endsWith(".md")
+        return isCommonType 
+          ? `LSP Rename not supported for this file type (${args.filePath.split('.').pop()}). Please use manual edit tools instead.`
+          : "Cannot rename (Unsupported file type / No LSP server configured)"
       }
       const output = `Error: ${e instanceof Error ? e.message : String(e)}`
       return output

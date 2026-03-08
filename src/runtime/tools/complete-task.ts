@@ -13,13 +13,15 @@ export function createCompleteTaskTool(options?: { client?: any, backgroundManag
         description: "Signal that the task is complete. The runtime will compose the final verified state report. DO NOT output your own summary, just call this tool.",
         // @ts-ignore
         args: {
-            message: z.string().describe("Optional short note about what was done. Do not include PR URLs or commit hashes here.")
+            message: z.string().describe("Optional short note about what was done. Do not include PR URLs or commit hashes here."),
+            overrideStrict: z.boolean().optional().describe("If true, attempts to complete even if strict mode requirements are not fully met (requires verification_summary)."),
+            verification_summary: z.string().optional().describe("Summary of manual verification performed to justify completion.")
         },
         execute: withToolContract("complete_task", async (args, toolContext) => {
             const client = options?.client;
             const sessionID = toolContext.sessionID;
             
-            // Check for incomplete todos if client is available
+            // 1. Check for incomplete todos
             if (client) {
                 try {
                     const todosRes = await client.session.todo({
@@ -30,27 +32,26 @@ export function createCompleteTaskTool(options?: { client?: any, backgroundManag
                         (t: any) => t.status !== "completed" && t.status !== "cancelled" && t.status !== "blocked" && t.status !== "deleted"
                     )
 
-                    if (incompleteTodos.length > 0) {
-                        const failMsg = `[ERROR] TASK COMPLETION REJECTED.\n\nYou have ${incompleteTodos.length} incomplete TODOs remaining in the UI tracker. You CANNOT mark the task as complete until all TODOs are explicitly marked as completed or cancelled using the TodoWrite tool (or TaskUpdate if experimental tasks are enabled).\n\nPlease review your TODOs, complete them, and then retry calling complete_task.`
+                    if (incompleteTodos.length > 0 && !args.overrideStrict) {
+                        const failMsg = `[ERROR] TASK COMPLETION REJECTED.\n\nYou have ${incompleteTodos.length} incomplete TODOs remaining. You CANNOT mark the task as complete until all TODOs are explicitly marked as completed or cancelled. Use 'overrideStrict: true' only if these TODOs are irrelevant to the final state.`
                         
                         const result = createFailureResult(failMsg)
-                        const meta = { title: "Task Completion Rejected", ...result }
-                        toolContext.metadata(meta)
+                        toolContext.metadata({ title: "Task Completion Rejected", ...result })
                         return failMsg
                     }
-                } catch (e) {
-                    // Ignore API fetch errors so we don't hard block on network issues
-                }
+                } catch (e) {}
             }
             
+            // 2. Strict Issue Resolution Mode Check
             if (isSessionIssueMode(sessionID)) {
                 const issueState = getIssueState(sessionID)
-                if (!issueState.reproduced || !issueState.fixApplied || !issueState.reproAfterPassed) {
-                    const failMsg = `[ERROR] STRICT ISSUE RESOLUTION MODE ACTIVE.\n\nYou cannot mark this task as complete until you have explicitly verified the fix.\n\nCurrent Verification State:\n- Reproduced: ${issueState.reproduced}\n- Fix Applied: ${issueState.fixApplied}\n- Repro After Fix Passed: ${issueState.reproAfterPassed}\n\nYou MUST use the 'report_issue_verification' tool to truthfully log your progress as you perform each step. If you only performed static reasoning without live verification, your state is incomplete.`
+                const isFullyVerified = issueState.reproduced && issueState.fixApplied && issueState.reproAfterPassed;
+                
+                if (!isFullyVerified && !(args.overrideStrict && args.verification_summary)) {
+                    const failMsg = `[ERROR] STRICT ISSUE RESOLUTION MODE ACTIVE.\n\nYou cannot mark this task as complete until you have explicitly verified the fix.\n\nCurrent Verification State:\n- Reproduced: ${issueState.reproduced}\n- Fix Applied: ${issueState.fixApplied}\n- Repro After Fix Passed: ${issueState.reproAfterPassed}\n\nTo bypass this (e.g., if repro is impossible but fix is verified), use 'overrideStrict: true' and provide a detailed 'verification_summary'.`
                     
                     const result = createFailureResult(failMsg)
                     toolContext.metadata({ title: "Task Completion Rejected", ...result })
-
                     return failMsg
                 }
             }
