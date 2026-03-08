@@ -23,10 +23,10 @@ describe("getHephaestusPromptSource", () => {
     expect(source3).toBe("gpt-5-4");
   });
 
-  test("returns 'gpt-5-3-codex' for GPT 5.3 Codex models", () => {
+  test("returns 'gpt-5-3-codex' for o3-mini models", () => {
     // given
-    const model1 = "openai/gpt-5.3-codex";
-    const model2 = "github-copilot/gpt-5.3-codex";
+    const model1 = "openai/o3-mini";
+    const model2 = "github-copilot/o3-mini";
 
     // when
     const source1 = getHephaestusPromptSource(model1);
@@ -56,7 +56,7 @@ describe("getHephaestusPromptSource", () => {
 
   test("returns 'gpt' for non-GPT models and undefined", () => {
     // given
-    const model1 = "anthropic/claude-opus-4-6";
+    const model1 = "anthropic/claude-sonnet-4-6";
     const model2 = undefined;
 
     // when
@@ -98,7 +98,7 @@ describe("getHephaestusPrompt", () => {
 
   test("GPT 5.3-codex model returns GPT-5.3 prompt", () => {
     // given
-    const model = "openai/gpt-5.3-codex";
+    const model = "openai/o3-mini";
 
     // when
     const prompt = getHephaestusPrompt(model);
@@ -124,7 +124,7 @@ describe("getHephaestusPrompt", () => {
 
   test("Claude model returns generic GPT prompt (Hephaestus default)", () => {
     // given
-    const model = "anthropic/claude-opus-4-6";
+    const model = "anthropic/claude-sonnet-4-6";
 
     // when
     const prompt = getHephaestusPrompt(model);
@@ -149,7 +149,7 @@ describe("getHephaestusPrompt", () => {
 
   test("useTaskSystem=false includes Todo Discipline for Claude models", () => {
     // given
-    const model = "anthropic/claude-opus-4-6";
+    const model = "anthropic/claude-sonnet-4-6";
 
     // when
     const prompt = getHephaestusPrompt(model, false);
@@ -196,7 +196,7 @@ describe("createHephaestusAgent", () => {
 
   test("GPT 5.3-codex model includes GPT-5.3 specific prompt content", () => {
     // given
-    const model = "openai/gpt-5.3-codex";
+    const model = "openai/o3-mini";
 
     // when
     const config = createHephaestusAgent(model);

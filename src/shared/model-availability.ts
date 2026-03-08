@@ -1,10 +1,12 @@
-import { existsSync, readFileSync } from "fs"
+import { existsSync, readFileSync, statSync } from "fs"
 import { join } from "path"
 import { log } from "./logger"
 import { getOpenCodeCacheDir } from "./data-path"
 import * as connectedProvidersCache from "./connected-providers-cache"
 import { normalizeSDKResponse } from "./normalize-sdk-response"
 import { normalizeModelID } from "./model-normalization"
+
+let _modelsJsonCache: { mtimeMs: number; data: any } | null = null;
 
 /**
  * Fuzzy match a target model name against available models
@@ -256,8 +258,17 @@ export async function fetchAvailableModels(
 		log("[fetchAvailableModels] models.json cache file not found, falling back to client")
 	} else {
 		try {
-			const content = readFileSync(cacheFile, "utf-8")
-			const data = JSON.parse(content) as Record<string, { id?: string; models?: Record<string, { id?: string }> }>
+			const stats = statSync(cacheFile)
+			const mtimeMs = stats.mtimeMs
+
+			let data: any
+			if (_modelsJsonCache && _modelsJsonCache.mtimeMs === mtimeMs) {
+				data = _modelsJsonCache.data
+			} else {
+				const content = readFileSync(cacheFile, "utf-8")
+				data = JSON.parse(content)
+				_modelsJsonCache = { mtimeMs, data }
+			}
 
 			const providerIds = Object.keys(data)
 			log("[fetchAvailableModels] providers found in models.json", { count: providerIds.length, providers: providerIds.slice(0, 10) })
@@ -313,7 +324,9 @@ export async function fetchAvailableModels(
 	return modelSet
 }
 
-export function __resetModelCache(): void {}
+export function __resetModelCache(): void {
+	_modelsJsonCache = null;
+}
 
 export function isModelCacheAvailable(): boolean {
 	if (connectedProvidersCache.hasProviderModelsCache()) {
