@@ -8,13 +8,14 @@ describe("Plan Enforcement Hook", () => {
     beforeEach(() => {
         hook = createPlanEnforcementHook({} as any)
         // Reset compiler state
-        compiler.submit([] as any, { sessionID: "test" } as any)
+        compiler.submit("test", [])
     })
 
     afterEach(() => {
         // Clean up after each test
-        compiler.submit([] as any, { sessionID: "test" } as any)
+        compiler.submit("test", [])
     })
+
 
     describe("No active step", () => {
         it("should allow all tools when no plan is active", async () => {
@@ -25,11 +26,11 @@ describe("Plan Enforcement Hook", () => {
 
     describe("Active step with allowed tools", () => {
         beforeEach(() => {
-            compiler.submit([{
+            compiler.submit("test", [{
                 id: "1",
                 action: "Fix model-resolver tests to pass in full test suite",
                 dependencies: []
-            }] as any, { sessionID: "test" } as any)
+            }] as any)
         })
 
         const allowedTools = [
@@ -80,11 +81,11 @@ describe("Plan Enforcement Hook", () => {
 
     describe("Active step with blocked tools", () => {
         beforeEach(() => {
-            compiler.submit([{
+            compiler.submit("test", [{
                 id: "1",
                 action: "Fix model-resolver tests to pass in full test suite",
                 dependencies: []
-            }] as any, { sessionID: "test" } as any)
+            }] as any)
         })
 
         const blockedTools = [
@@ -109,17 +110,17 @@ describe("Plan Enforcement Hook", () => {
             expect(error?.requestedTool).toBe(tool)
             expect(error?.allowedTools).toContain("grep")
             expect(error?.allowedTools).toContain("edit")
-            expect(error?.reason).toContain("not in always-allowed list")
+            expect(error?.reason).toContain("Tool mismatch")
         })
     })
 
     describe("Error logging", () => {
         beforeEach(() => {
-            compiler.submit([{
+            compiler.submit("test", [{
                 id: "1",
                 action: "Fix model-resolver tests to pass in full test suite",
                 dependencies: []
-            }] as any, { sessionID: "test" } as any)
+            }] as any)
         })
 
         it("should log guard decisions", async () => {

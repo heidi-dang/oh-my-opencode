@@ -98,12 +98,12 @@ export function createPlanEnforcementHook(_ctx: PluginInput) {
             }
 
             // STALE STATE AUTO-RECOVERY
-            const isStaleLock = 
-                (input.tool === "todowrite" || input.tool === "task" || input.tool === "read") &&
-                !activeStep.action.toLowerCase().includes(input.tool.replace("_safe", ""))
+            const isStaleLock =
+                (input.tool === "todowrite" || input.tool === "task" || input.tool === "read" || input.tool === "task_create" || input.tool === "submit_plan") &&
+                !activeStep.action.toLowerCase().includes(input.tool.replace("_safe", "").replace("_create", ""))
 
             if (isStaleLock) {
-                console.warn(`[Plan Compiler Guard] Stale lock detected in session ${input.sessionID}. Auto-clearing plan.`)
+                console.warn(`[Plan Compiler Guard] Stale lock detected in session ${input.sessionID} (Tool: ${input.tool}). Auto-clearing plan.`)
                 compiler.clear(input.sessionID)
                 return
             }
@@ -130,8 +130,8 @@ export function createPlanEnforcementHook(_ctx: PluginInput) {
                     `You are currently locked into a deterministic plan. You MUST finish the active step ` +
                     `or use 'mark_step_complete' if the work is done. If you need to break out of this plan, ` +
                     `use 'unlock_plan' or complete all steps.\n\n` +
-                    `Wait! If you believe this is a stale lock, the guard should have auto-cleared. ` +
-                    `If it didn't, use 'unlock_plan' now.`,
+                    `**RECOVERY**: If you believe this is a stale lock or the plan is no longer valid, ` +
+                    `you MUST run 'unlock_plan' now to return to freestyle mode.`,
                     activeStep.id,
                     activeStep.action,
                     input.tool,

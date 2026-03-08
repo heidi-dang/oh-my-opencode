@@ -25,6 +25,12 @@ export const CategoryConfigSchema = z.object({
   is_unstable_agent: z.boolean().optional(),
   /** Disable this category. Disabled categories are excluded from task delegation. */
   disable: z.boolean().optional(),
+  /** Require a specific model for this category. */
+  requires_model: z.string().optional(),
+  /** If true, require at least one fallback model to be available. */
+  requires_any_model: z.boolean().optional(),
+  /** Only activate category when any of these providers are connected. */
+  requires_provider: z.array(z.string()).optional(),
   /** Mis-nested background_task config - should be at root level only */
   background_task: z.never().optional().describe("Mis-nested background_task config - move to root level"),
 })

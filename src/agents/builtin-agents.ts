@@ -1,5 +1,6 @@
 import type { AgentConfig } from "@opencode-ai/sdk"
 import type { BuiltinAgentName, AgentOverrides, AgentFactory, AgentPromptMetadata } from "./types"
+import type { OhMyOpenCodeConfig } from "../config"
 import type { CategoriesConfig, GitMasterConfig } from "../config/schema"
 import type { LoadedSkill } from "../features/opencode-skill-loader/types"
 import type { BrowserAutomationProvider } from "../config/schema"
@@ -65,10 +66,9 @@ const agentMetadata: Partial<Record<BuiltinAgentName, AgentPromptMetadata>> = {
 
 export async function createBuiltinAgents(
   disabledAgents: string[] = [],
-  agentOverrides: AgentOverrides = {},
+  pluginConfig: OhMyOpenCodeConfig,
   directory?: string,
   systemDefaultModel?: string,
-  categories?: CategoriesConfig,
   gitMasterConfig?: GitMasterConfig,
   discoveredSkills: LoadedSkill[] = [],
   customAgentSummaries?: unknown,
@@ -79,6 +79,8 @@ export async function createBuiltinAgents(
   useTaskSystem = false,
   disableOmoEnv = false
 ): Promise<Record<string, AgentConfig>> {
+  const categories = pluginConfig.categories
+  const agentOverrides = pluginConfig.agents ?? {}
 
   const connectedProviders = readConnectedProvidersCache()
   const providerModelsConnected = connectedProviders
@@ -123,6 +125,7 @@ export async function createBuiltinAgents(
     availableModels,
     disabledSkills,
     disableOmoEnv,
+    pluginConfig,
   })
 
   const registeredAgents = parseRegisteredAgentSummaries(customAgentSummaries)
@@ -160,6 +163,7 @@ export async function createBuiltinAgents(
     userCategories: categories,
     useTaskSystem,
     disableOmoEnv,
+    pluginConfig,
   })
   if (masterConfig) {
     result["master"] = masterConfig
@@ -183,6 +187,7 @@ export async function createBuiltinAgents(
     userCategories: categories,
     useTaskSystem,
     disableOmoEnv,
+    pluginConfig,
   })
   if (sisyphusConfig) {
     result["sisyphus"] = sisyphusConfig
@@ -203,6 +208,7 @@ export async function createBuiltinAgents(
     directory,
     useTaskSystem,
     disableOmoEnv,
+    pluginConfig,
   })
   if (hephaestusConfig) {
     result["hephaestus"] = hephaestusConfig
@@ -225,6 +231,7 @@ export async function createBuiltinAgents(
     mergedCategories,
     directory,
     userCategories: categories,
+    pluginConfig,
   })
   if (atlasConfig) {
     result["atlas"] = atlasConfig

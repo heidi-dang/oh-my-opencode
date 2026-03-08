@@ -1,5 +1,6 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import { computeLineHash } from "../../tools/hashline-edit/hash-computation"
+import { readTracker } from "../../shared/read-permission-tracker"
 
 const WRITE_SUCCESS_MARKER = "File written successfully."
 
@@ -184,6 +185,12 @@ export function createHashlineReadEnhancerHook(
       if (typeof output.output !== "string") {
         return
       }
+
+      const filePath = extractFilePath(output.metadata)
+      if (filePath) {
+        readTracker.recordRead(input.sessionID, filePath)
+      }
+
       if (!shouldProcess(config)) {
         return
       }

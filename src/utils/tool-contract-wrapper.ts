@@ -55,9 +55,18 @@ export function withToolContract(
         try {
             executionMessage = await executeFn(args, context)
 
-            // 4. [REMOVED] Final Hard Guarantee
-            // We no longer inject success if the tool failed to call metadata.
-            // This ensures that missing metadata is caught as a contract violation (if applicable).
+            // 4. Final Hard Guarantee for metadata presence
+            if (!metadataCalled) {
+                const result = createFailureResult(`[Tool Contract Violation] Tool ${toolName} finished without calling context.metadata().`)
+                const meta = {
+                    title: `${toolName} protocol error`,
+                    ...result,
+                    success: false,
+                    verified: false
+                }
+                context.metadata(meta)
+                return result.message!
+            }
         } catch (error: any) {
             const result = createFailureResult(`Exception in ${toolName}: ${error.message}`)
             const meta = {
