@@ -196,26 +196,7 @@ export function createEventHandler(args: {
     }
 
     await dispatchToHooks(input);
-    if (input.event.type === "tool.result") {
-      const sessionID = (input.event.properties as Record<string, unknown> | undefined)?.sessionID as string | undefined;
-      if (sessionID) {
-        log(`[event] tool.result → synthetic idle queued for ${sessionID}`);
-        const syntheticIdleForTool: EventInput = {
-          event: {
-            type: "session.idle",
-            properties: { sessionID },
-          },
-        };
-        const emittedAt = recentRealIdles.get(sessionID);
-        if (emittedAt && Date.now() - emittedAt < DEDUP_WINDOW_MS) {
-          recentRealIdles.delete(sessionID);
-        }
-        recentSyntheticIdles.set(sessionID, Date.now());
-        setTimeout(async () => {
-          await dispatchToHooks(syntheticIdleForTool);
-        }, 100);
-      }
-    }
+
 
     const syntheticIdle = normalizeSessionStatusToIdle(input);
     if (syntheticIdle) {
@@ -231,6 +212,29 @@ export function createEventHandler(args: {
 
     const { event } = input;
     const props = event.properties as Record<string, unknown> | undefined;
+
+    // FIX: Trigger continuation on tool.result to prevent stall if session.idle missing
+    if (event.type === "tool.result") {
+      const sessionID = props?.sessionID as string | undefined;
+      if (sessionID) {
+        log(`[event] tool.result → synthetic idle queued for ${sessionID}`);
+        // Mirror syntheticIdle logic with 100ms delay to ensure tool metadata processed
+        setTimeout(async () => {
+          const emittedAt = recentRealIdles.get(sessionID);
+          if (emittedAt && Date.now() - emittedAt < DEDUP_WINDOW_MS) {
+            return;
+          }
+          recentSyntheticIdles.set(sessionID, Date.now());
+          const syntheticIdleForTool: EventInput = {
+            event: {
+              type: "session.idle",
+              properties: { sessionID },
+            },
+          };
+          await dispatchToHooks(syntheticIdleForTool);
+        }, 100);
+      }
+    }
 
     if (event.type === "session.created") {
       const sessionInfo = props?.info as { id?: string; title?: string; parentID?: string } | undefined;
