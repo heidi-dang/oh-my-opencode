@@ -1,0 +1,1 @@
+export { createWorkspaceGuardHook } from "./hook"

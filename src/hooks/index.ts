@@ -61,3 +61,4 @@ export { createEditSafeguardHook } from "./edit-safeguard/hook"
 export { createXaiUsagePatchHook } from "./xai-usage-patch/hook"
 
 
+export { createWorkspaceGuardHook } from "./workspace-guard"

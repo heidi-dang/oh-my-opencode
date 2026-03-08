@@ -57,6 +57,7 @@ export const HookNameSchema = z.enum([
   "semantic-loop-guard",
   "edit-safeguard",
   "xai-usage-patch",
+  "workspace-guard",
 ])
 
 export type HookName = z.infer<typeof HookNameSchema>
