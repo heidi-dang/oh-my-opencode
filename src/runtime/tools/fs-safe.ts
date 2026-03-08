@@ -18,7 +18,29 @@ export function createFsSafeTool(): any {
         execute: withToolContract("fs_safe", async (args, context) => {
             try {
                 const { operation, filePath, content } = args
-                const fullPath = path.resolve(context.directory || process.cwd(), filePath)
+                const contextDir = context.directory || process.cwd()
+                const fullPath = path.resolve(contextDir, filePath)
+
+                // 🚨 SECURITY: Repo Boundary & Symlink Guard
+                if (!fullPath.startsWith(contextDir)) {
+                    throw new Error(`Security Violation: Path escapes repository boundary (${filePath})`)
+                }
+
+                const parts = filePath.split(path.sep)
+                let currentPath = contextDir
+                for (const part of parts) {
+                    if (!part || part === ".") continue
+                    currentPath = path.join(currentPath, part)
+                    try {
+                        const stats = fs.lstatSync(currentPath)
+                        if (stats.isSymbolicLink()) {
+                            throw new Error(`Security Violation: Symlink detected at '${part}'. Symlinks are forbidden to prevent repo escape.`)
+                        }
+                    } catch (e) {
+                        if (e.code !== "ENOENT") throw e
+                        break // Path doesn't exist yet, which is fine for write/mkdir
+                    }
+                }
 
                 let changedState = false
                 let stateChangePayload: any = null
