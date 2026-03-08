@@ -196,6 +196,26 @@ export function createEventHandler(args: {
     }
 
     await dispatchToHooks(input);
+    if (input.event.type === "tool.result") {
+      const sessionID = (input.event.properties as Record<string, unknown> | undefined)?.sessionID as string | undefined;
+      if (sessionID) {
+        log(`[event] tool.result → synthetic idle queued for ${sessionID}`);
+        const syntheticIdleForTool: EventInput = {
+          event: {
+            type: "session.idle",
+            properties: { sessionID },
+          },
+        };
+        const emittedAt = recentRealIdles.get(sessionID);
+        if (emittedAt && Date.now() - emittedAt < DEDUP_WINDOW_MS) {
+          recentRealIdles.delete(sessionID);
+        }
+        recentSyntheticIdles.set(sessionID, Date.now());
+        setTimeout(async () => {
+          await dispatchToHooks(syntheticIdleForTool);
+        }, 100);
+      }
+    }
 
     const syntheticIdle = normalizeSessionStatusToIdle(input);
     if (syntheticIdle) {
