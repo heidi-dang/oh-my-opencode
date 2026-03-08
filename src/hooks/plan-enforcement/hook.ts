@@ -57,8 +57,16 @@ const ALWAYS_ALLOWED_TOOLS = new Set([
     "background_output",
     "background_cancel",
 
-    // Shell access
+    // Shell and execution access
     "interactive_bash",
+    "bash",
+    "apply_patch",
+    "hashline_edit",
+    "ast_grep_search",
+    "ls",
+    "read_file",
+    "find_files",
+    "unlock_plan",
 
     // Agent communication
     "call_omo_agent",
