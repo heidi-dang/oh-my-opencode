@@ -34,7 +34,7 @@ describe("ConcurrencyManager.getConcurrencyLimit", () => {
   test("should return provider limit even when modelConcurrency exists but doesn't match", () => {
     // given
     const config: BackgroundTaskConfig = {
-      modelConcurrency: { "google/gemini-3.1-pro": 5 },
+      modelConcurrency: { "google/gemini-2.0-flash": 5 },
       providerConcurrency: { anthropic: 3 }
     }
     const manager = new ConcurrencyManager(config)
@@ -94,8 +94,8 @@ describe("ConcurrencyManager.getConcurrencyLimit", () => {
 
     // when
     const modelLimit = manager.getConcurrencyLimit("anthropic/claude-sonnet-4-6")
-    const providerLimit = manager.getConcurrencyLimit("anthropic/claude-opus-4-6")
-    const defaultLimit = manager.getConcurrencyLimit("google/gemini-3.1-pro")
+    const providerLimit = manager.getConcurrencyLimit("anthropic/claude-3-5-haiku")
+    const defaultLimit = manager.getConcurrencyLimit("google/gemini-2.0-flash")
 
     // then
     expect(modelLimit).toBe(10)

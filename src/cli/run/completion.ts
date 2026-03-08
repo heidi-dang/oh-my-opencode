@@ -1,6 +1,6 @@
 import pc from "picocolors"
 import type { RunContext, Todo, ChildSession, SessionStatus } from "./types"
-import { normalizeSDKResponse } from "../../shared"
+import { normalizeSDKResponse, verifyTaskCompletionState } from "../../shared"
 import {
   getContinuationState,
   type ContinuationState,
@@ -25,6 +25,12 @@ export async function checkCompletionConditions(ctx: RunContext): Promise<boolea
     }
 
     if (!areContinuationHooksIdle(ctx, continuationState)) {
+      return false
+    }
+
+    const isLegitimatelyComplete = await verifyTaskCompletionState(ctx.client, ctx.sessionID)
+    if (!isLegitimatelyComplete) {
+      logWaiting(ctx, "failed verification constraints or complete_task explicitly rejected")
       return false
     }
 

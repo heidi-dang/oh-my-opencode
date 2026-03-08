@@ -93,9 +93,15 @@ export function handleSessionError(ctx: RunContext, payload: EventPayload, state
 
   const props = payload.properties as SessionErrorProps | undefined
   if (getSessionId(props) === ctx.sessionID) {
+    const errorName = (props?.error as any)?.name
     state.mainSessionError = true
-    state.lastError = serializeError(props?.error)
-    console.error(pc.red(`\n[session.error] ${state.lastError}`))
+    if (errorName === "AbortError" || errorName === "MessageAbortedError") {
+      state.lastError = "Task aborted."
+      console.error(pc.yellow(`\n[session.error] ${state.lastError}`))
+    } else {
+      state.lastError = serializeError(props?.error)
+      console.error(pc.red(`\n[session.error] ${state.lastError}`))
+    }
   }
 }
 

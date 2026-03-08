@@ -14,6 +14,7 @@ import {
   promptWithModelSuggestionRetry,
   resolveInheritedPromptTools,
   createInternalAgentTextPart,
+  verifyTaskCompletionState,
 } from "../../shared"
 import { saveActiveTasks, ActiveTaskInfo } from "../../shared/active-task-storage"
 import { setSessionTools } from "../../shared/session-tools-store"
@@ -1031,6 +1032,20 @@ export class BackgroundManager {
       SessionCategoryRegistry.remove(sessionID)
     }
 
+    if (event.type === "session.error") {
+      const sessionID = props?.sessionID as string | undefined
+      const error = props?.error as { name?: string; message?: string } | undefined
+      const errorName = extractErrorName(error)
+      
+      if (sessionID && (errorName === "AbortError" || errorName === "MessageAbortedError")) {
+        const task = this.findBySession(sessionID)
+        if (task && task.status === "running") {
+          log("[background-agent] Session aborted, cancelling task:", task.id)
+          this.cancelTask(task.id, { reason: "Task aborted" }).catch(() => {})
+        }
+      }
+    }
+
     if (event.type === "session.status") {
       const sessionID = props?.sessionID as string | undefined
       const status = props?.status as { type?: string; message?: string } | undefined
@@ -1699,6 +1714,31 @@ Use \`background_output(task_id="${task.id}")\` to retrieve this result when rea
           const hasIncompleteTodos = await this.checkSessionTodos(sessionID)
           if (hasIncompleteTodos) {
             log("[background-agent] Task has incomplete todos via polling, waiting:", task.id)
+            continue
+          }
+
+          const isLegitimatelyComplete = await verifyTaskCompletionState(this.client, sessionID)
+          if (!isLegitimatelyComplete) {
+            log("[background-agent] Task failed complete_task constraints but reached idle. Marking as error.", task.id)
+            task.status = "error"
+            task.error = "Task stopped executing without successfully completing the task and satisfying verification constraints."
+            task.completedAt = new Date()
+            if (task.concurrencyKey) {
+              this.concurrencyManager.release(task.concurrencyKey)
+              task.concurrencyKey = undefined
+            }
+            this.cleanupPendingByParent(task)
+            this.clearNotificationsForTask(task.id)
+            const toastManager = getTaskToastManager()
+            if (toastManager) {
+              toastManager.removeTask(task.id)
+            }
+            if (task.sessionID) {
+              subagentSessions.delete(task.sessionID)
+              SessionCategoryRegistry.remove(task.sessionID)
+            }
+            this.markForNotification(task)
+            this.enqueueNotificationForParent(task.parentSessionID, () => this.notifyParentSession(task)).catch(() => {})
             continue
           }
 
