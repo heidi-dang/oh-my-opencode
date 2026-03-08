@@ -12,23 +12,23 @@ describe("think-mode switcher", () => {
         const variant = getHighVariant("claude-opus-4.6")
 
         // then should return high variant with hyphen format
-        expect(variant).toBe("claude-opus-4-6-high")
+        expect(variant).toBe("claude-sonnet-4-6-high")
       })
 
       it("should handle hyphens in Claude version numbers", () => {
         // given a Claude model ID with hyphen format
-        const variant = getHighVariant("claude-opus-4-6")
+        const variant = getHighVariant("claude-sonnet-4-6")
 
         // then should return high variant
-        expect(variant).toBe("claude-opus-4-6-high")
+        expect(variant).toBe("claude-sonnet-4-6-high")
       })
 
-      it("should handle claude-opus-4-6 high variant", () => {
+      it("should handle claude-sonnet-4-6 high variant", () => {
         // given a Claude Opus 4.6 model ID
-        const variant = getHighVariant("claude-opus-4-6")
+        const variant = getHighVariant("claude-sonnet-4-6")
 
         // then should return high variant
-        expect(variant).toBe("claude-opus-4-6-high")
+        expect(variant).toBe("claude-sonnet-4-6-high")
       })
 
       it("should handle dots in GPT version numbers", () => {
@@ -49,8 +49,8 @@ describe("think-mode switcher", () => {
 
       it("should handle Gemini preview variants", () => {
         // given Gemini preview model IDs
-        expect(getHighVariant("gemini-3.1-pro")).toBe(
-          "gemini-3-1-pro-high"
+        expect(getHighVariant("gemini-2.0-flash")).toBe(
+          "gemini-2.0-flash-high"
         )
         expect(getHighVariant("gemini-3-flash")).toBe(
           "gemini-3-flash-high"
@@ -59,9 +59,9 @@ describe("think-mode switcher", () => {
 
       it("should return null for already-high variants", () => {
         // given model IDs that are already high variants
-        expect(getHighVariant("claude-opus-4-6-high")).toBeNull()
+        expect(getHighVariant("claude-sonnet-4-6-high")).toBeNull()
         expect(getHighVariant("gpt-5-2-high")).toBeNull()
-        expect(getHighVariant("gemini-3-1-pro-high")).toBeNull()
+        expect(getHighVariant("gemini-2.0-flash-high")).toBeNull()
       })
 
       it("should return null for unknown models", () => {
@@ -75,9 +75,9 @@ describe("think-mode switcher", () => {
   describe("isAlreadyHighVariant", () => {
     it("should detect -high suffix", () => {
       // given model IDs with -high suffix
-      expect(isAlreadyHighVariant("claude-opus-4-6-high")).toBe(true)
+      expect(isAlreadyHighVariant("claude-sonnet-4-6-high")).toBe(true)
       expect(isAlreadyHighVariant("gpt-5-2-high")).toBe(true)
-      expect(isAlreadyHighVariant("gemini-3.1-pro-high")).toBe(true)
+      expect(isAlreadyHighVariant("gemini-2.0-flash-high")).toBe(true)
     })
 
     it("should detect -high suffix after normalization", () => {
@@ -87,10 +87,10 @@ describe("think-mode switcher", () => {
 
     it("should return false for base models", () => {
       // given base model IDs without -high suffix
-      expect(isAlreadyHighVariant("claude-opus-4-6")).toBe(false)
+      expect(isAlreadyHighVariant("claude-sonnet-4-6")).toBe(false)
       expect(isAlreadyHighVariant("claude-opus-4.6")).toBe(false)
       expect(isAlreadyHighVariant("gpt-5.2")).toBe(false)
-      expect(isAlreadyHighVariant("gemini-3.1-pro")).toBe(false)
+      expect(isAlreadyHighVariant("gemini-2.0-flash")).toBe(false)
     })
 
     it("should return false for models with 'high' in name but not suffix", () => {
@@ -122,14 +122,14 @@ describe("think-mode switcher", () => {
         const variant = getHighVariant("vertex_ai/claude-opus-4.6")
 
         // then should normalize dots and preserve prefix
-        expect(variant).toBe("vertex_ai/claude-opus-4-6-high")
+        expect(variant).toBe("vertex_ai/claude-sonnet-4-6-high")
       })
 
       it("should handle multiple different prefixes", () => {
         // given various custom prefixes
         expect(getHighVariant("azure/gpt-5")).toBe("azure/gpt-5-high")
         expect(getHighVariant("bedrock/claude-sonnet-4-6")).toBe("bedrock/claude-sonnet-4-6-high")
-        expect(getHighVariant("custom-llm/gemini-3.1-pro")).toBe("custom-llm/gemini-3-1-pro-high")
+        expect(getHighVariant("custom-llm/gemini-2.0-flash")).toBe("custom-llm/gemini-2.0-flash-high")
       })
 
       it("should return null for prefixed models without high variant mapping", () => {
@@ -140,7 +140,7 @@ describe("think-mode switcher", () => {
 
       it("should return null for already-high prefixed models", () => {
         // given prefixed model IDs that are already high
-        expect(getHighVariant("vertex_ai/claude-opus-4-6-high")).toBeNull()
+        expect(getHighVariant("vertex_ai/claude-sonnet-4-6-high")).toBeNull()
         expect(getHighVariant("openai/gpt-5-2-high")).toBeNull()
       })
     })
@@ -148,14 +148,14 @@ describe("think-mode switcher", () => {
     describe("isAlreadyHighVariant with prefixes", () => {
       it("should detect -high suffix in prefixed models", () => {
         // given prefixed model IDs with -high suffix
-        expect(isAlreadyHighVariant("vertex_ai/claude-opus-4-6-high")).toBe(true)
+        expect(isAlreadyHighVariant("vertex_ai/claude-sonnet-4-6-high")).toBe(true)
         expect(isAlreadyHighVariant("openai/gpt-5-2-high")).toBe(true)
-        expect(isAlreadyHighVariant("custom/gemini-3.1-pro-high")).toBe(true)
+        expect(isAlreadyHighVariant("custom/gemini-2.0-flash-high")).toBe(true)
       })
 
       it("should return false for prefixed base models", () => {
         // given prefixed base model IDs without -high suffix
-        expect(isAlreadyHighVariant("vertex_ai/claude-opus-4-6")).toBe(false)
+        expect(isAlreadyHighVariant("vertex_ai/claude-sonnet-4-6")).toBe(false)
         expect(isAlreadyHighVariant("openai/gpt-5-2")).toBe(false)
       })
 

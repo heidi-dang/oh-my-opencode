@@ -19,7 +19,7 @@ describe("session-model-state", () => {
   test("clears a session model", () => {
     //#given
     const sessionID = "ses_clear"
-    setSessionModel(sessionID, { providerID: "anthropic", modelID: "gpt-5.3-codex" })
+    setSessionModel(sessionID, { providerID: "anthropic", modelID: "o3-mini" })
 
     //#when
     clearSessionModel(sessionID)

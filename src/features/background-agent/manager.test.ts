@@ -825,7 +825,7 @@ describe("BackgroundManager.notifyParentSession - dynamic message lookup", () =>
             {
               info: {
                 agent: "sisyphus",
-                model: { providerID: "anthropic", modelID: "claude-opus-4-6" },
+                model: { providerID: "anthropic", modelID: "claude-sonnet-4-6" },
               },
             },
             {
@@ -860,7 +860,7 @@ describe("BackgroundManager.notifyParentSession - dynamic message lookup", () =>
 
     //#then
     expect(capturedBody?.agent).toBe("sisyphus")
-    expect(capturedBody?.model).toEqual({ providerID: "anthropic", modelID: "claude-opus-4-6" })
+    expect(capturedBody?.model).toEqual({ providerID: "anthropic", modelID: "claude-sonnet-4-6" })
 
     manager.shutdown()
   })
@@ -883,7 +883,7 @@ describe("BackgroundManager.notifyParentSession - dynamic message lookup", () =>
     }
     const currentMessage: CurrentMessage = {
       agent: "sisyphus",
-      model: { providerID: "anthropic", modelID: "claude-opus-4-6" },
+      model: { providerID: "anthropic", modelID: "claude-sonnet-4-6" },
     }
 
     // when
@@ -891,7 +891,7 @@ describe("BackgroundManager.notifyParentSession - dynamic message lookup", () =>
 
     // then - uses currentMessage values, not task.parentModel/parentAgent
     expect(promptBody.agent).toBe("sisyphus")
-    expect(promptBody.model).toEqual({ providerID: "anthropic", modelID: "claude-opus-4-6" })
+    expect(promptBody.model).toEqual({ providerID: "anthropic", modelID: "claude-sonnet-4-6" })
   })
 
   test("should fallback to parentAgent when currentMessage.agent is undefined", async () => {
@@ -1213,7 +1213,7 @@ describe("BackgroundManager.tryCompleteTask", () => {
 
   test("should release concurrency and clear key on completion", async () => {
     // given
-    const concurrencyKey = "anthropic/claude-opus-4-6"
+    const concurrencyKey = "anthropic/claude-sonnet-4-6"
     const concurrencyManager = getConcurrencyManager(manager)
     await concurrencyManager.acquire(concurrencyKey)
 
@@ -1242,7 +1242,7 @@ describe("BackgroundManager.tryCompleteTask", () => {
 
   test("should prevent double completion and double release", async () => {
     // given
-    const concurrencyKey = "anthropic/claude-opus-4-6"
+    const concurrencyKey = "anthropic/claude-sonnet-4-6"
     const concurrencyManager = getConcurrencyManager(manager)
     await concurrencyManager.acquire(concurrencyKey)
 
@@ -2069,7 +2069,7 @@ describe("BackgroundManager - Non-blocking Queue Integration", () => {
         description: "Task 1",
         prompt: "Do something",
         agent: "test-agent",
-        model: { providerID: "anthropic", modelID: "claude-opus-4-6" },
+        model: { providerID: "anthropic", modelID: "claude-sonnet-4-6" },
         parentSessionID: "parent-session",
         parentMessageID: "parent-message",
       }
@@ -3013,8 +3013,8 @@ describe("BackgroundManager.handleEvent - session.deleted cascade", () => {
 
 describe("BackgroundManager.handleEvent - session.error", () => {
   const defaultRetryFallbackChain = [
-    { providers: ["anthropic"], model: "claude-opus-4-6", variant: "max" },
-    { providers: ["anthropic"], model: "gpt-5.3-codex", variant: "high" },
+    { providers: ["anthropic"], model: "claude-sonnet-4-6", variant: "max" },
+    { providers: ["anthropic"], model: "o3-mini", variant: "high" },
   ]
 
   const stubProcessKey = (manager: BackgroundManager) => {
@@ -3037,7 +3037,7 @@ describe("BackgroundManager.handleEvent - session.error", () => {
       agent: "sisyphus",
       status: "running",
       concurrencyKey: input.concurrencyKey,
-      model: { providerID: "anthropic", modelID: "claude-opus-4-6-thinking" },
+      model: { providerID: "anthropic", modelID: "claude-sonnet-4-6-thinking" },
       fallbackChain: input.fallbackChain ?? defaultRetryFallbackChain,
       attemptCount: 0,
     })
@@ -3176,7 +3176,7 @@ describe("BackgroundManager.handleEvent - session.error", () => {
     //#given
     const manager = createBackgroundManager()
     const concurrencyManager = getConcurrencyManager(manager)
-    const concurrencyKey = "anthropic/claude-opus-4-6-thinking"
+    const concurrencyKey = "anthropic/claude-sonnet-4-6-thinking"
     await concurrencyManager.acquire(concurrencyKey)
 
     stubProcessKey(manager)
@@ -3188,7 +3188,7 @@ describe("BackgroundManager.handleEvent - session.error", () => {
       description: "task that should retry",
       concurrencyKey,
       fallbackChain: [
-        { providers: ["anthropic"], model: "claude-opus-4-6", variant: "max" },
+        { providers: ["anthropic"], model: "claude-sonnet-4-6", variant: "max" },
         { providers: ["anthropic"], model: "claude-opus-4-5", variant: "default" as any },
       ],
     })
@@ -3202,7 +3202,7 @@ describe("BackgroundManager.handleEvent - session.error", () => {
           name: "UnknownError",
           data: {
             message:
-              "Bad Gateway: {\"error\":{\"message\":\"unknown provider for model claude-opus-4-6-thinking\"}}",
+              "Bad Gateway: {\"error\":{\"message\":\"unknown provider for model claude-sonnet-4-6-thinking\"}}",
           },
         },
       },
@@ -3213,7 +3213,7 @@ describe("BackgroundManager.handleEvent - session.error", () => {
     expect(task.attemptCount).toBe(1)
     expect(task.model).toEqual({
       providerID: "anthropic",
-      modelID: "claude-opus-4-6",
+      modelID: "claude-sonnet-4-6",
       variant: "max",
     })
     expect(task.concurrencyKey).toBeUndefined()
@@ -3251,7 +3251,7 @@ describe("BackgroundManager.handleEvent - session.error", () => {
     expect(task.attemptCount).toBe(1)
     expect(task.model).toEqual({
       providerID: "anthropic",
-      modelID: "claude-opus-4-6",
+      modelID: "claude-sonnet-4-6",
       variant: "max",
     })
 
@@ -3282,7 +3282,7 @@ describe("BackgroundManager.handleEvent - session.error", () => {
             name: "UnknownError",
             data: {
               message:
-                "Bad Gateway: {\"error\":{\"message\":\"unknown provider for model claude-opus-4-6-thinking\"}}",
+                "Bad Gateway: {\"error\":{\"message\":\"unknown provider for model claude-sonnet-4-6-thinking\"}}",
             },
           },
         } as any,
@@ -3294,7 +3294,7 @@ describe("BackgroundManager.handleEvent - session.error", () => {
     expect(task.attemptCount).toBe(1)
     expect(task.model).toEqual({
       providerID: "anthropic",
-      modelID: "claude-opus-4-6",
+      modelID: "claude-sonnet-4-6",
       variant: "max",
     })
 

@@ -90,7 +90,7 @@ describe("resolveSubagentExecution", () => {
     })
     const args = createBaseArgs({ subagent_type: "oracle" })
     const executorCtx = createExecutorContext(async () => ([
-      { name: "oracle", mode: "subagent", model: "openai/gpt-5.3-codex" },
+      { name: "oracle", mode: "subagent", model: "openai/o3-mini" },
     ]))
 
     //#when
@@ -98,7 +98,7 @@ describe("resolveSubagentExecution", () => {
 
     //#then
     expect(result.error).toBeUndefined()
-    expect(result.categoryModel).toEqual({ providerID: "openai", modelID: "gpt-5.3-codex" })
+    expect(result.categoryModel).toEqual({ providerID: "openai", modelID: "o3-mini" })
     cacheSpy.mockRestore()
   })
 })

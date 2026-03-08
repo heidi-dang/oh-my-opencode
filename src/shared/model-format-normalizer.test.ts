@@ -9,8 +9,8 @@ describe("normalizeModelFormat", () => {
     })
 
     it("handles provider with multiple slashes", () => {
-      const result = normalizeModelFormat("anthropic/claude-opus-4-6/max")
-      expect(result).toEqual({ providerID: "anthropic", modelID: "claude-opus-4-6/max" })
+      const result = normalizeModelFormat("anthropic/claude-sonnet-4-6/max")
+      expect(result).toEqual({ providerID: "anthropic", modelID: "claude-sonnet-4-6/max" })
     })
 
     it("returns undefined for malformed string without separator", () => {

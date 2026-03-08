@@ -6,7 +6,7 @@ describe("resolveModelPipeline", () => {
     // given
     const result = resolveModelPipeline({
       intent: {
-        userModel: "openai/gpt-5.3-codex",
+        userModel: "openai/o3-mini",
       },
       constraints: {
         availableModels: new Set<string>(),
@@ -19,7 +19,7 @@ describe("resolveModelPipeline", () => {
       : false
 
     // then
-    expect(result).toMatchObject({ model: "openai/gpt-5.3-codex", provenance: "override" })
+    expect(result).toMatchObject({ model: "openai/o3-mini", provenance: "override" })
     expect(hasExplicitUserConfigField).toBe(false)
   })
 
@@ -71,7 +71,7 @@ describe("resolveModelPipeline", () => {
     //#given - sessionModel is not in the available models set
     const result = resolveModelPipeline({
       intent: {
-        sessionModel: "openai/gpt-5.3-codex", // not available
+        sessionModel: "openai/o3-mini", // not available
       },
       constraints: { availableModels: new Set(["anthropic/claude-3.5-sonnet"]) },
       policy: { fallbackChain: [{ providers: ["anthropic"], model: "claude-3.5-sonnet" }] }

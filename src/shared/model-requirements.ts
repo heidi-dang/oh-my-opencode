@@ -164,8 +164,8 @@ function normalizeFallbackModels(fallbackModels: string | any[] | undefined): Fa
   })
 }
 
-export function getAgentRequirement(config: OhMyOpenCodeConfig, agentName: string): ModelRequirement | undefined {
-  const agentOverrides = config.agents as Record<string, any> | undefined
+export function getAgentRequirement(config: OhMyOpenCodeConfig | undefined, agentName: string): ModelRequirement | undefined {
+  const agentOverrides = config?.agents as Record<string, any> | undefined
   const override = agentOverrides?.[agentName] 
     ?? Object.entries(agentOverrides || {}).find(([key]) => key.toLowerCase() === agentName.toLowerCase())?.[1]
   
@@ -186,8 +186,8 @@ export function getAgentRequirement(config: OhMyOpenCodeConfig, agentName: strin
   }
 }
 
-export function getCategoryRequirement(config: OhMyOpenCodeConfig, categoryName: string): ModelRequirement | undefined {
-  const categoryOverrides = config.categories
+export function getCategoryRequirement(config: OhMyOpenCodeConfig | undefined, categoryName: string): ModelRequirement | undefined {
+  const categoryOverrides = config?.categories
   const override = categoryOverrides?.[categoryName]
   const defaultRequirement = DEFAULT_CATEGORY_MODEL_REQUIREMENTS[categoryName]
 

@@ -186,7 +186,7 @@ describe("generateOmoConfig - model fallback system", () => {
     // #when generating config
     const result = generateOmoConfig(config)
 
-    // #then Sisyphus uses Copilot (OR logic - copilot is in claude-opus-4-6 providers)
+    // #then Sisyphus uses Copilot (OR logic - copilot is in claude-sonnet-4-6 providers)
     expect((result.agents as Record<string, { model: string }>).sisyphus.model).toBe("github-copilot/claude-opus-4.6")
   })
 
@@ -230,7 +230,7 @@ describe("generateOmoConfig - model fallback system", () => {
     // #then librarian should use ZAI model
     expect((result.agents as Record<string, { model: string }>).librarian.model).toBe("zai-coding-plan/glm-4.7")
     // #then Sisyphus uses Claude (OR logic)
-    expect((result.agents as Record<string, { model: string }>).sisyphus.model).toBe("anthropic/claude-opus-4-6")
+    expect((result.agents as Record<string, { model: string }>).sisyphus.model).toBe("anthropic/claude-sonnet-4-6")
   })
 
   test("uses native OpenAI models when only ChatGPT available", () => {
@@ -253,8 +253,8 @@ describe("generateOmoConfig - model fallback system", () => {
     expect((result.agents as Record<string, { model: string }>).sisyphus).toBeUndefined()
     // #then Oracle should use native OpenAI (first fallback entry)
     expect((result.agents as Record<string, { model: string }>).oracle.model).toBe("openai/gpt-5.2")
-    // #then multimodal-looker should use native OpenAI (first fallback entry is gpt-5.3-codex)
-    expect((result.agents as Record<string, { model: string }>)["multimodal-looker"].model).toBe("openai/gpt-5.3-codex")
+    // #then multimodal-looker should use native OpenAI (first fallback entry is o3-mini)
+    expect((result.agents as Record<string, { model: string }>)["multimodal-looker"].model).toBe("openai/o3-mini")
   })
 
   test("uses haiku for explore when Claude max20", () => {

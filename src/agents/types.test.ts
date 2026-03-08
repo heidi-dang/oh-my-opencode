@@ -41,46 +41,46 @@ describe("isGptModel", () => {
   });
 
   test("claude models are not gpt", () => {
-    expect(isGptModel("anthropic/claude-opus-4-6")).toBe(false);
+    expect(isGptModel("anthropic/claude-sonnet-4-6")).toBe(false);
     expect(isGptModel("anthropic/claude-sonnet-4-6")).toBe(false);
     expect(isGptModel("litellm/anthropic.claude-opus-4-5")).toBe(false);
   });
 
   test("gemini models are not gpt", () => {
-    expect(isGptModel("google/gemini-3.1-pro")).toBe(false);
-    expect(isGptModel("litellm/gemini-3.1-pro")).toBe(false);
+    expect(isGptModel("google/gemini-2.0-flash")).toBe(false);
+    expect(isGptModel("litellm/gemini-2.0-flash")).toBe(false);
   });
 
   test("opencode provider is not gpt", () => {
-    expect(isGptModel("opencode/claude-opus-4-6")).toBe(false);
+    expect(isGptModel("opencode/claude-sonnet-4-6")).toBe(false);
   });
 });
 
 describe("isGeminiModel", () => {
   test("#given google provider models #then returns true", () => {
-    expect(isGeminiModel("google/gemini-3.1-pro")).toBe(true);
+    expect(isGeminiModel("google/gemini-2.0-flash")).toBe(true);
     expect(isGeminiModel("google/gemini-3-flash")).toBe(true);
     expect(isGeminiModel("google/gemini-2.5-pro")).toBe(true);
   });
 
   test("#given google-vertex provider models #then returns true", () => {
-    expect(isGeminiModel("google-vertex/gemini-3.1-pro")).toBe(true);
+    expect(isGeminiModel("google-vertex/gemini-2.0-flash")).toBe(true);
     expect(isGeminiModel("google-vertex/gemini-3-flash")).toBe(true);
   });
 
   test("#given github copilot gemini models #then returns true", () => {
-    expect(isGeminiModel("github-copilot/gemini-3.1-pro")).toBe(true);
+    expect(isGeminiModel("github-copilot/gemini-2.0-flash")).toBe(true);
     expect(isGeminiModel("github-copilot/gemini-3-flash")).toBe(true);
   });
 
   test("#given litellm proxied gemini models #then returns true", () => {
-    expect(isGeminiModel("litellm/gemini-3.1-pro")).toBe(true);
+    expect(isGeminiModel("litellm/gemini-2.0-flash")).toBe(true);
     expect(isGeminiModel("litellm/gemini-3-flash")).toBe(true);
     expect(isGeminiModel("litellm/gemini-2.5-pro")).toBe(true);
   });
 
   test("#given other proxied gemini models #then returns true", () => {
-    expect(isGeminiModel("custom-provider/gemini-3.1-pro")).toBe(true);
+    expect(isGeminiModel("custom-provider/gemini-2.0-flash")).toBe(true);
     expect(isGeminiModel("ollama/gemini-3-flash")).toBe(true);
   });
 
@@ -91,11 +91,11 @@ describe("isGeminiModel", () => {
   });
 
   test("#given claude models #then returns false", () => {
-    expect(isGeminiModel("anthropic/claude-opus-4-6")).toBe(false);
+    expect(isGeminiModel("anthropic/claude-sonnet-4-6")).toBe(false);
     expect(isGeminiModel("anthropic/claude-sonnet-4-6")).toBe(false);
   });
 
   test("#given opencode provider #then returns false", () => {
-    expect(isGeminiModel("opencode/claude-opus-4-6")).toBe(false);
+    expect(isGeminiModel("opencode/claude-sonnet-4-6")).toBe(false);
   });
 });

@@ -72,7 +72,7 @@ describe("findNearestMessageExcludingCompaction", () => {
       // given
       const message = {
         agent: "sisyphus",
-        model: { providerID: "anthropic", modelID: "claude-opus-4-6" },
+        model: { providerID: "anthropic", modelID: "claude-sonnet-4-6" },
       }
       writeFileSync(join(tempDir, "001.json"), JSON.stringify(message))
 
@@ -83,18 +83,18 @@ describe("findNearestMessageExcludingCompaction", () => {
       expect(result).not.toBeNull()
       expect(result?.agent).toBe("sisyphus")
       expect(result?.model?.providerID).toBe("anthropic")
-      expect(result?.model?.modelID).toBe("claude-opus-4-6")
+      expect(result?.model?.modelID).toBe("claude-sonnet-4-6")
     })
 
     test("skips compaction agent messages", () => {
       // given
       const compactionMessage = {
         agent: "compaction",
-        model: { providerID: "anthropic", modelID: "claude-opus-4-6" },
+        model: { providerID: "anthropic", modelID: "claude-sonnet-4-6" },
       }
       const validMessage = {
         agent: "sisyphus",
-        model: { providerID: "anthropic", modelID: "claude-opus-4-6" },
+        model: { providerID: "anthropic", modelID: "claude-sonnet-4-6" },
       }
       writeFileSync(join(tempDir, "002.json"), JSON.stringify(compactionMessage))
       writeFileSync(join(tempDir, "001.json"), JSON.stringify(validMessage))

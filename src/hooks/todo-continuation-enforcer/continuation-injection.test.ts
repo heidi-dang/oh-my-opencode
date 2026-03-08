@@ -37,7 +37,7 @@ describe("injectContinuation", () => {
       sessionID: "ses_continuation_tools",
       resolvedInfo: {
         agent: "Hephaestus",
-        model: { providerID: "openai", modelID: "gpt-5.3-codex" },
+        model: { providerID: "openai", modelID: "o3-mini" },
         tools: { question: "deny", bash: "allow" },
       },
       sessionStateStore: sessionStateStore as never,

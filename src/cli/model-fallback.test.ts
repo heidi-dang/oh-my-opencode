@@ -376,7 +376,7 @@ describe("generateModelConfig", () => {
       const result = generateModelConfig(config)
 
       // #then
-      expect(result.agents?.sisyphus?.model).toBe("anthropic/claude-opus-4-6")
+      expect(result.agents?.sisyphus?.model).toBe("anthropic/claude-sonnet-4-6")
     })
 
     test("Sisyphus is created when multiple fallback providers are available", () => {
@@ -393,7 +393,7 @@ describe("generateModelConfig", () => {
       const result = generateModelConfig(config)
 
       // #then
-      expect(result.agents?.sisyphus?.model).toBe("anthropic/claude-opus-4-6")
+      expect(result.agents?.sisyphus?.model).toBe("anthropic/claude-sonnet-4-6")
     })
 
     test("Sisyphus is omitted when no fallback provider is available (OpenAI not in chain)", () => {
@@ -417,18 +417,18 @@ describe("generateModelConfig", () => {
       const result = generateModelConfig(config)
 
       // #then
-      expect(result.agents?.hephaestus?.model).toBe("openai/gpt-5.3-codex")
+      expect(result.agents?.hephaestus?.model).toBe("openai/o3-mini")
       expect(result.agents?.hephaestus?.variant).toBe("medium")
     })
 
-    test("Hephaestus is NOT created when only Copilot is available (gpt-5.3-codex unavailable on github-copilot)", () => {
+    test("Hephaestus is NOT created when only Copilot is available (o3-mini unavailable on github-copilot)", () => {
       // #given
       const config = createConfig({ hasCopilot: true })
 
       // #when
       const result = generateModelConfig(config)
 
-      // #then - hephaestus is omitted because gpt-5.3-codex is not available on github-copilot
+      // #then - hephaestus is omitted because o3-mini is not available on github-copilot
       expect(result.agents?.hephaestus).toBeUndefined()
     })
 
@@ -440,7 +440,7 @@ describe("generateModelConfig", () => {
       const result = generateModelConfig(config)
 
       // #then
-      expect(result.agents?.hephaestus?.model).toBe("opencode/gpt-5.3-codex")
+      expect(result.agents?.hephaestus?.model).toBe("opencode/o3-mini")
       expect(result.agents?.hephaestus?.variant).toBe("medium")
     })
 

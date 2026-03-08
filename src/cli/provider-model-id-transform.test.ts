@@ -4,10 +4,10 @@ import { transformModelForProvider } from "./provider-model-id-transform"
 
 describe("transformModelForProvider", () => {
 	describe("github-copilot provider", () => {
-		test("transforms claude-opus-4-6 to claude-opus-4.6", () => {
-			// #given github-copilot provider and claude-opus-4-6 model
+		test("transforms claude-sonnet-4-6 to claude-opus-4.6", () => {
+			// #given github-copilot provider and claude-sonnet-4-6 model
 			const provider = "github-copilot"
-			const model = "claude-opus-4-6"
+			const model = "claude-sonnet-4-6"
 
 			// #when transformModelForProvider is called
 			const result = transformModelForProvider(provider, model)
@@ -40,16 +40,16 @@ describe("transformModelForProvider", () => {
 			expect(result).toBe("claude-haiku-4.5")
 		})
 
-		test("transforms gemini-3.1-pro to gemini-3.1-pro-preview", () => {
-			// #given github-copilot provider and gemini-3.1-pro model
+		test("transforms gemini-2.0-flash to gemini-2.0-flash-preview", () => {
+			// #given github-copilot provider and gemini-2.0-flash model
 			const provider = "github-copilot"
-			const model = "gemini-3.1-pro"
+			const model = "gemini-2.0-flash"
 
 			// #when transformModelForProvider is called
 			const result = transformModelForProvider(provider, model)
 
-			// #then should transform to gemini-3.1-pro-preview
-			expect(result).toBe("gemini-3.1-pro-preview")
+			// #then should transform to gemini-2.0-flash-preview
+			expect(result).toBe("gemini-2.0-flash-preview")
 		})
 
 		test("transforms gemini-3-flash to gemini-3-flash-preview", () => {
@@ -64,16 +64,16 @@ describe("transformModelForProvider", () => {
 			expect(result).toBe("gemini-3-flash-preview")
 		})
 
-		test("prevents double transformation of gemini-3.1-pro-preview", () => {
-			// #given github-copilot provider and gemini-3.1-pro-preview model (already transformed)
+		test("prevents double transformation of gemini-2.0-flash-preview", () => {
+			// #given github-copilot provider and gemini-2.0-flash-preview model (already transformed)
 			const provider = "github-copilot"
-			const model = "gemini-3.1-pro-preview"
+			const model = "gemini-2.0-flash-preview"
 
 			// #when transformModelForProvider is called
 			const result = transformModelForProvider(provider, model)
 
-			// #then should NOT become gemini-3.1-pro-preview-preview
-			expect(result).toBe("gemini-3.1-pro-preview")
+			// #then should NOT become gemini-2.0-flash-preview-preview
+			expect(result).toBe("gemini-2.0-flash-preview")
 		})
 
 		test("prevents double transformation of gemini-3-flash-preview", () => {
@@ -102,16 +102,16 @@ describe("transformModelForProvider", () => {
 			expect(result).toBe("gemini-3-flash-preview")
 		})
 
-		test("transforms gemini-3.1-pro to gemini-3.1-pro-preview", () => {
-			// #given google provider and gemini-3.1-pro model
+		test("transforms gemini-2.0-flash to gemini-2.0-flash-preview", () => {
+			// #given google provider and gemini-2.0-flash model
 			const provider = "google"
-			const model = "gemini-3.1-pro"
+			const model = "gemini-2.0-flash"
 
 			// #when transformModelForProvider is called
 			const result = transformModelForProvider(provider, model)
 
-			// #then should transform to gemini-3.1-pro-preview
-			expect(result).toBe("gemini-3.1-pro-preview")
+			// #then should transform to gemini-2.0-flash-preview
+			expect(result).toBe("gemini-2.0-flash-preview")
 		})
 
 		test("passes through other gemini models unchanged", () => {
@@ -138,28 +138,28 @@ describe("transformModelForProvider", () => {
 			expect(result).toBe("gemini-3-flash-preview")
 		})
 
-		test("prevents double transformation of gemini-3.1-pro-preview", () => {
-			// #given google provider and gemini-3.1-pro-preview model (already transformed)
+		test("prevents double transformation of gemini-2.0-flash-preview", () => {
+			// #given google provider and gemini-2.0-flash-preview model (already transformed)
 			const provider = "google"
-			const model = "gemini-3.1-pro-preview"
+			const model = "gemini-2.0-flash-preview"
 
 			// #when transformModelForProvider is called
 			const result = transformModelForProvider(provider, model)
 
-			// #then should NOT become gemini-3.1-pro-preview-preview
-			expect(result).toBe("gemini-3.1-pro-preview")
+			// #then should NOT become gemini-2.0-flash-preview-preview
+			expect(result).toBe("gemini-2.0-flash-preview")
 		})
 
 		test("does not transform claude models for google provider", () => {
-			// #given google provider and claude-opus-4-6 model
+			// #given google provider and claude-sonnet-4-6 model
 			const provider = "google"
-			const model = "claude-opus-4-6"
+			const model = "claude-sonnet-4-6"
 
 			// #when transformModelForProvider is called
 			const result = transformModelForProvider(provider, model)
 
 			// #then should pass through unchanged (google doesn't use claude)
-			expect(result).toBe("claude-opus-4-6")
+			expect(result).toBe("claude-sonnet-4-6")
 		})
 	})
 

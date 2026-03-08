@@ -84,14 +84,14 @@ describe("applyAgentVariant", () => {
 
 describe("resolveVariantForModel", () => {
   test("returns agent override variant when configured", () => {
-    // given - use a model in sisyphus chain (claude-opus-4-6 has default variant "max")
+    // given - use a model in sisyphus chain (claude-sonnet-4-6 has default variant "max")
     // to verify override takes precedence over fallback chain
     const config = {
       agents: {
         sisyphus: { variant: "high" },
       },
     } as OhMyOpenCodeConfig
-    const model = { providerID: "anthropic", modelID: "claude-opus-4-6" }
+    const model = { providerID: "anthropic", modelID: "claude-sonnet-4-6" }
 
     // when
     const variant = resolveVariantForModel(config, "sisyphus", model)
@@ -103,7 +103,7 @@ describe("resolveVariantForModel", () => {
   test("returns correct variant for anthropic provider", () => {
     // given
     const config = {} as OhMyOpenCodeConfig
-    const model = { providerID: "anthropic", modelID: "claude-opus-4-6" }
+    const model = { providerID: "anthropic", modelID: "claude-sonnet-4-6" }
 
     // when
     const variant = resolveVariantForModel(config, "sisyphus", model)
@@ -113,9 +113,9 @@ describe("resolveVariantForModel", () => {
   })
 
   test("returns correct variant for openai provider (hephaestus agent)", () => {
-    // #given hephaestus has openai/gpt-5.3-codex with variant "medium" in its chain
+    // #given hephaestus has openai/o3-mini with variant "medium" in its chain
     const config = {} as OhMyOpenCodeConfig
-    const model = { providerID: "openai", modelID: "gpt-5.3-codex" }
+    const model = { providerID: "openai", modelID: "o3-mini" }
 
     // #when
     const variant = resolveVariantForModel(config, "hephaestus", model)
@@ -151,7 +151,7 @@ describe("resolveVariantForModel", () => {
   test("returns undefined for unknown agent", () => {
     // given
     const config = {} as OhMyOpenCodeConfig
-    const model = { providerID: "anthropic", modelID: "claude-opus-4-6" }
+    const model = { providerID: "anthropic", modelID: "claude-sonnet-4-6" }
 
     // when
     const variant = resolveVariantForModel(config, "nonexistent-agent", model)
@@ -179,7 +179,7 @@ describe("resolveVariantForModel", () => {
         "custom-agent": { category: "ultrabrain" },
       },
     } as OhMyOpenCodeConfig
-    const model = { providerID: "openai", modelID: "gpt-5.3-codex" }
+    const model = { providerID: "openai", modelID: "o3-mini" }
 
     // when
     const variant = resolveVariantForModel(config, "custom-agent", model)
@@ -203,7 +203,7 @@ describe("resolveVariantForModel", () => {
   test("returns correct variant for oracle agent with anthropic", () => {
     // given
     const config = {} as OhMyOpenCodeConfig
-    const model = { providerID: "anthropic", modelID: "claude-opus-4-6" }
+    const model = { providerID: "anthropic", modelID: "claude-sonnet-4-6" }
 
     // when
     const variant = resolveVariantForModel(config, "oracle", model)

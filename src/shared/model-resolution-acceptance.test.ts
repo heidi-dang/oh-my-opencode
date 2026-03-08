@@ -42,7 +42,7 @@ describe("Model Resolution Acceptance Tests", () => {
     //#given
     const result = resolveModelPipeline({
       intent: {
-        sessionModel: "openai/gpt-5.3-codex", // NOT in availableModels
+        sessionModel: "openai/o3-mini", // NOT in availableModels
         userModel: undefined,
       },
       constraints: { availableModels },
@@ -96,7 +96,7 @@ describe("Model Resolution Acceptance Tests", () => {
     //#given - uiSelectedModel is stale/unsupported
     const result = resolveModelPipeline({
       intent: {
-        uiSelectedModel: "openai/gpt-5.3-codex", // NOT available
+        uiSelectedModel: "openai/o3-mini", // NOT available
         userModel: "minimax/minimax-0.1",
       },
       constraints: { availableModels }
@@ -106,11 +106,11 @@ describe("Model Resolution Acceptance Tests", () => {
     expect(result?.model).toBe("minimax/minimax-0.1")
   })
 
-  test("User specific case: opencode-go/minimax-m2.5 in userModel overrides openai/gpt-5.3-codex in sessionModel", () => {
+  test("User specific case: opencode-go/minimax-m2.5 in userModel overrides openai/o3-mini in sessionModel", () => {
     //#given
     const result = resolveModelPipeline({
       intent: {
-        sessionModel: "openai/gpt-5.3-codex",
+        sessionModel: "openai/o3-mini",
         userModel: "opencode-go/minimax-m2.5",
       },
       constraints: { availableModels: new Set(["opencode-go/minimax-m2.5", "anthropic/claude-3.5-sonnet"]) }

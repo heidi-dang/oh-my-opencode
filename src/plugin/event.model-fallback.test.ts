@@ -70,12 +70,12 @@ describe("createEventHandler - model fallback", () => {
               name: "APIError",
               data: {
                 message:
-                  "Bad Gateway: {\"error\":{\"message\":\"unknown provider for model claude-opus-4-6-thinking\"}}",
+                  "Bad Gateway: {\"error\":{\"message\":\"unknown provider for model claude-sonnet-4-6-thinking\"}}",
                 isRetryable: true,
               },
             },
             parentID: "msg_user_1",
-            modelID: "claude-opus-4-6-thinking",
+            modelID: "claude-sonnet-4-6-thinking",
             providerID: "anthropic",
             mode: "Sisyphus (Ultraworker)",
             agent: "Sisyphus (Ultraworker)",
@@ -110,7 +110,7 @@ describe("createEventHandler - model fallback", () => {
             data: {
               error: {
                 message:
-                  "Bad Gateway: {\"error\":{\"message\":\"unknown provider for model claude-opus-4-6-thinking\"}}",
+                  "Bad Gateway: {\"error\":{\"message\":\"unknown provider for model claude-sonnet-4-6-thinking\"}}",
               },
             },
           },
@@ -167,7 +167,7 @@ describe("createEventHandler - model fallback", () => {
             role: "user",
             time: { created: 1 },
             content: [],
-            modelID: "claude-opus-4-6-thinking",
+            modelID: "claude-sonnet-4-6-thinking",
             providerID: "anthropic",
             agent: "Sisyphus (Ultraworker)",
             path: { cwd: "/tmp", root: "/tmp" },
@@ -186,7 +186,7 @@ describe("createEventHandler - model fallback", () => {
             type: "retry",
             attempt: 1,
             message:
-              "Bad Gateway: {\"error\":{\"message\":\"unknown provider for model claude-opus-4-6-thinking\"}}",
+              "Bad Gateway: {\"error\":{\"message\":\"unknown provider for model claude-sonnet-4-6-thinking\"}}",
             next: 1234,
           },
         },
@@ -198,7 +198,7 @@ describe("createEventHandler - model fallback", () => {
       {
         sessionID,
         agent: "sisyphus",
-        model: { providerID: "anthropic", modelID: "claude-opus-4-6-thinking" },
+        model: { providerID: "anthropic", modelID: "claude-sonnet-4-6-thinking" },
       },
       output,
     )
@@ -208,7 +208,7 @@ describe("createEventHandler - model fallback", () => {
     expect(promptCalls).toEqual([sessionID])
     expect((output.message as Record<string, unknown>)["model"]).toEqual({
       providerID: "anthropic",
-      modelID: "claude-opus-4-6",
+      modelID: "claude-sonnet-4-6",
     })
     expect((output.message as Record<string, unknown>)["variant"]).toBe("max")
   })
@@ -293,13 +293,13 @@ describe("createEventHandler - model fallback", () => {
           properties: { ...({} as any),
             sessionID,
             providerID: "anthropic",
-            modelID: "claude-opus-4-6-thinking",
+            modelID: "claude-sonnet-4-6-thinking",
             error: {
               name: "UnknownError",
               data: {
                 error: {
                   message:
-                    "Bad Gateway: {\"error\":{\"message\":\"unknown provider for model claude-opus-4-6-thinking\"}}",
+                    "Bad Gateway: {\"error\":{\"message\":\"unknown provider for model claude-sonnet-4-6-thinking\"}}",
                 },
               },
             },
@@ -312,7 +312,7 @@ describe("createEventHandler - model fallback", () => {
         {
           sessionID,
           agent: "sisyphus",
-          model: { providerID: "anthropic", modelID: "claude-opus-4-6-thinking" },
+          model: { providerID: "anthropic", modelID: "claude-sonnet-4-6-thinking" },
         },
         output,
       )
@@ -325,7 +325,7 @@ describe("createEventHandler - model fallback", () => {
     //#then - first fallback entry applied (prefers current provider when available)
     expect((first.message as any)["model"]).toEqual({
       providerID: "anthropic",
-      modelID: "claude-opus-4-6",
+      modelID: "claude-sonnet-4-6",
     })
     expect((first.message as any)["variant"]).toBe("max")
 
@@ -363,12 +363,12 @@ describe("createEventHandler - model fallback", () => {
               name: "APIError",
               data: {
                 message:
-                  "Bad Gateway: {\"error\":{\"message\":\"unknown provider for model claude-opus-4-6-thinking\"}}",
+                  "Bad Gateway: {\"error\":{\"message\":\"unknown provider for model claude-sonnet-4-6-thinking\"}}",
                 isRetryable: true,
               },
             },
             parentID: "msg_user_disabled_1",
-            modelID: "claude-opus-4-6-thinking",
+            modelID: "claude-sonnet-4-6-thinking",
             providerID: "anthropic",
             agent: "Sisyphus (Ultraworker)",
             path: { cwd: "/tmp", root: "/tmp" },
@@ -390,7 +390,7 @@ describe("createEventHandler - model fallback", () => {
             data: {
               error: {
                 message:
-                  "Bad Gateway: {\"error\":{\"message\":\"unknown provider for model claude-opus-4-6-thinking\"}}",
+                  "Bad Gateway: {\"error\":{\"message\":\"unknown provider for model claude-sonnet-4-6-thinking\"}}",
               },
             },
           },

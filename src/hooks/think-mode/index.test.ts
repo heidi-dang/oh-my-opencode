@@ -49,7 +49,7 @@ describe("createThinkModeHook", () => {
     const input = createHookInput({
       sessionID,
       providerID: "github-copilot",
-      modelID: "claude-opus-4-6",
+      modelID: "claude-sonnet-4-6",
     })
     const output = createHookOutput("Please think deeply about this")
 
@@ -60,7 +60,7 @@ describe("createThinkModeHook", () => {
     expect(output.message.variant).toBe("high")
     expect(output.message.model).toEqual({
       providerID: "github-copilot",
-      modelID: "claude-opus-4-6-high",
+      modelID: "claude-sonnet-4-6-high",
     })
   })
 
@@ -109,7 +109,7 @@ describe("createThinkModeHook", () => {
     const input = createHookInput({
       sessionID,
       providerID: "google",
-      modelID: "gemini-3.1-pro",
+      modelID: "gemini-2.0-flash",
     })
     const output = createHookOutput("Please solve this directly")
 
