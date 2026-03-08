@@ -18,17 +18,16 @@ export async function verifyTaskCompletionState(
 
     // Find the last complete_task invocation
     let lastCompleteTaskIndex = -1
-    let lastCompleteTaskCallId = ""
+    let lastCompleteTaskPart: any = null
 
     for (let i = messages.length - 1; i >= 0; i--) {
       const msg = messages[i]
-      if (msg.info?.role === "assistant") {
+      if (msg.info?.role === "assistant" || msg.info?.role === "tool") {
         const parts = msg.parts ?? []
         for (const p of parts) {
-          if (p.type === "tool" && p.toolName === "complete_task") {
+          if (p.type === "tool" && (p.toolName === "complete_task" || p.name === "complete_task" || p.tool === "complete_task")) {
             lastCompleteTaskIndex = i
-            // In API, tool call ID is usually in callID or toolCallId or just id
-            lastCompleteTaskCallId = p.callID || p.id || ""
+            lastCompleteTaskPart = p
             break
           }
         }
@@ -36,33 +35,42 @@ export async function verifyTaskCompletionState(
       if (lastCompleteTaskIndex !== -1) break
     }
 
-    if (lastCompleteTaskIndex !== -1) {
-      // Look forward to find the result of this tool call
-      let hasErrorResult = false
-      let foundResult = false
+    if (lastCompleteTaskIndex !== -1 && lastCompleteTaskPart) {
+       // In OpenCode SDK, the tool result is often within the same part under `state.output`
+       let hasErrorResult = false
+       let foundResult = false
 
-      for (let i = lastCompleteTaskIndex + 1; i < messages.length; i++) {
-        const msg = messages[i]
-        if (msg.info?.role === "user" || msg.info?.role === "tool") {
-          const parts = msg.parts ?? []
-          for (const p of parts) {
-            // It might be a tool_result part or a text part containing [tool result]
-            if (p.type === "tool_result" && (p.callID === lastCompleteTaskCallId || p.toolCallId === lastCompleteTaskCallId)) {
-               foundResult = true
-               const content = typeof p.content === "string" ? p.content : JSON.stringify(p.content || "")
-               if (content.includes("[ERROR] TASK COMPLETION REJECTED") || content.includes("[ERROR] STRICT ISSUE RESOLUTION MODE")) {
-                 hasErrorResult = true
+       if (lastCompleteTaskPart.state && (lastCompleteTaskPart.state.status === "completed" || lastCompleteTaskPart.state.status === "error")) {
+         foundResult = true
+         const output = typeof lastCompleteTaskPart.state.output === "string" ? lastCompleteTaskPart.state.output : JSON.stringify(lastCompleteTaskPart.state.output || "")
+         if (output.includes("[ERROR] TASK COMPLETION REJECTED") || output.includes("[ERROR] STRICT ISSUE RESOLUTION MODE") || output.includes("explicitly failed") || lastCompleteTaskPart.state.status === "error") {
+           hasErrorResult = true
+         }
+       }
+
+       // Also look forward in case the result came in a separate subsequent message
+       if (!foundResult) {
+         for (let i = lastCompleteTaskIndex + 1; i < messages.length; i++) {
+           const msg = messages[i]
+           if (msg.info?.role === "user" || msg.info?.role === "tool") {
+             const parts = msg.parts ?? []
+             for (const p of parts) {
+               if (p.type === "tool_result" || p.type === "tool") {
+                  foundResult = true
+                  const content = typeof p.content === "string" ? p.content : (typeof p.state?.output === "string" ? p.state.output : JSON.stringify(p.content || p.state?.output || ""))
+                  if (content.includes("[ERROR] TASK COMPLETION REJECTED") || content.includes("[ERROR] STRICT ISSUE RESOLUTION MODE") || content.includes("explicitly failed") || p.state?.status === "error") {
+                    hasErrorResult = true
+                  }
+               } else if (p.type === "text" && typeof p.text === "string" && p.text.includes("[tool result]")) {
+                  if (p.text.includes("[ERROR] TASK COMPLETION REJECTED") || p.text.includes("[ERROR] STRICT ISSUE RESOLUTION MODE") || p.text.includes("explicitly failed")) {
+                    foundResult = true
+                    hasErrorResult = true
+                  }
                }
-            } else if (p.type === "text" && typeof p.text === "string" && p.text.includes("[tool result]")) {
-               // Sometimes tool results come back in text parts
-               if (p.text.includes("[ERROR] TASK COMPLETION REJECTED") || p.text.includes("[ERROR] STRICT ISSUE RESOLUTION MODE") || p.text.includes("[Tool Contract Enforcer] Tool execution explicitly failed in complete_task")) {
-                 foundResult = true
-                 hasErrorResult = true
-               }
-            }
-          }
-        }
-      }
+             }
+           }
+         }
+       }
 
       if (foundResult && hasErrorResult) {
         log("[verifyTaskCompletionState] Rejected completion because the last complete_task call failed:", sessionID)
