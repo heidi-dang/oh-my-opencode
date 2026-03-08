@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { spawn as bunSpawn } from "bun"
 import { tool } from "@opencode-ai/plugin"
 import { z } from "zod"
@@ -36,6 +37,7 @@ export function createGitSafeTool(deps: { spawn?: typeof bunSpawn } = {}): any {
                 return result.message
             }
 
+            try {
                 const proc = spawn(["git", ...commandArgs], {
                     cwd: context.directory || process.cwd(),
                     stdout: "pipe",

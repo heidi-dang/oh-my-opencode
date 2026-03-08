@@ -35,6 +35,7 @@ export function createGhSafeTool(): any {
                 return result.message
             }
 
+            try {
                 const proc = spawn(["gh", ...commandArgs], {
                     cwd: context.directory || process.cwd(),
                     stdout: "pipe",
@@ -70,6 +71,7 @@ export function createGhSafeTool(): any {
                     });
                 }
 
+                const isStateChanging = ["pr", "issue", "branch", "repo"].includes(commandArgs[0])
                 const result = createSuccessResult({
                     verified: !isStateChanging,
                     changedState: success && isStateChanging,
