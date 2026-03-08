@@ -16,13 +16,24 @@ export function createGhSafeTool(): any {
         execute: withToolContract("gh_safe", async (args: any, context) => {
             let commandArgs: string[] = []
             try {
-                commandArgs = (args.command as string).match(/([^\\"]\S*|".+?")\s*/g)?.map((s: string) => s.trim().replace(/^"(.*)"$/, '$1')) || []
-
+                // 🚨 SECURITY: Safe Argument Parsing (Fix B3)
+                const rawCommand = (args.command as string).trim()
+                commandArgs = rawCommand.match(/(".*?"|'.*?'|\S+)/g)?.map(s => s.replace(/^["']|["']$/g, "")) || []
+                
                 if (commandArgs.length === 0) {
-                    const result = createFailureResult("No command provided");
-                    context.metadata({ title: "GH Exec Error", ...result })
-                    return result.message
+                    throw new Error("Empty gh command provided")
                 }
+
+                // 🚨 SECURITY: Dangerous Command Blacklist (Matching Fix B2)
+                const DANGEROUS_FLAGS = ["--force", "-f", "repo delete", "api -X DELETE"]
+                if (DANGEROUS_FLAGS.some(flag => rawCommand.includes(flag))) {
+                    throw new Error(`Security Violation: Dangerous gh flag or command detected and blocked: ${rawCommand}`)
+                }
+            } catch (e: any) {
+                const result = createFailureResult(e.message)
+                context.metadata({ title: "GH Safety Violation", ...result })
+                return result.message
+            }
 
                 const proc = spawn(["gh", ...commandArgs], {
                     cwd: context.directory || process.cwd(),
