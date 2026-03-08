@@ -8,6 +8,9 @@ export function getEffectiveModel(requirement: ModelRequirement, userOverride?: 
   if (userOverride) {
     return userOverride
   }
+  if (requirement.fallbackModel) {
+    return requirement.fallbackModel
+  }
   const firstEntry = requirement.fallbackChain[0]
   if (!firstEntry) {
     return "unknown"
@@ -18,6 +21,9 @@ export function getEffectiveModel(requirement: ModelRequirement, userOverride?: 
 export function buildEffectiveResolution(requirement: ModelRequirement, userOverride?: string): string {
   if (userOverride) {
     return `User override: ${userOverride}`
+  }
+  if (requirement.fallbackModel) {
+    return `Config fallback: ${requirement.fallbackModel}`
   }
   const firstEntry = requirement.fallbackChain[0]
   if (!firstEntry) {

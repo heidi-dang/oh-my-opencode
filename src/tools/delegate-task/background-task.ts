@@ -16,6 +16,7 @@ export async function executeBackgroundTask(
   categoryModel: { providerID: string; modelID: string; variant?: string } | undefined,
   systemContent: string | undefined,
   fallbackChain?: FallbackEntry[],
+  fallbackModel?: string,
 ): Promise<string> {
   const { manager } = executorCtx
 
@@ -31,6 +32,7 @@ export async function executeBackgroundTask(
       parentTools: getSessionTools(parentContext.sessionID),
       model: categoryModel,
       fallbackChain,
+      fallbackModel,
       skills: args.load_skills.length > 0 ? args.load_skills : undefined,
       skillContent: systemContent,
       category: args.category,

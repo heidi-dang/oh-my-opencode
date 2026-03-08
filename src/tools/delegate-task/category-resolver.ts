@@ -6,7 +6,7 @@ import { mergeCategories } from "../../shared/merge-categories"
 import { SISYPHUS_JUNIOR_AGENT } from "./sisyphus-junior-agent"
 import { resolveCategoryConfig } from "./categories"
 import { parseModelString } from "./model-string-parser"
-import { CATEGORY_MODEL_REQUIREMENTS } from "../../shared/model-requirements"
+import { getCategoryRequirement } from "../../shared/model-requirements"
 import { getAvailableModelsForDelegateTask } from "./available-models"
 import { resolveModelForDelegateTask } from "./model-selection"
 
@@ -19,6 +19,7 @@ export interface CategoryResolutionResult {
   actualModel: string | undefined
   isUnstableAgent: boolean
   fallbackChain?: FallbackEntry[]  // For runtime retry on model errors
+  fallbackModel?: string
   error?: string
 }
 
@@ -43,8 +44,11 @@ export async function resolveCategoryExecution(
     availableModels,
   })
 
+  // Use the new centralized helper for requirement fetching
+  const openCodeConfig = await client.config.get() as { data: import("../../config/schema").OhMyOpenCodeConfig }
+  const requirement = getCategoryRequirement(openCodeConfig.data, categoryName)
+
   if (!resolved) {
-    const requirement = CATEGORY_MODEL_REQUIREMENTS[categoryName]
     const allCategoryNames = Object.keys(enabledCategories).join(", ")
 
     if (categoryExists && requirement?.requiresModel) {
@@ -78,7 +82,6 @@ Available categories: ${allCategoryNames}`,
     }
   }
 
-  const requirement = CATEGORY_MODEL_REQUIREMENTS[args.category!]
   let actualModel: string | undefined
   let modelInfo: ModelFallbackInfo | undefined
   let categoryModel: { providerID: string; modelID: string; variant?: string } | undefined
@@ -88,8 +91,6 @@ Available categories: ${allCategoryNames}`,
 
   if (!requirement) {
     // Precedence: explicit category model > sisyphus-junior default > category resolved model
-    // This keeps `sisyphus-junior.model` useful as a global default while allowing
-    // per-category overrides via `categories[category].model`.
     actualModel = explicitCategoryModel ?? overrideModel ?? resolved.model
     if (actualModel) {
       modelInfo = explicitCategoryModel || overrideModel
@@ -99,7 +100,9 @@ Available categories: ${allCategoryNames}`,
   } else {
     const resolution = resolveModelForDelegateTask({
       userModel: explicitCategoryModel ?? overrideModel,
+      userFallbackModel: userCategories?.[args.category!]?.fallback_model,
       categoryDefaultModel: resolved.model,
+      categoryFallbackModel: requirement.fallbackModel,
       fallbackChain: requirement.fallbackChain,
       availableModels,
       systemDefaultModel,
@@ -187,5 +190,6 @@ Available categories: ${categoryNames.join(", ")}`,
     actualModel,
     isUnstableAgent,
     fallbackChain: requirement?.fallbackChain,
+    fallbackModel: requirement?.fallbackModel,
   }
 }

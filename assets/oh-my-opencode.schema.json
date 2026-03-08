@@ -73,6 +73,9 @@
     "model_fallback": {
       "type": "boolean"
     },
+    "fallback_model": {
+      "type": "string"
+    },
     "agents": {
       "type": "object",
       "properties": {
@@ -80,6 +83,9 @@
           "type": "object",
           "properties": {
             "model": {
+              "type": "string"
+            },
+            "fallback_model": {
               "type": "string"
             },
             "fallback_models": {
@@ -90,7 +96,32 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "string"
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "providers": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "model": {
+                            "type": "string"
+                          },
+                          "variant": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "model"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
                   }
                 }
               ]
@@ -267,6 +298,18 @@
                 "type": "string"
               },
               "additionalProperties": {}
+            },
+            "requires_model": {
+              "type": "string"
+            },
+            "requires_any_model": {
+              "type": "boolean"
+            },
+            "requires_provider": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
             "ultrawork": {
               "type": "object",
@@ -301,6 +344,9 @@
             "model": {
               "type": "string"
             },
+            "fallback_model": {
+              "type": "string"
+            },
             "fallback_models": {
               "anyOf": [
                 {
@@ -309,7 +355,32 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "string"
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "providers": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "model": {
+                            "type": "string"
+                          },
+                          "variant": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "model"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
                   }
                 }
               ]
@@ -486,6 +557,18 @@
                 "type": "string"
               },
               "additionalProperties": {}
+            },
+            "requires_model": {
+              "type": "string"
+            },
+            "requires_any_model": {
+              "type": "boolean"
+            },
+            "requires_provider": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
             "ultrawork": {
               "type": "object",
@@ -520,6 +603,9 @@
             "model": {
               "type": "string"
             },
+            "fallback_model": {
+              "type": "string"
+            },
             "fallback_models": {
               "anyOf": [
                 {
@@ -528,7 +614,32 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "string"
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "providers": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "model": {
+                            "type": "string"
+                          },
+                          "variant": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "model"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
                   }
                 }
               ]
@@ -705,6 +816,18 @@
                 "type": "string"
               },
               "additionalProperties": {}
+            },
+            "requires_model": {
+              "type": "string"
+            },
+            "requires_any_model": {
+              "type": "boolean"
+            },
+            "requires_provider": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
             "ultrawork": {
               "type": "object",
@@ -739,6 +862,9 @@
             "model": {
               "type": "string"
             },
+            "fallback_model": {
+              "type": "string"
+            },
             "fallback_models": {
               "anyOf": [
                 {
@@ -747,7 +873,32 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "string"
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "providers": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "model": {
+                            "type": "string"
+                          },
+                          "variant": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "model"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
                   }
                 }
               ]
@@ -924,6 +1075,18 @@
                 "type": "string"
               },
               "additionalProperties": {}
+            },
+            "requires_model": {
+              "type": "string"
+            },
+            "requires_any_model": {
+              "type": "boolean"
+            },
+            "requires_provider": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
             "ultrawork": {
               "type": "object",
@@ -961,6 +1124,9 @@
             "model": {
               "type": "string"
             },
+            "fallback_model": {
+              "type": "string"
+            },
             "fallback_models": {
               "anyOf": [
                 {
@@ -969,7 +1135,32 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "string"
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "providers": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "model": {
+                            "type": "string"
+                          },
+                          "variant": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "model"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
                   }
                 }
               ]
@@ -1146,6 +1337,18 @@
                 "type": "string"
               },
               "additionalProperties": {}
+            },
+            "requires_model": {
+              "type": "string"
+            },
+            "requires_any_model": {
+              "type": "boolean"
+            },
+            "requires_provider": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
             "ultrawork": {
               "type": "object",
@@ -1180,6 +1383,9 @@
             "model": {
               "type": "string"
             },
+            "fallback_model": {
+              "type": "string"
+            },
             "fallback_models": {
               "anyOf": [
                 {
@@ -1188,7 +1394,32 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "string"
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "providers": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "model": {
+                            "type": "string"
+                          },
+                          "variant": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "model"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
                   }
                 }
               ]
@@ -1365,6 +1596,18 @@
                 "type": "string"
               },
               "additionalProperties": {}
+            },
+            "requires_model": {
+              "type": "string"
+            },
+            "requires_any_model": {
+              "type": "boolean"
+            },
+            "requires_provider": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
             "ultrawork": {
               "type": "object",
@@ -1399,6 +1642,9 @@
             "model": {
               "type": "string"
             },
+            "fallback_model": {
+              "type": "string"
+            },
             "fallback_models": {
               "anyOf": [
                 {
@@ -1407,7 +1653,32 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "string"
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "providers": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "model": {
+                            "type": "string"
+                          },
+                          "variant": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "model"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
                   }
                 }
               ]
@@ -1584,6 +1855,18 @@
                 "type": "string"
               },
               "additionalProperties": {}
+            },
+            "requires_model": {
+              "type": "string"
+            },
+            "requires_any_model": {
+              "type": "boolean"
+            },
+            "requires_provider": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
             "ultrawork": {
               "type": "object",
@@ -1618,6 +1901,9 @@
             "model": {
               "type": "string"
             },
+            "fallback_model": {
+              "type": "string"
+            },
             "fallback_models": {
               "anyOf": [
                 {
@@ -1626,7 +1912,32 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "string"
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "providers": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "model": {
+                            "type": "string"
+                          },
+                          "variant": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "model"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
                   }
                 }
               ]
@@ -1803,6 +2114,18 @@
                 "type": "string"
               },
               "additionalProperties": {}
+            },
+            "requires_model": {
+              "type": "string"
+            },
+            "requires_any_model": {
+              "type": "boolean"
+            },
+            "requires_provider": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
             "ultrawork": {
               "type": "object",
@@ -1837,6 +2160,9 @@
             "model": {
               "type": "string"
             },
+            "fallback_model": {
+              "type": "string"
+            },
             "fallback_models": {
               "anyOf": [
                 {
@@ -1845,7 +2171,32 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "string"
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "providers": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "model": {
+                            "type": "string"
+                          },
+                          "variant": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "model"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
                   }
                 }
               ]
@@ -2022,6 +2373,18 @@
                 "type": "string"
               },
               "additionalProperties": {}
+            },
+            "requires_model": {
+              "type": "string"
+            },
+            "requires_any_model": {
+              "type": "boolean"
+            },
+            "requires_provider": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
             "ultrawork": {
               "type": "object",
@@ -2056,6 +2419,9 @@
             "model": {
               "type": "string"
             },
+            "fallback_model": {
+              "type": "string"
+            },
             "fallback_models": {
               "anyOf": [
                 {
@@ -2064,7 +2430,32 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "string"
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "providers": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "model": {
+                            "type": "string"
+                          },
+                          "variant": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "model"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
                   }
                 }
               ]
@@ -2241,6 +2632,18 @@
                 "type": "string"
               },
               "additionalProperties": {}
+            },
+            "requires_model": {
+              "type": "string"
+            },
+            "requires_any_model": {
+              "type": "boolean"
+            },
+            "requires_provider": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
             "ultrawork": {
               "type": "object",
@@ -2275,6 +2678,9 @@
             "model": {
               "type": "string"
             },
+            "fallback_model": {
+              "type": "string"
+            },
             "fallback_models": {
               "anyOf": [
                 {
@@ -2283,7 +2689,32 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "string"
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "providers": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "model": {
+                            "type": "string"
+                          },
+                          "variant": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "model"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
                   }
                 }
               ]
@@ -2460,6 +2891,18 @@
                 "type": "string"
               },
               "additionalProperties": {}
+            },
+            "requires_model": {
+              "type": "string"
+            },
+            "requires_any_model": {
+              "type": "boolean"
+            },
+            "requires_provider": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
             "ultrawork": {
               "type": "object",
@@ -2494,6 +2937,9 @@
             "model": {
               "type": "string"
             },
+            "fallback_model": {
+              "type": "string"
+            },
             "fallback_models": {
               "anyOf": [
                 {
@@ -2502,7 +2948,32 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "string"
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "providers": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "model": {
+                            "type": "string"
+                          },
+                          "variant": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "model"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
                   }
                 }
               ]
@@ -2679,6 +3150,18 @@
                 "type": "string"
               },
               "additionalProperties": {}
+            },
+            "requires_model": {
+              "type": "string"
+            },
+            "requires_any_model": {
+              "type": "boolean"
+            },
+            "requires_provider": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
             "ultrawork": {
               "type": "object",
@@ -2713,6 +3196,9 @@
             "model": {
               "type": "string"
             },
+            "fallback_model": {
+              "type": "string"
+            },
             "fallback_models": {
               "anyOf": [
                 {
@@ -2721,7 +3207,32 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "string"
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "providers": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "model": {
+                            "type": "string"
+                          },
+                          "variant": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "model"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
                   }
                 }
               ]
@@ -2898,6 +3409,18 @@
                 "type": "string"
               },
               "additionalProperties": {}
+            },
+            "requires_model": {
+              "type": "string"
+            },
+            "requires_any_model": {
+              "type": "boolean"
+            },
+            "requires_provider": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
             "ultrawork": {
               "type": "object",
@@ -2932,6 +3455,9 @@
             "model": {
               "type": "string"
             },
+            "fallback_model": {
+              "type": "string"
+            },
             "fallback_models": {
               "anyOf": [
                 {
@@ -2940,7 +3466,32 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "string"
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "providers": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "model": {
+                            "type": "string"
+                          },
+                          "variant": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "model"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
                   }
                 }
               ]
@@ -3117,6 +3668,18 @@
                 "type": "string"
               },
               "additionalProperties": {}
+            },
+            "requires_model": {
+              "type": "string"
+            },
+            "requires_any_model": {
+              "type": "boolean"
+            },
+            "requires_provider": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
             "ultrawork": {
               "type": "object",
@@ -3162,6 +3725,9 @@
           "model": {
             "type": "string"
           },
+          "fallback_model": {
+            "type": "string"
+          },
           "fallback_models": {
             "anyOf": [
               {
@@ -3170,7 +3736,32 @@
               {
                 "type": "array",
                 "items": {
-                  "type": "string"
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "providers": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "model": {
+                          "type": "string"
+                        },
+                        "variant": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "model"
+                      ],
+                      "additionalProperties": false
+                    }
+                  ]
                 }
               }
             ]
@@ -3249,6 +3840,22 @@
           },
           "disable": {
             "type": "boolean"
+          },
+          "requires_model": {
+            "type": "string"
+          },
+          "requires_any_model": {
+            "type": "boolean"
+          },
+          "requires_provider": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "background_task": {
+            "description": "Mis-nested background_task config - move to root level",
+            "not": {}
           }
         },
         "additionalProperties": false

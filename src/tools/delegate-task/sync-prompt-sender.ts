@@ -37,6 +37,7 @@ export async function sendSyncPrompt(
     args: DelegateTaskArgs
     systemContent: string | undefined
     categoryModel: { providerID: string; modelID: string; variant?: string } | undefined
+    fallbackModel?: string
     toastManager: { removeTask: (id: string) => void } | null | undefined
     taskId: string | undefined
   },
@@ -62,6 +63,7 @@ export async function sendSyncPrompt(
         ? { model: { providerID: input.categoryModel.providerID, modelID: input.categoryModel.modelID } }
         : {}),
       ...(input.categoryModel?.variant ? { variant: input.categoryModel.variant } : {}),
+      ...(input.fallbackModel ? { fallback_model: input.fallbackModel } : {}),
     },
   }
 

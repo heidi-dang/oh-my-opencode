@@ -32,7 +32,7 @@ export function buildModelResolutionDetails(options: {
   details.push("")
   details.push("Agents:")
   for (const agent of options.info.agents) {
-    const marker = agent.userOverride ? "●" : "○"
+    const marker = agent.userOverride ? "●" : agent.requirement.fallbackModel ? "◓" : "○"
     const display = formatModelWithVariant(
       agent.effectiveModel,
       getEffectiveVariant(agent.name, agent.requirement, options.config)
@@ -42,7 +42,7 @@ export function buildModelResolutionDetails(options: {
   details.push("")
   details.push("Categories:")
   for (const category of options.info.categories) {
-    const marker = category.userOverride ? "●" : "○"
+    const marker = category.userOverride ? "●" : category.requirement.fallbackModel ? "◓" : "○"
     const display = formatModelWithVariant(
       category.effectiveModel,
       getCategoryEffectiveVariant(category.name, category.requirement, options.config)
@@ -50,7 +50,7 @@ export function buildModelResolutionDetails(options: {
     details.push(`  ${marker} ${category.name}: ${display}`)
   }
   details.push("")
-  details.push("● = user override, ○ = provider fallback")
+  details.push("● = user override, ◓ = config fallback (fallback_model), ○ = provider fallback")
 
   return details
 }

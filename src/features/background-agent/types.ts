@@ -53,10 +53,8 @@ export interface BackgroundTask {
   /** Category used for this task (e.g., 'quick', 'visual-engineering') */
   category?: string
 
-  /** Last message count for stability detection */
-  lastMsgCount?: number
-  /** Number of consecutive polls with stable message count */
-  stablePolls?: number
+  /** Explicit fallback model to use if the primary model fails */
+  fallbackModel?: string
   /** Files affected by this task (collected from sub-agent session) */
   affectedFiles?: string[]
 }
@@ -73,6 +71,7 @@ export interface LaunchInput {
   model?: { providerID: string; modelID: string; variant?: string }
   /** Fallback chain for runtime retry on model errors */
   fallbackChain?: FallbackEntry[]
+  fallbackModel?: string
   isUnstableAgent?: boolean
   skills?: string[]
   skillContent?: string
@@ -87,4 +86,5 @@ export interface ResumeInput {
   parentModel?: { providerID: string; modelID: string }
   parentAgent?: string
   parentTools?: Record<string, boolean>
+  fallbackModel?: string
 }

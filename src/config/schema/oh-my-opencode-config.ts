@@ -38,6 +38,8 @@ export const OhMyOpenCodeConfigSchema = z.object({
   hashline_edit: z.boolean().optional(),
   /** Enable model fallback on API errors (default: false). Set to true to enable automatic model switching when model errors occur. */
   model_fallback: z.boolean().optional(),
+  /** Default fallback model for the entire plugin. Used if primary model fails and no agent-specific fallback is set. */
+  fallback_model: z.string().optional(),
   agents: AgentOverridesSchema.optional(),
   categories: CategoriesConfigSchema.optional(),
   claude_code: ClaudeCodeConfigSchema.optional(),

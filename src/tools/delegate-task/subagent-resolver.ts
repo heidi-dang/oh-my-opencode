@@ -3,12 +3,11 @@ import type { ExecutorContext } from "./executor-types"
 import { isPlanFamily } from "./constants"
 import { SISYPHUS_JUNIOR_AGENT } from "./sisyphus-junior-agent"
 import { normalizeModelFormat } from "../../shared/model-format-normalizer"
-import { AGENT_MODEL_REQUIREMENTS } from "../../shared/model-requirements"
+import { getAgentRequirement, type FallbackEntry } from "../../shared/model-requirements"
 import { getAgentDisplayName, getAgentConfigKey } from "../../shared/agent-display-names"
 import { normalizeSDKResponse } from "../../shared"
 import { log } from "../../shared/logger"
 import { getAvailableModelsForDelegateTask } from "./available-models"
-import type { FallbackEntry } from "../../shared/model-requirements"
 import { resolveModelForDelegateTask } from "./model-selection"
 
 export async function resolveSubagentExecution(
@@ -16,7 +15,13 @@ export async function resolveSubagentExecution(
   executorCtx: ExecutorContext,
   parentAgent: string | undefined,
   categoryExamples: string
-): Promise<{ agentToUse: string; categoryModel: { providerID: string; modelID: string; variant?: string } | undefined; fallbackChain?: FallbackEntry[]; error?: string }> {
+): Promise<{ 
+  agentToUse: string; 
+  categoryModel: { providerID: string; modelID: string; variant?: string } | undefined; 
+  fallbackChain?: FallbackEntry[]; 
+  fallbackModel?: string;
+  error?: string 
+}> {
   const { client, agentOverrides } = executorCtx
 
   if (!args.subagent_type?.trim()) {
@@ -48,6 +53,7 @@ Create the work plan directly - that's your job as the planning agent.`,
   let agentToUse = agentName
   let categoryModel: { providerID: string; modelID: string; variant?: string } | undefined
   let fallbackChain: FallbackEntry[] | undefined = undefined
+  let fallbackModel: string | undefined = undefined
 
   try {
     const agentsResult = await client.app.agents()
@@ -96,9 +102,12 @@ Create the work plan directly - that's your job as the planning agent.`,
 
     const agentConfigKey = getAgentConfigKey(agentToUse)
     const agentOverride = agentOverrides?.[agentConfigKey as keyof typeof agentOverrides]
-      ?? (agentOverrides ? Object.entries(agentOverrides).find(([key]) => key.toLowerCase() === agentConfigKey)?.[1] : undefined)
-    const agentRequirement = AGENT_MODEL_REQUIREMENTS[agentConfigKey]
+      ?? (agentOverrides ? Object.entries(agentOverrides).find(([key]) => key.toLowerCase() === agentConfigKey)?.[1] : undefined) as Record<string, any> | undefined
+    
+    const openCodeConfig = await client.config.get() as { data: import("../../config/schema").OhMyOpenCodeConfig }
+    const agentRequirement = getAgentRequirement(openCodeConfig.data, agentConfigKey)
     fallbackChain = agentRequirement?.fallbackChain
+    const fallbackModel = agentRequirement?.fallbackModel
 
     if (agentOverride?.model || agentRequirement || matchedAgent.model) {
       const availableModels = await getAvailableModelsForDelegateTask(client)
@@ -112,7 +121,9 @@ Create the work plan directly - that's your job as the planning agent.`,
 
       const resolution = resolveModelForDelegateTask({
         userModel: agentOverride?.model,
+        userFallbackModel: agentOverride?.fallback_model,
         categoryDefaultModel: matchedAgentModelStr,
+        categoryFallbackModel: fallbackModel,
         fallbackChain: agentRequirement?.fallbackChain,
         availableModels,
         systemDefaultModel: undefined,
@@ -148,5 +159,5 @@ Create the work plan directly - that's your job as the planning agent.`,
     }
   }
 
-  return { agentToUse, categoryModel, fallbackChain }
+  return { agentToUse, categoryModel, fallbackChain, fallbackModel }
 }

@@ -184,6 +184,7 @@ export function createDelegateTask(options: DelegateTaskToolOptions): ToolDefini
       let actualModel: string | undefined
       let isUnstableAgent = false
       let fallbackChain: import("../../shared/model-requirements").FallbackEntry[] | undefined
+      let fallbackModel: string | undefined
       let maxPromptTokens: number | undefined
 
       if (args.category) {
@@ -198,6 +199,7 @@ export function createDelegateTask(options: DelegateTaskToolOptions): ToolDefini
         actualModel = resolution.actualModel
         isUnstableAgent = resolution.isUnstableAgent
         fallbackChain = resolution.fallbackChain
+        fallbackModel = resolution.fallbackModel
         maxPromptTokens = resolution.maxPromptTokens
 
         const isRunInBackgroundExplicitlyFalse = args.run_in_background === false || args.run_in_background === "false" as unknown as boolean
@@ -233,6 +235,7 @@ export function createDelegateTask(options: DelegateTaskToolOptions): ToolDefini
         agentToUse = resolution.agentToUse
         categoryModel = resolution.categoryModel
         fallbackChain = resolution.fallbackChain
+        fallbackModel = resolution.fallbackModel
       }
 
       const systemContent = buildSystemContent({
@@ -247,10 +250,10 @@ export function createDelegateTask(options: DelegateTaskToolOptions): ToolDefini
       })
 
       if (runInBackground) {
-        return executeBackgroundTask(args, ctx, options, parentContext, agentToUse, categoryModel, systemContent, fallbackChain)
+        return executeBackgroundTask(args, ctx, options, parentContext, agentToUse, categoryModel, systemContent, fallbackChain, fallbackModel)
       }
 
-      return executeSyncTask(args, ctx, options, parentContext, agentToUse, categoryModel, systemContent, modelInfo, fallbackChain)
+      return executeSyncTask(args, ctx, options, parentContext, agentToUse, categoryModel, systemContent, modelInfo, fallbackChain, fallbackModel)
     },
   })
 }
