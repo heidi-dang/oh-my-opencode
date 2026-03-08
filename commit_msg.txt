@@ -1,8 +1,0 @@
-fix(models): strictly enforce oh-my-opencode.json configurations over hardcoded legacy defaults
-
-- Replaces raw resolveModel() calls inside sub-agent and background executors with the standardized fallback pipeline
-- Config schema now allows explicit 'fallback_model' parameters
-- Replaced hardcoded legacy defaults (like openai/gpt-5.3-codex) across categories and subagents
-- Refactored model requirement objects to expose the full fallback context
-- Doctor output now explicitly separates User Override (●), Config Fallback (◓), and Provider Fallback (○)
-- Resolved all typing schema mismatches arising from config payload structure updates

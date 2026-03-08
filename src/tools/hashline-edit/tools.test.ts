@@ -132,7 +132,7 @@ describe("createHashlineEditTool", () => {
     await tool.execute(
       {
         filePath,
-        edits: [{ op: "replace", pos: `1#${line1Hash}`, lines: "join(\\n)" }],
+        edits: [{ op: "replace", pos: `1#${line1Hash}`, lines: ["join(\\n)"] }],
       },
       createMockContext(),
     )

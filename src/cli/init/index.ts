@@ -50,44 +50,278 @@ function loadDefaultConfig(): string {
 
 /** Embedded fallback — matches assets/default-oh-my-opencode.json exactly */
 const EMBEDDED_DEFAULT_CONFIG = {
-    $schema:
-        "https://raw.githubusercontent.com/heidi-dang/oh-my-opencode/refs/heads/dev/assets/oh-my-opencode.schema.json",
-    agents: {
-        sisyphus: {
-            model: "xai/grok-4-1-fast",
-            ultrawork: { model: "xai/grok-4-1-fast", variant: "max" },
+  "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/dev/assets/oh-my-opencode.schema.json",
+  "new_task_system_enabled": true,
+  "default_run_agent": "sisyphus",
+  "hashline_edit": true,
+  "model_fallback": true,
+  "fallback_model": "github-copilot/gpt-5-mini",
+  "disabled_skills": [],
+  "disabled_hooks": [],
+  "disabled_tools": [],
+  "disabled_commands": [],
+  "experimental": {
+    "aggressive_truncation": true,
+    "auto_resume": true,
+    "preemptive_compaction": true,
+    "truncate_all_tool_outputs": true,
+    "task_system": true,
+    "safe_hook_creation": true,
+    "disable_omo_env": false,
+    "hashline_edit": true,
+    "model_fallback_title": true,
+    "dynamic_context_pruning": {
+      "enabled": true,
+      "notification": "minimal",
+      "turn_protection": {
+        "enabled": true,
+        "turns": 3
+      },
+      "protected_tools": [
+        "task",
+        "todowrite",
+        "todoread",
+        "lsp_rename",
+        "session_read",
+        "session_write",
+        "session_search"
+      ],
+      "strategies": {
+        "deduplication": {
+          "enabled": true
         },
-        librarian: { model: "xai/grok-4-1-fast-non-reasoning" },
-        explore: { model: "xai/grok-4-1-fast-non-reasoning" },
-        oracle: { model: "xai/grok-4-1-fast", variant: "high" },
-        prometheus: {
-            prompt_append:
-                "Prefer fast agents; only trigger ultrawork when necessary. Parallelize but avoid duplicate work.",
+        "supersede_writes": {
+          "enabled": true,
+          "aggressive": false
         },
+        "purge_errors": {
+          "enabled": true,
+          "turns": 5
+        }
+      }
+    }
+  },
+  "runtime_fallback": {
+    "enabled": true,
+    "max_fallback_attempts": 2,
+    "cooldown_seconds": 8,
+    "timeout_seconds": 45,
+    "notify_on_fallback": true
+  },
+  "background_task": {
+    "defaultConcurrency": 2,
+    "providerConcurrency": {
+      "xai": 2,
+      "github-copilot": 2,
+      "opencode-go": 1
     },
-    categories: {
-        quick: { model: "opencode-go/minimax-m2.5" },
-        "unspecified-low": { model: "xai/grok-4-1-fast-non-reasoning" },
-        "unspecified-high": { model: "xai/grok-4-1-fast", variant: "high" },
-        "visual-engineering": { model: "google/gemini-3-pro-preview", variant: "high" },
-        writing: { model: "xai/grok-4-1-fast-non-reasoning" },
+    "modelConcurrency": {
+      "xai/grok-4-1-fast": 2,
+      "xai/grok-4-1-fast-non-reasoning": 2,
+      "github-copilot/gpt-5-mini": 2,
+      "opencode-go/minimax-m2.5": 1
     },
-    background_task: {
-        providerConcurrency: {
-            xai: 8,
-            "opencode-go": 6,
-            opencode: 2,
-            google: 1,
-            openai: 1,
-            anthropic: 1,
-        },
-        modelConcurrency: {
-            "xai/grok-4-1-fast-non-reasoning": 8,
-            "xai/grok-4-1-fast": 2,
-            "opencode-go/minimax-m2.5": 6,
-        },
+    "staleTimeoutMs": 120000,
+    "messageStalenessTimeoutMs": 120000,
+    "syncPollTimeoutMs": 120000
+  },
+  "babysitting": {
+    "timeout_ms": 120000
+  },
+  "browser_automation_engine": {
+    "provider": "playwright"
+  },
+  "sisyphus_agent": {
+    "disabled": false,
+    "default_builder_enabled": true,
+    "planner_enabled": true,
+    "replace_plan": false
+  },
+  "agents": {
+    "sisyphus": {
+      "model": "xai/grok-4-1-fast",
+      "fallback_model": "github-copilot/gpt-5-mini",
+      "reasoningEffort": "medium",
+      "textVerbosity": "medium",
+      "temperature": 0.2,
+      "top_p": 0.95,
+      "maxTokens": 120000,
+      "thinking": {
+        "type": "enabled",
+        "budgetTokens": 24000
+      },
+      "mode": "primary",
+      "description": "Main orchestrator. Strong planning, routing, and repo-wide coordination."
     },
+    "plan": {
+      "model": "xai/grok-4-1-fast",
+      "fallback_model": "github-copilot/gpt-5-mini",
+      "reasoningEffort": "high",
+      "textVerbosity": "medium",
+      "temperature": 0.1,
+      "top_p": 0.9,
+      "maxTokens": 64000,
+      "thinking": {
+        "type": "enabled",
+        "budgetTokens": 32000
+      },
+      "mode": "all",
+      "description": "Deterministic planner. Keep conservative and low-noise."
+    },
+    "build": {
+      "model": "xai/grok-4-1-fast-non-reasoning",
+      "fallback_models": [
+        "github-copilot/gpt-5-mini",
+        "opencode-go/minimax-m2.5"
+      ],
+      "reasoningEffort": "low",
+      "textVerbosity": "low",
+      "temperature": 0.1,
+      "top_p": 0.9,
+      "maxTokens": 64000,
+      "thinking": {
+        "type": "disabled"
+      },
+      "mode": "all",
+      "description": "Fast code execution/build lane."
+    },
+    "hephaestus": {
+      "model": "xai/grok-4-1-fast-non-reasoning",
+      "fallback_models": [
+        "github-copilot/gpt-5-mini",
+        "opencode-go/minimax-m2.5"
+      ],
+      "reasoningEffort": "low",
+      "textVerbosity": "low",
+      "temperature": 0.1,
+      "top_p": 0.9,
+      "maxTokens": 64000,
+      "thinking": {
+        "type": "disabled"
+      },
+      "mode": "subagent",
+      "allow_non_gpt_model": true,
+      "description": "Deep worker optimized for fast implementation, not long reasoning."
+    },
+    "prometheus": {
+      "model": "xai/grok-4-1-fast",
+      "fallback_model": "github-copilot/gpt-5-mini",
+      "reasoningEffort": "high",
+      "textVerbosity": "medium",
+      "temperature": 0.2,
+      "top_p": 0.95,
+      "maxTokens": 96000,
+      "thinking": {
+        "type": "enabled",
+        "budgetTokens": 28000
+      },
+      "mode": "subagent",
+      "description": "Research/planning/strategy agent."
+    },
+    "atlas": {
+      "model": "xai/grok-4-1-fast",
+      "fallback_model": "github-copilot/gpt-5-mini",
+      "reasoningEffort": "medium",
+      "textVerbosity": "medium",
+      "temperature": 0.2,
+      "top_p": 0.95,
+      "maxTokens": 96000,
+      "thinking": {
+        "type": "enabled",
+        "budgetTokens": 20000
+      },
+      "mode": "subagent",
+      "description": "Repository analysis and architecture navigation."
+    },
+    "explore": {
+      "model": "xai/grok-4-1-fast",
+      "fallback_model": "github-copilot/gpt-5-mini",
+      "reasoningEffort": "medium",
+      "textVerbosity": "medium",
+      "temperature": 0.3,
+      "top_p": 0.95,
+      "maxTokens": 64000,
+      "thinking": {
+        "type": "enabled",
+        "budgetTokens": 16000
+      },
+      "mode": "subagent",
+      "description": "Codebase exploration and discovery."
+    },
+    "librarian": {
+      "model": "github-copilot/gpt-5-mini",
+      "fallback_model": "xai/grok-4-1-fast",
+      "reasoningEffort": "low",
+      "textVerbosity": "low",
+      "temperature": 0.1,
+      "top_p": 0.9,
+      "maxTokens": 32000,
+      "thinking": {
+        "type": "disabled"
+      },
+      "mode": "subagent",
+      "description": "Cheap summarizer and retrieval helper."
+    },
+    "multimodal-looker": {
+      "model": "xai/grok-4-1-fast",
+      "fallback_model": "github-copilot/gpt-5-mini",
+      "reasoningEffort": "medium",
+      "textVerbosity": "medium",
+      "temperature": 0.2,
+      "top_p": 0.95,
+      "maxTokens": 48000,
+      "thinking": {
+        "type": "enabled",
+        "budgetTokens": 12000
+      },
+      "mode": "subagent",
+      "description": "Image/screenshot-oriented inspection."
+    }
+  },
+  "categories": {
+    "fast-build": {
+      "description": "High-speed implementation path",
+      "model": "xai/grok-4-1-fast-non-reasoning",
+      "fallback_model": "github-copilot/gpt-5-mini",
+      "temperature": 0.1,
+      "top_p": 0.9,
+      "thinking": {
+        "type": "disabled"
+      },
+      "reasoningEffort": "low",
+      "textVerbosity": "low",
+      "max_prompt_tokens": 120000
+    },
+    "deep-plan": {
+      "description": "High-quality planning path",
+      "model": "xai/grok-4-1-fast",
+      "fallback_model": "github-copilot/gpt-5-mini",
+      "temperature": 0.1,
+      "top_p": 0.9,
+      "thinking": {
+        "type": "enabled",
+        "budgetTokens": 24000
+      },
+      "reasoningEffort": "high",
+      "textVerbosity": "medium",
+      "max_prompt_tokens": 160000
+    },
+    "cheap-helper": {
+      "description": "Low-cost utility path",
+      "model": "github-copilot/gpt-5-mini",
+      "fallback_model": "xai/grok-4-1-fast-non-reasoning",
+      "temperature": 0.1,
+      "top_p": 0.9,
+      "thinking": {
+        "type": "disabled"
+      },
+      "reasoningEffort": "low",
+      "textVerbosity": "low",
+      "max_prompt_tokens": 48000
+    }
+  }
 }
+
 
 export async function initCommand(options: InitOptions): Promise<number> {
     const configPath = getGlobalConfigPath()
