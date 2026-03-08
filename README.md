@@ -22,6 +22,19 @@
 
 This repository contains the **Heidi Reliability Extension** for OhMyOpencode, transforming a flexible but non-deterministic agent into a production-grade, hallucination-resistant autonomous system.
 
+## ⚠️ Security & Audit Status (2026-03-08)
+
+A comprehensive hard audit revealed several critical and high-risk vulnerabilities in the runtime tools. **This plugin should be used with extreme caution until these are resolved.**
+
+### Identified Weak Points (AUDIT FAILURES):
+- **❌ Symlink Escape (CRITICAL)**: `fs_safe` fails to check for symlinks, allowing agents to potentially write/delete files anywhere on the system.
+- **❌ Dangerous Git Commands (HIGH)**: `git_safe` lacks a blacklist for destructive flags like `--force`, `-f`, or `clean -f`.
+- **❌ Command Injection (HIGH)**: Naive argument parsing in `git_safe`/`gh_safe` is vulnerable to injection attacks.
+- **❌ Session Isolation (MEDIUM)**: `complete_task` allows entries with null session IDs to pass verification, leading to cross-session contamination.
+- **❌ CWD Fallback (MEDIUM)**: Runtime tools fall back to `process.cwd()` when `context.directory` is missing, posing risks in multi-repo environments.
+
+---
+
 ## Comparison: Official Repo vs. Heidi System
 
 | Layer | Official repo | Heidi system |
