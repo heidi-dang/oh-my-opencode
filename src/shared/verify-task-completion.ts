@@ -3,12 +3,20 @@ import { log } from "./logger"
 
 export async function verifyTaskCompletionState(
   client: any,
-  sessionID: string
+  sessionID: string,
+  options?: {
+    /** If true, requires complete_task to have been called. If false (default), allows completion when no complete_task found. */
+    requireCompleteTask?: boolean
+  }
 ): Promise<boolean> {
   try {
     const response = await client.session.messages({
       path: { id: sessionID },
     })
+
+    if (response === null || response === undefined) {
+      throw new Error("SDK returned null or undefined session messages")
+    }
 
     const messages = normalizeSDKResponse(
       response,
@@ -78,9 +86,17 @@ export async function verifyTaskCompletionState(
       }
     }
 
+    // If complete_task was required but not found, fail-closed
+    if (options?.requireCompleteTask && lastCompleteTaskIndex === -1) {
+      log("[verifyTaskCompletionState] complete_task was required but not found, fail-closed:", sessionID)
+      return false
+    }
+
     return true
   } catch (error) {
-    log("[verifyTaskCompletionState] Error verifying task completion state, defaulting to true:", error)
-    return true
+    // FAIL-CLOSED: Any error during verification means we cannot confirm completion.
+    log("[verifyTaskCompletionState] Error verifying task completion state, fail-closed:", error)
+    return false
   }
 }
+

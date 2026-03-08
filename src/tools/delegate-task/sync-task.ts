@@ -10,6 +10,7 @@ import { formatDuration } from "./time-formatter"
 import { formatDetailedError } from "./error-formatting"
 import { syncTaskDeps, type SyncTaskDeps } from "./sync-task-deps"
 import { setSessionFallbackChain, clearSessionFallbackChain } from "../../hooks/model-fallback/hook"
+import { verifyTaskCompletionState } from "../../shared/verify-task-completion"
 
 export async function executeSyncTask(
   args: DelegateTaskArgs,
@@ -124,6 +125,15 @@ export async function executeSyncTask(
       if (pollError) {
         return pollError
       }
+
+      // CRITICAL: Verify completion via authoritative gate before treating as success.
+      // requireCompleteTask: true ensures a valid complete_task MUST have been called
+      const isLegitimatelyComplete = await verifyTaskCompletionState(client, sessionID, { requireCompleteTask: true })
+      if (!isLegitimatelyComplete) {
+        const duration = formatDuration(startTime)
+        return `Task verification failed after ${duration}. The subagent session completed but could not verify successful completion. This may indicate the subagent did not call complete_task, or the task was rejected. Agent: ${agentToUse}${args.category ? ` (category: ${args.category})` : ""} Session ID: ${sessionID}`
+      }
+
 
       const result = await deps.fetchSyncResult(client, sessionID)
       if (!result.ok) {

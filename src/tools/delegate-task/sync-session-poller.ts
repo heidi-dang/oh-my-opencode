@@ -1,3 +1,17 @@
+/**
+ * Poll a sync session until completion or timeout.
+ * 
+ * IMPORTANT: This function returns null ONLY when:
+ * 1. isSessionComplete() returns true (verified terminal finish), OR
+ * 2. Timeout is reached (timedOut = true)
+ * 
+ * The fallback path "assistant text detected" was REMOVED because it cannot verify
+ * that complete_task was actually called and succeeded. Treating assistant text
+ * as completion is a security vulnerability - it allows bypass of the authoritative
+ * completion gate.
+ * 
+ * @returns null if session completed (verified), error string if failed, timeout message if timed out
+ */
 import type { ToolContextWithMetadata, OpencodeClient } from "./types"
 import type { SessionMessage } from "./executor-types"
 import { getDefaultSyncPollTimeoutMs, getTimingConfig } from "./timing"
@@ -94,25 +108,15 @@ export async function pollSyncSession(
       log("[task] Poll complete - terminal finish detected", { sessionID: input.sessionID, pollCount })
       break
     }
-
-    const lastAssistant = [...msgs].reverse().find((m) => m.info?.role === "assistant")
-    const hasAssistantText = msgs.some((m) => {
-      if (m.info?.role !== "assistant") return false
-      const parts = m.parts ?? []
-      return parts.some((p) => {
-        if (p.type !== "text" && p.type !== "reasoning") return false
-        const text = (p.text ?? "").trim()
-        return text.length > 0
-      })
-    })
-
-    if (!lastAssistant?.info?.finish && hasAssistantText) {
-      log("[task] Poll complete - assistant text detected (fallback)", {
-        sessionID: input.sessionID,
-        pollCount,
-      })
-      break
-    }
+    // 
+    // REMOVED FALLBACK: The old fallback path that treated "assistant text appeared"
+    // as completion is REMOVED. This was a security vulnerability - assistant text
+    // alone does NOT verify that complete_task was called and succeeded.
+    //
+    // Only isSessionComplete() (verified terminal finish) allows completion.
+    // If no terminal finish is detected, the poll will timeout.
+    // The caller (sync-task.ts) must handle timeout as non-success.
+    //
   }
 
   if (Date.now() - pollStart >= maxPollTimeMs) {

@@ -1,6 +1,6 @@
 {
   "name": "@heidi-dang/oh-my-opencode-windows-x64",
-  "version": "3.12.5",
+  "version": "3.13.1",
   "description": "Platform-specific binary for oh-my-opencode (windows-x64)",
   "license": "MIT",
   "repository": {
