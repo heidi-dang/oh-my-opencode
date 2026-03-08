@@ -15,13 +15,26 @@ export function createGitSafeTool(deps: { spawn?: typeof bunSpawn } = {}): any {
         execute: withToolContract("git_safe", async (args: any, context) => {
             let commandArgs: string[] = []
             try {
-                commandArgs = (args.command as string).match(/([^\\"]\S*|".+?")\s*/g)?.map((s: string) => s.trim().replace(/^"(.*)"$/, '$1')) || []
-
+                // 🚨 SECURITY: Safe Argument Parsing (Fix B3)
+                const rawCommand = (args.command as string).trim()
+                commandArgs = rawCommand.match(/(".*?"|'.*?'|\S+)/g)?.map(s => s.replace(/^["']|["']$/g, "")) || []
+                
                 if (commandArgs.length === 0) {
-                    const result = createFailureResult("No command provided");
-                    context.metadata({ title: "Git Exec Error", ...result })
-                    return result.message
+                    throw new Error("Empty git command provided")
                 }
+
+                // 🚨 SECURITY: Dangerous Command Blacklist (Fix B2/G2)
+                const DANGEROUS_FLAGS = ["--force", "-f", "--force-with-lease", "--force-if-includes", "filter-branch", "reflog", "rebase --quit", "reset --hard HEAD~"]
+                const destructiveClean = commandArgs[0] === "clean" && commandArgs.some(arg => arg === "-f" || arg === "-df" || arg === "-fd" || arg === "-xf" || arg === "-fx")
+
+                if (DANGEROUS_FLAGS.some(flag => rawCommand.includes(flag)) || destructiveClean) {
+                    throw new Error(`Security Violation: Dangerous git flag or command detected and blocked: ${rawCommand}`)
+                }
+            } catch (e: any) {
+                const result = createFailureResult(e.message)
+                context.metadata({ title: "Git Safety Violation", ...result })
+                return result.message
+            }
 
                 const proc = spawn(["git", ...commandArgs], {
                     cwd: context.directory || process.cwd(),
@@ -82,7 +95,7 @@ export function createGitSafeTool(deps: { spawn?: typeof bunSpawn } = {}): any {
 
                 return `Exit Code: ${exitCode}\n\nSTDOUT:\n${stdoutText}\n\nSTDERR:\n${stderrText}`
             } catch (e: any) {
-                const result = createFailureResult(`JSON parse error on args or execution failed: ${e.message}`);
+                const result = createFailureResult(`Git execution failed: ${e.message}`);
                 context.metadata({ title: "Git Exec Error", ...result })
                 return result.message
             }

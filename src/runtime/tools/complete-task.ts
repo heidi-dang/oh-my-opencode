@@ -65,7 +65,8 @@ export function createCompleteTaskTool(options?: { client?: any, backgroundManag
             const entries = ledger.getEntries().filter(e =>
                 e.verified === true &&
                 e.success === true &&
-                (!e.sessionID || sessionIDs.includes(e.sessionID))
+                e.sessionID && // 🚨 SECURITY: Fix B4 - Require sessionID
+                sessionIDs.includes(e.sessionID)
             )
 
             // Compile verifiable evidence report
