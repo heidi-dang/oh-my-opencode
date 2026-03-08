@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync, promises as fsPromises } from "node:fs"
 import { randomBytes } from "node:crypto"
 import { join } from "node:path"
 import type { PluginInput } from "@opencode-ai/plugin"
@@ -182,30 +182,59 @@ export function findNearestMessageWithFields(messageDir: string): StoredMessage 
  * @deprecated Use findFirstMessageWithAgentFromSDK for beta/SQLite backend
  */
 export function findFirstMessageWithAgent(messageDir: string): string | null {
-  // On beta SQLite backend, skip JSON file reads entirely
-  if (isSqliteBackend()) {
-    return null
-  }
-
+  if (isSqliteBackend()) return null
   try {
-    const files = readdirSync(messageDir)
-      .filter((f) => f.endsWith(".json"))
-      .sort()
-
+    const files = readdirSync(messageDir).filter((f) => f.endsWith(".json")).sort()
     for (const file of files) {
       try {
         const content = readFileSync(join(messageDir, file), "utf-8")
         const msg = JSON.parse(content) as StoredMessage
-        if (msg.agent) {
-          return msg.agent
-        }
-      } catch {
-        continue
-      }
+        if (msg.agent) return msg.agent
+      } catch { continue }
     }
-  } catch {
-    return null
-  }
+  } catch { return null }
+  return null
+}
+
+export async function findNearestMessageWithFieldsAsync(messageDir: string): Promise<StoredMessage | null> {
+  if (isSqliteBackend()) return null
+  try {
+    const files = (await fsPromises.readdir(messageDir))
+      .filter((f) => f.endsWith(".json"))
+      .sort()
+      .reverse()
+
+    for (const file of files) {
+      try {
+        const content = await fsPromises.readFile(join(messageDir, file), "utf-8")
+        const msg = JSON.parse(content) as StoredMessage
+        if (msg.agent && msg.model?.providerID && msg.model?.modelID) return msg
+      } catch { continue }
+    }
+
+    for (const file of files) {
+      try {
+        const content = await fsPromises.readFile(join(messageDir, file), "utf-8")
+        const msg = JSON.parse(content) as StoredMessage
+        if (msg.agent || (msg.model?.providerID && msg.model?.modelID)) return msg
+      } catch { continue }
+    }
+  } catch { return null }
+  return null
+}
+
+export async function findFirstMessageWithAgentAsync(messageDir: string): Promise<string | null> {
+  if (isSqliteBackend()) return null
+  try {
+    const files = (await fsPromises.readdir(messageDir)).filter((f) => f.endsWith(".json")).sort()
+    for (const file of files) {
+      try {
+        const content = await fsPromises.readFile(join(messageDir, file), "utf-8")
+        const msg = JSON.parse(content) as StoredMessage
+        if (msg.agent) return msg.agent
+      } catch { continue }
+    }
+  } catch { return null }
   return null
 }
 
@@ -368,8 +397,8 @@ export async function resolveMessageContext(
         findFirstMessageWithAgentFromSDK(client, sessionID),
       ])
     : [
-        messageDir ? findNearestMessageWithFields(messageDir) : null,
-        messageDir ? findFirstMessageWithAgent(messageDir) : null,
+        messageDir ? await findNearestMessageWithFieldsAsync(messageDir) : null,
+        messageDir ? await findFirstMessageWithAgentAsync(messageDir) : null,
       ]
 
   return { prevMessage, firstMessageAgent }

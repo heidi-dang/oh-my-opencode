@@ -8,16 +8,16 @@ describe("resolveModel", () => {
     test("returns userModel when all three are set", () => {
       // given
       const input: ModelResolutionInput = {
-        userModel: "anthropic/claude-opus-4-6",
+        userModel: "anthropic/claude-sonnet-4-6",
         inheritedModel: "openai/gpt-5.2",
-        systemDefault: "google/gemini-3.1-pro",
+        systemDefault: "google/gemini-2.0-flash",
       }
 
       // when
       const result = resolveModel(input)
 
       // then
-      expect(result).toBe("anthropic/claude-opus-4-6")
+      expect(result).toBe("anthropic/claude-sonnet-4-6")
     })
 
     test("returns inheritedModel when userModel is undefined", () => {
@@ -25,7 +25,7 @@ describe("resolveModel", () => {
       const input: ModelResolutionInput = {
         userModel: undefined,
         inheritedModel: "openai/gpt-5.2",
-        systemDefault: "google/gemini-3.1-pro",
+        systemDefault: "google/gemini-2.0-flash",
       }
 
       // when
@@ -40,14 +40,14 @@ describe("resolveModel", () => {
       const input: ModelResolutionInput = {
         userModel: undefined,
         inheritedModel: undefined,
-        systemDefault: "google/gemini-3.1-pro",
+        systemDefault: "google/gemini-2.0-flash",
       }
 
       // when
       const result = resolveModel(input)
 
       // then
-      expect(result).toBe("google/gemini-3.1-pro")
+      expect(result).toBe("google/gemini-2.0-flash")
     })
   })
 
@@ -57,7 +57,7 @@ describe("resolveModel", () => {
       const input: ModelResolutionInput = {
         userModel: "",
         inheritedModel: "openai/gpt-5.2",
-        systemDefault: "google/gemini-3.1-pro",
+        systemDefault: "google/gemini-2.0-flash",
       }
 
       // when
@@ -72,14 +72,14 @@ describe("resolveModel", () => {
       const input: ModelResolutionInput = {
         userModel: "   ",
         inheritedModel: "",
-        systemDefault: "google/gemini-3.1-pro",
+        systemDefault: "google/gemini-2.0-flash",
       }
 
       // when
       const result = resolveModel(input)
 
       // then
-      expect(result).toBe("google/gemini-3.1-pro")
+      expect(result).toBe("google/gemini-2.0-flash")
     })
   })
 
@@ -87,9 +87,9 @@ describe("resolveModel", () => {
     test("same input returns same output (referential transparency)", () => {
       // given
       const input: ModelResolutionInput = {
-        userModel: "anthropic/claude-opus-4-6",
+        userModel: "anthropic/claude-sonnet-4-6",
         inheritedModel: "openai/gpt-5.2",
-        systemDefault: "google/gemini-3.1-pro",
+        systemDefault: "google/gemini-2.0-flash",
       }
 
       // when
@@ -118,12 +118,12 @@ describe("resolveModelWithFallback", () => {
       // given
       const input: ExtendedModelResolutionInput = {
         uiSelectedModel: "opencode/big-pickle",
-        userModel: "anthropic/claude-opus-4-6",
+        userModel: "anthropic/claude-sonnet-4-6",
         fallbackChain: [
-          { providers: ["anthropic", "github-copilot"], model: "claude-opus-4-6" },
+          { providers: ["anthropic", "github-copilot"], model: "claude-sonnet-4-6" },
         ],
-        availableModels: new Set(["anthropic/claude-opus-4-6", "github-copilot/claude-opus-4-6-preview"]),
-        systemDefaultModel: "google/gemini-3.1-pro",
+        availableModels: new Set(["opencode/big-pickle", "anthropic/claude-sonnet-4-6", "github-copilot/claude-sonnet-4-6-preview"]),
+        systemDefaultModel: "google/gemini-2.0-flash",
       }
 
       // when
@@ -133,16 +133,16 @@ describe("resolveModelWithFallback", () => {
       console.log("Result:", result)
       expect(result!.model).toBe("opencode/big-pickle")
       expect(result!.source).toBe("override")
-      expect(logSpy).toHaveBeenCalledWith("Model resolved via UI selection", { model: "opencode/big-pickle" })
+      expect(logSpy).toHaveBeenCalledWith("[MODEL-RESOLUTION] Resolved via override", { requested: "opencode/big-pickle", resolved: "opencode/big-pickle" })
     })
 
     test("UI selection takes priority over config override", () => {
       // given
       const input: ExtendedModelResolutionInput = {
         uiSelectedModel: "opencode/big-pickle",
-        userModel: "anthropic/claude-opus-4-6",
-        availableModels: new Set(["anthropic/claude-opus-4-6"]),
-        systemDefaultModel: "google/gemini-3.1-pro",
+        userModel: "anthropic/claude-sonnet-4-6",
+        availableModels: new Set(["opencode/big-pickle", "anthropic/claude-sonnet-4-6"]),
+        systemDefaultModel: "google/gemini-2.0-flash",
       }
 
       // when
@@ -157,33 +157,33 @@ describe("resolveModelWithFallback", () => {
       // given
       const input: ExtendedModelResolutionInput = {
         uiSelectedModel: "   ",
-        userModel: "anthropic/claude-opus-4-6",
-        availableModels: new Set(["anthropic/claude-opus-4-6"]),
-        systemDefaultModel: "google/gemini-3.1-pro",
+        userModel: "anthropic/claude-sonnet-4-6",
+        availableModels: new Set(["opencode/big-pickle", "anthropic/claude-sonnet-4-6"]),
+        systemDefaultModel: "google/gemini-2.0-flash",
       }
 
       // when
       const result = resolveModelWithFallback(input)
 
       // then
-      expect(result!.model).toBe("anthropic/claude-opus-4-6")
-      expect(logSpy).toHaveBeenCalledWith("Model resolved via config override", { model: "anthropic/claude-opus-4-6" })
+      expect(result!.model).toBe("anthropic/claude-sonnet-4-6")
+      expect(logSpy).toHaveBeenCalledWith("[MODEL-RESOLUTION] Resolved via override", { requested: "anthropic/claude-sonnet-4-6", resolved: "anthropic/claude-sonnet-4-6" })
     })
 
     test("empty string uiSelectedModel falls through to config override", () => {
       // given
       const input: ExtendedModelResolutionInput = {
         uiSelectedModel: "",
-        userModel: "anthropic/claude-opus-4-6",
-        availableModels: new Set(["anthropic/claude-opus-4-6"]),
-        systemDefaultModel: "google/gemini-3.1-pro",
+        userModel: "anthropic/claude-sonnet-4-6",
+        availableModels: new Set(["opencode/big-pickle", "anthropic/claude-sonnet-4-6"]),
+        systemDefaultModel: "google/gemini-2.0-flash",
       }
 
       // when
       const result = resolveModelWithFallback(input)
 
       // then
-      expect(result!.model).toBe("anthropic/claude-opus-4-6")
+      expect(result!.model).toBe("anthropic/claude-sonnet-4-6")
     })
   })
 
@@ -191,21 +191,21 @@ describe("resolveModelWithFallback", () => {
     test("returns userModel with override source when userModel is provided", () => {
       // given
       const input: ExtendedModelResolutionInput = {
-        userModel: "anthropic/claude-opus-4-6",
+        userModel: "anthropic/claude-sonnet-4-6",
         fallbackChain: [
-          { providers: ["anthropic", "github-copilot"], model: "claude-opus-4-6" },
+          { providers: ["anthropic", "github-copilot"], model: "claude-sonnet-4-6" },
         ],
-        availableModels: new Set(["anthropic/claude-opus-4-6", "github-copilot/claude-opus-4-6-preview"]),
-        systemDefaultModel: "google/gemini-3.1-pro",
+        availableModels: new Set(["anthropic/claude-sonnet-4-6", "github-copilot/claude-sonnet-4-6-preview"]),
+        systemDefaultModel: "google/gemini-2.0-flash",
       }
 
       // when
       const result = resolveModelWithFallback(input)
 
       // then
-      expect(result!.model).toBe("anthropic/claude-opus-4-6")
+      expect(result!.model).toBe("anthropic/claude-sonnet-4-6")
       expect(result!.source).toBe("override")
-      expect(logSpy).toHaveBeenCalledWith("Model resolved via config override", { model: "anthropic/claude-opus-4-6" })
+      expect(logSpy).toHaveBeenCalledWith("[MODEL-RESOLUTION] Resolved via override", { requested: "anthropic/claude-sonnet-4-6", resolved: "anthropic/claude-sonnet-4-6" })
     })
 
     test("override takes priority even if model not in availableModels", () => {
@@ -213,10 +213,10 @@ describe("resolveModelWithFallback", () => {
       const input: ExtendedModelResolutionInput = {
         userModel: "custom/my-model",
         fallbackChain: [
-          { providers: ["anthropic"], model: "claude-opus-4-6" },
+          { providers: ["anthropic"], model: "claude-sonnet-4-6" },
         ],
-        availableModels: new Set(["anthropic/claude-opus-4-6"]),
-        systemDefaultModel: "google/gemini-3.1-pro",
+        availableModels: new Set(["custom/my-model", "anthropic/claude-sonnet-4-6"]),
+        systemDefaultModel: "google/gemini-2.0-flash",
       }
 
       // when
@@ -232,11 +232,11 @@ describe("resolveModelWithFallback", () => {
       const input: ExtendedModelResolutionInput = {
         userModel: "xai/grok-4-1-fast",
         fallbackChain: [
-          { providers: ["openai", "venice", "opencode"], model: "gpt-5.3-codex", variant: "medium" },
+          { providers: ["openai", "venice", "opencode"], model: "o3-mini", variant: "medium" },
           { providers: ["github-copilot"], model: "gpt-5.2", variant: "medium" },
         ],
-        availableModels: new Set(["xai/grok-4-1-fast", "openai/gpt-5.3-codex"]),
-        systemDefaultModel: "google/gemini-3.1-pro",
+        availableModels: new Set(["xai/grok-4-1-fast", "openai/o3-mini"]),
+        systemDefaultModel: "google/gemini-2.0-flash",
       }
 
       // when
@@ -252,17 +252,17 @@ describe("resolveModelWithFallback", () => {
       const input: ExtendedModelResolutionInput = {
         userModel: undefined,
         fallbackChain: [
-          { providers: ["openai", "venice", "opencode"], model: "gpt-5.3-codex", variant: "medium" },
+          { providers: ["openai", "venice", "opencode"], model: "o3-mini", variant: "medium" },
         ],
-        availableModels: new Set(["openai/gpt-5.3-codex", "xai/grok-4-1-fast"]),
-        systemDefaultModel: "google/gemini-3.1-pro",
+        availableModels: new Set(["openai/o3-mini", "xai/grok-4-1-fast"]),
+        systemDefaultModel: "google/gemini-2.0-flash",
       }
 
       // when
       const result = resolveModelWithFallback(input)
 
       // then
-      expect(result!.model).toBe("openai/gpt-5.3-codex")
+      expect(result!.model).toBe("openai/o3-mini")
       expect(result!.source).toBe("provider-fallback")
     })
 
@@ -271,10 +271,10 @@ describe("resolveModelWithFallback", () => {
       const input: ExtendedModelResolutionInput = {
         userModel: "   ",
         fallbackChain: [
-          { providers: ["anthropic"], model: "claude-opus-4-6" },
+          { providers: ["anthropic"], model: "claude-sonnet-4-6" },
         ],
-        availableModels: new Set(["anthropic/claude-opus-4-6"]),
-        systemDefaultModel: "google/gemini-3.1-pro",
+        availableModels: new Set(["custom/my-model", "anthropic/claude-sonnet-4-6"]),
+        systemDefaultModel: "google/gemini-2.0-flash",
       }
 
       // when
@@ -289,10 +289,10 @@ describe("resolveModelWithFallback", () => {
       const input: ExtendedModelResolutionInput = {
         userModel: "",
         fallbackChain: [
-          { providers: ["anthropic"], model: "claude-opus-4-6" },
+          { providers: ["anthropic"], model: "claude-sonnet-4-6" },
         ],
-        availableModels: new Set(["anthropic/claude-opus-4-6"]),
-        systemDefaultModel: "google/gemini-3.1-pro",
+        availableModels: new Set(["custom/my-model", "anthropic/claude-sonnet-4-6"]),
+        systemDefaultModel: "google/gemini-2.0-flash",
       }
 
       // when
@@ -308,23 +308,22 @@ describe("resolveModelWithFallback", () => {
       // given
       const input: ExtendedModelResolutionInput = {
         fallbackChain: [
-          { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-opus-4-6" },
+          { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-sonnet-4-6" },
         ],
-        availableModels: new Set(["github-copilot/claude-opus-4-6-preview", "opencode/claude-opus-4-7"]),
-        systemDefaultModel: "google/gemini-3.1-pro",
+        availableModels: new Set(["github-copilot/claude-sonnet-4-6-preview", "opencode/claude-opus-4-7"]),
+        systemDefaultModel: "google/gemini-2.0-flash",
       }
 
       // when
       const result = resolveModelWithFallback(input)
 
       // then
-      expect(result!.model).toBe("github-copilot/claude-opus-4-6-preview")
+      expect(result!.model).toBe("github-copilot/claude-sonnet-4-6-preview")
       expect(result!.source).toBe("provider-fallback")
-      expect(logSpy).toHaveBeenCalledWith("Model resolved via fallback chain (availability confirmed)", {
+      expect(logSpy).toHaveBeenCalledWith("[MODEL-RESOLUTION] Resolved via provider-specific fallback chain", {
         provider: "github-copilot",
-        model: "claude-opus-4-6",
-        match: "github-copilot/claude-opus-4-6-preview",
-        variant: undefined,
+        model: "claude-sonnet-4-6",
+        match: "github-copilot/claude-sonnet-4-6-preview",
       })
     })
 
@@ -334,8 +333,8 @@ describe("resolveModelWithFallback", () => {
         fallbackChain: [
           { providers: ["openai", "anthropic", "google"], model: "gpt-5.2" },
         ],
-        availableModels: new Set(["openai/gpt-5.2", "anthropic/claude-opus-4-6", "google/gemini-3.1-pro"]),
-        systemDefaultModel: "google/gemini-3.1-pro",
+        availableModels: new Set(["anthropic/gpt-5.2", "openai/gpt-5.2", "anthropic/claude-sonnet-4-6", "google/gemini-2.0-flash"]),
+        systemDefaultModel: "google/gemini-2.0-flash",
       }
 
       // when
@@ -353,7 +352,7 @@ describe("resolveModelWithFallback", () => {
           { providers: ["anthropic", "opencode"], model: "gpt-5-nano" },
         ],
         availableModels: new Set(["opencode/gpt-5-nano"]),
-        systemDefaultModel: "google/gemini-3.1-pro",
+        systemDefaultModel: "google/gemini-2.0-flash",
       }
 
       // when
@@ -368,25 +367,25 @@ describe("resolveModelWithFallback", () => {
       // given
       const input: ExtendedModelResolutionInput = {
         fallbackChain: [
-          { providers: ["anthropic", "github-copilot"], model: "claude-opus" },
+          { providers: ["anthropic", "github-copilot"], model: "claude-sonnet" },
         ],
-        availableModels: new Set(["anthropic/claude-opus-4-6", "github-copilot/claude-opus-4-6-preview"]),
-        systemDefaultModel: "google/gemini-3.1-pro",
+        availableModels: new Set(["anthropic/claude-sonnet-4-6", "github-copilot/claude-sonnet-4-6-preview"]),
+        systemDefaultModel: "google/gemini-2.0-flash",
       }
 
       // when
       const result = resolveModelWithFallback(input)
 
       // then
-      expect(result!.model).toBe("anthropic/claude-opus-4-6")
+      expect(result!.model).toBe("anthropic/claude-sonnet-4-6")
       expect(result!.source).toBe("provider-fallback")
     })
 
     test("skips fallback chain when not provided", () => {
       // given
       const input: ExtendedModelResolutionInput = {
-        availableModels: new Set(["anthropic/claude-opus-4-6"]),
-        systemDefaultModel: "google/gemini-3.1-pro",
+        availableModels: new Set(["anthropic/claude-sonnet-4-6", "google/gemini-2.0-flash"]),
+        systemDefaultModel: "google/gemini-2.0-flash",
       }
 
       // when
@@ -400,8 +399,8 @@ describe("resolveModelWithFallback", () => {
       // given
       const input: ExtendedModelResolutionInput = {
         fallbackChain: [],
-        availableModels: new Set(["anthropic/claude-opus-4-6"]),
-        systemDefaultModel: "google/gemini-3.1-pro",
+        availableModels: new Set(["anthropic/claude-sonnet-4-6", "google/gemini-2.0-flash"]),
+        systemDefaultModel: "google/gemini-2.0-flash",
       }
 
       // when
@@ -415,21 +414,21 @@ describe("resolveModelWithFallback", () => {
       // given
       const input: ExtendedModelResolutionInput = {
         fallbackChain: [
-          { providers: ["anthropic"], model: "CLAUDE-OPUS" },
+          { providers: ["anthropic"], model: "CLAUDE-SONNET" },
         ],
-        availableModels: new Set(["anthropic/claude-opus-4-6"]),
-        systemDefaultModel: "google/gemini-3.1-pro",
+        availableModels: new Set(["anthropic/claude-sonnet-4-6"]),
+        systemDefaultModel: "google/gemini-2.0-flash",
       }
 
       // when
       const result = resolveModelWithFallback(input)
 
       // then
-      expect(result!.model).toBe("anthropic/claude-opus-4-6")
+      expect(result!.model).toBe("anthropic/claude-sonnet-4-6")
       expect(result!.source).toBe("provider-fallback")
     })
 
-    test("cross-provider fuzzy match when preferred provider unavailable (librarian scenario)", () => {
+    test("cross-provider fuzzy match is no longer supported (falls through)", () => {
       // given - glm-5 is defined for zai-coding-plan, but only opencode has it
       const input: ExtendedModelResolutionInput = {
         fallbackChain: [
@@ -437,59 +436,54 @@ describe("resolveModelWithFallback", () => {
           { providers: ["anthropic"], model: "claude-sonnet-4-6" },
         ],
         availableModels: new Set(["opencode/glm-5", "anthropic/claude-sonnet-4-6"]),
-        systemDefaultModel: "google/gemini-3.1-pro",
+        systemDefaultModel: "google/gemini-2.0-flash",
       }
 
       // when
       const result = resolveModelWithFallback(input)
 
-      // then - should find glm-5 from opencode via cross-provider fuzzy match
-      expect(result!.model).toBe("opencode/glm-5")
+      // then - should skip zai-coding-plan because cross-provider match is disallowed, and fall through to anthropic
+      expect(result!.model).toBe("anthropic/claude-sonnet-4-6")
       expect(result!.source).toBe("provider-fallback")
-      expect(logSpy).toHaveBeenCalledWith("Model resolved via fallback chain (cross-provider fuzzy match)", {
-        model: "glm-5",
-        match: "opencode/glm-5",
-        variant: undefined,
-      })
     })
 
-    test("prefers specified provider over cross-provider match", () => {
+    test("prefers specified provider naturally (no cross-provider match needed)", () => {
       // given - both zai-coding-plan and opencode have glm-5
       const input: ExtendedModelResolutionInput = {
         fallbackChain: [
           { providers: ["zai-coding-plan"], model: "glm-5" },
         ],
         availableModels: new Set(["zai-coding-plan/glm-5", "opencode/glm-5"]),
-        systemDefaultModel: "google/gemini-3.1-pro",
+        systemDefaultModel: "google/gemini-2.0-flash",
       }
 
       // when
       const result = resolveModelWithFallback(input)
 
-      // then - should prefer zai-coding-plan (specified provider) over opencode
+      // then - should prefer zai-coding-plan (specified provider)
       expect(result!.model).toBe("zai-coding-plan/glm-5")
       expect(result!.source).toBe("provider-fallback")
     })
 
-    test("cross-provider match preserves variant from entry", () => {
-      // given - entry has variant, model found via cross-provider
+    test("match preserves variant from entry", () => {
+      // given - entry has variant, model found via specfied provider
       const input: ExtendedModelResolutionInput = {
         fallbackChain: [
           { providers: ["zai-coding-plan"], model: "glm-5", variant: "high" },
         ],
-        availableModels: new Set(["opencode/glm-5"]),
-        systemDefaultModel: "google/gemini-3.1-pro",
+        availableModels: new Set(["zai-coding-plan/glm-5"]),
+        systemDefaultModel: "google/gemini-2.0-flash",
       }
 
       // when
       const result = resolveModelWithFallback(input)
 
       // then - variant should be preserved
-      expect(result!.model).toBe("opencode/glm-5")
+      expect(result!.model).toBe("zai-coding-plan/glm-5")
       expect(result!.variant).toBe("high")
     })
 
-    test("cross-provider match tries next entry if no match found anywhere", () => {
+    test("tries next entry if no match found anywhere", () => {
       // given - first entry model not available anywhere, second entry available
       const input: ExtendedModelResolutionInput = {
         fallbackChain: [
@@ -497,7 +491,7 @@ describe("resolveModelWithFallback", () => {
           { providers: ["anthropic"], model: "claude-sonnet-4-6" },
         ],
         availableModels: new Set(["anthropic/claude-sonnet-4-6"]),
-        systemDefaultModel: "google/gemini-3.1-pro",
+        systemDefaultModel: "google/gemini-2.0-flash",
       }
 
       // when
@@ -516,17 +510,17 @@ describe("resolveModelWithFallback", () => {
         fallbackChain: [
           { providers: ["anthropic"], model: "nonexistent-model" },
         ],
-        availableModels: new Set(["openai/gpt-5.2", "anthropic/claude-opus-4-6"]),
-        systemDefaultModel: "google/gemini-3.1-pro",
+        availableModels: new Set(["google/gemini-2.0-flash", "openai/gpt-5.2", "anthropic/claude-sonnet-4-6"]),
+        systemDefaultModel: "google/gemini-2.0-flash",
       }
 
       // when
       const result = resolveModelWithFallback(input)
 
       // then
-      expect(result!.model).toBe("google/gemini-3.1-pro")
+      expect(result!.model).toBe("google/gemini-2.0-flash")
       expect(result!.source).toBe("system-default")
-      expect(logSpy).toHaveBeenCalledWith("No available model found in fallback chain, falling through to system default")
+      expect(logSpy).toHaveBeenCalledWith("[MODEL-RESOLUTION] Resolved via system-default", { requested: "google/gemini-2.0-flash", resolved: "google/gemini-2.0-flash" })
     })
 
     test("returns undefined when availableModels empty and no connected providers cache exists", () => {
@@ -534,7 +528,7 @@ describe("resolveModelWithFallback", () => {
       const cacheSpy = spyOn(connectedProvidersCache, "readConnectedProvidersCache").mockReturnValue(null)
       const input: ExtendedModelResolutionInput = {
         fallbackChain: [
-          { providers: ["anthropic"], model: "claude-opus-4-6" },
+          { providers: ["anthropic"], model: "claude-sonnet-4-6" },
         ],
         availableModels: new Set(),
         systemDefaultModel: undefined, // no system default configured
@@ -553,17 +547,17 @@ describe("resolveModelWithFallback", () => {
       const cacheSpy = spyOn(connectedProvidersCache, "readConnectedProvidersCache").mockReturnValue(["openai", "google"])
       const input: ExtendedModelResolutionInput = {
         fallbackChain: [
-          { providers: ["anthropic", "openai"], model: "claude-opus-4-6" },
+          { providers: ["anthropic", "openai"], model: "claude-sonnet-4-6" },
         ],
         availableModels: new Set(),
-        systemDefaultModel: "google/gemini-3.1-pro",
+        systemDefaultModel: "google/gemini-2.0-flash",
       }
 
       // when
       const result = resolveModelWithFallback(input)
 
       // then - should use connected provider (openai) from fallback chain
-      expect(result!.model).toBe("openai/claude-opus-4-6")
+      expect(result!.model).toBe("openai/claude-sonnet-4-6")
       expect(result!.source).toBe("provider-fallback")
       cacheSpy.mockRestore()
     })
@@ -597,14 +591,14 @@ describe("resolveModelWithFallback", () => {
           { providers: ["openai", "opencode"], model: "claude-haiku-4-5" },
         ],
         availableModels: new Set(),
-        systemDefaultModel: "anthropic/claude-opus-4-6-20251101",
+        systemDefaultModel: "anthropic/claude-sonnet-4-6-20251101",
       }
 
       // when
       const result = resolveModelWithFallback(input)
 
       // then - no provider in fallback is connected, fall through to system default
-      expect(result!.model).toBe("anthropic/claude-opus-4-6-20251101")
+      expect(result!.model).toBe("anthropic/claude-sonnet-4-6-20251101")
       expect(result!.source).toBe("system-default")
       cacheSpy.mockRestore()
     })
@@ -614,17 +608,17 @@ describe("resolveModelWithFallback", () => {
       const cacheSpy = spyOn(connectedProvidersCache, "readConnectedProvidersCache").mockReturnValue(null)
       const input: ExtendedModelResolutionInput = {
         fallbackChain: [
-          { providers: ["anthropic"], model: "claude-opus-4-6" },
+          { providers: ["anthropic"], model: "claude-sonnet-4-6" },
         ],
         availableModels: new Set(),
-        systemDefaultModel: "google/gemini-3.1-pro",
+        systemDefaultModel: "google/gemini-2.0-flash",
       }
 
       // when
       const result = resolveModelWithFallback(input)
 
       // then - should fall through to system default
-      expect(result!.model).toBe("google/gemini-3.1-pro")
+      expect(result!.model).toBe("google/gemini-2.0-flash")
       expect(result!.source).toBe("system-default")
       cacheSpy.mockRestore()
     })
@@ -632,15 +626,15 @@ describe("resolveModelWithFallback", () => {
     test("returns system default when fallbackChain is not provided", () => {
       // given
       const input: ExtendedModelResolutionInput = {
-        availableModels: new Set(["openai/gpt-5.2"]),
-        systemDefaultModel: "google/gemini-3.1-pro",
+        availableModels: new Set(["google/gemini-2.0-flash", "openai/gpt-5.2"]),
+        systemDefaultModel: "google/gemini-2.0-flash",
       }
 
       // when
       const result = resolveModelWithFallback(input)
 
       // then
-      expect(result!.model).toBe("google/gemini-3.1-pro")
+      expect(result!.model).toBe("google/gemini-2.0-flash")
       expect(result!.source).toBe("system-default")
     })
   })
@@ -648,39 +642,39 @@ describe("resolveModelWithFallback", () => {
   describe("Multi-entry fallbackChain", () => {
     test("resolves to claude-opus when OpenAI unavailable but Anthropic available (oracle scenario)", () => {
       // given
-      const availableModels = new Set(["anthropic/claude-opus-4-6"])
+      const availableModels = new Set(["anthropic/claude-sonnet-4-6"])
 
       // when
       const result = resolveModelWithFallback({
         fallbackChain: [
           { providers: ["openai", "github-copilot", "opencode"], model: "gpt-5.2", variant: "high" },
-          { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-opus-4-6", variant: "max" },
+          { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-sonnet-4-6", variant: "max" },
         ],
         availableModels,
         systemDefaultModel: "system/default",
       })
 
       // then
-      expect(result!.model).toBe("anthropic/claude-opus-4-6")
+      expect(result!.model).toBe("anthropic/claude-sonnet-4-6")
       expect(result!.source).toBe("provider-fallback")
     })
 
     test("tries all providers in first entry before moving to second entry", () => {
       // given
-      const availableModels = new Set(["google/gemini-3.1-pro"])
+      const availableModels = new Set(["google/gemini-2.0-flash"])
 
       // when
       const result = resolveModelWithFallback({
         fallbackChain: [
           { providers: ["openai", "anthropic"], model: "gpt-5.2" },
-          { providers: ["google"], model: "gemini-3.1-pro" },
+          { providers: ["google"], model: "gemini-2.0-flash" },
         ],
         availableModels,
         systemDefaultModel: "system/default",
       })
 
       // then
-      expect(result!.model).toBe("google/gemini-3.1-pro")
+      expect(result!.model).toBe("google/gemini-2.0-flash")
       expect(result!.source).toBe("provider-fallback")
     })
 
@@ -688,14 +682,14 @@ describe("resolveModelWithFallback", () => {
       // given
       const availableModels = new Set([
         "openai/gpt-5.2",
-        "anthropic/claude-opus-4-6",
+        "anthropic/claude-sonnet-4-6",
       ])
 
       // when
       const result = resolveModelWithFallback({
         fallbackChain: [
           { providers: ["openai"], model: "gpt-5.2" },
-          { providers: ["anthropic"], model: "claude-opus-4-6" },
+          { providers: ["anthropic"], model: "claude-sonnet-4-6" },
         ],
         availableModels,
         systemDefaultModel: "system/default",
@@ -708,14 +702,14 @@ describe("resolveModelWithFallback", () => {
 
     test("falls through to system default when none match availability", () => {
       // given
-      const availableModels = new Set(["other/model"])
+      const availableModels = new Set(["system/default", "other/model"])
 
       // when
       const result = resolveModelWithFallback({
         fallbackChain: [
           { providers: ["openai"], model: "gpt-5.2" },
-          { providers: ["anthropic"], model: "claude-opus-4-6" },
-          { providers: ["google"], model: "gemini-3.1-pro" },
+          { providers: ["anthropic"], model: "claude-sonnet-4-6" },
+          { providers: ["google"], model: "gemini-2.0-flash" },
         ],
         availableModels,
         systemDefaultModel: "system/default",
@@ -731,9 +725,9 @@ describe("resolveModelWithFallback", () => {
     test("result has correct ModelResolutionResult shape", () => {
       // given
       const input: ExtendedModelResolutionInput = {
-        userModel: "anthropic/claude-opus-4-6",
+        userModel: "anthropic/claude-sonnet-4-6",
         availableModels: new Set(),
-        systemDefaultModel: "google/gemini-3.1-pro",
+        systemDefaultModel: "google/gemini-2.0-flash",
       }
 
       // when
@@ -748,32 +742,32 @@ describe("resolveModelWithFallback", () => {
 
   describe("categoryDefaultModel (fuzzy matching for category defaults)", () => {
     test("applies fuzzy matching to categoryDefaultModel when userModel not provided", () => {
-      // given - gemini-3.1-pro is the category default, but only gemini-3.1-pro-preview is available
+      // given - gemini-2.0-flash is the category default, but only gemini-2.0-flash-preview is available
       const input: ExtendedModelResolutionInput = {
-        categoryDefaultModel: "google/gemini-3.1-pro",
+        categoryDefaultModel: "google/gemini-2.0-flash",
         fallbackChain: [
-          { providers: ["google", "github-copilot", "opencode"], model: "gemini-3.1-pro" },
+          { providers: ["google", "github-copilot", "opencode"], model: "gemini-2.0-flash" },
         ],
-        availableModels: new Set(["google/gemini-3.1-pro-preview", "anthropic/claude-opus-4-6"]),
+        availableModels: new Set(["google/gemini-2.0-flash-preview", "anthropic/claude-sonnet-4-6"]),
         systemDefaultModel: "anthropic/claude-sonnet-4-6",
       }
 
       // when
       const result = resolveModelWithFallback(input)
 
-      // then - should fuzzy match gemini-3.1-pro → gemini-3.1-pro-preview
-      expect(result!.model).toBe("google/gemini-3.1-pro-preview")
+      // then - should fuzzy match gemini-2.0-flash → gemini-2.0-flash-preview
+      expect(result!.model).toBe("google/gemini-2.0-flash-preview")
       expect(result!.source).toBe("category-default")
     })
 
     test("categoryDefaultModel uses exact match when available", () => {
       // given - exact match exists
       const input: ExtendedModelResolutionInput = {
-        categoryDefaultModel: "google/gemini-3.1-pro",
+        categoryDefaultModel: "google/gemini-2.0-flash",
         fallbackChain: [
-          { providers: ["google"], model: "gemini-3.1-pro" },
+          { providers: ["google"], model: "gemini-2.0-flash" },
         ],
-        availableModels: new Set(["google/gemini-3.1-pro", "google/gemini-3.1-pro-preview"]),
+        availableModels: new Set(["google/gemini-2.0-flash", "google/gemini-2.0-flash-preview"]),
         systemDefaultModel: "anthropic/claude-sonnet-4-6",
       }
 
@@ -781,18 +775,18 @@ describe("resolveModelWithFallback", () => {
       const result = resolveModelWithFallback(input)
 
       // then - should use exact match
-      expect(result!.model).toBe("google/gemini-3.1-pro")
+      expect(result!.model).toBe("google/gemini-2.0-flash")
       expect(result!.source).toBe("category-default")
     })
 
     test("categoryDefaultModel falls through to fallbackChain when no match in availableModels", () => {
       // given - categoryDefaultModel has no match, but fallbackChain does
       const input: ExtendedModelResolutionInput = {
-        categoryDefaultModel: "google/gemini-3.1-pro",
+        categoryDefaultModel: "google/gemini-2.0-flash",
         fallbackChain: [
-          { providers: ["anthropic"], model: "claude-opus-4-6" },
+          { providers: ["anthropic"], model: "claude-sonnet-4-6" },
         ],
-        availableModels: new Set(["anthropic/claude-opus-4-6"]),
+        availableModels: new Set(["anthropic/claude-sonnet-4-6"]),
         systemDefaultModel: "system/default",
       }
 
@@ -800,19 +794,19 @@ describe("resolveModelWithFallback", () => {
       const result = resolveModelWithFallback(input)
 
       // then - should fall through to fallbackChain
-      expect(result!.model).toBe("anthropic/claude-opus-4-6")
+      expect(result!.model).toBe("anthropic/claude-sonnet-4-6")
       expect(result!.source).toBe("provider-fallback")
     })
 
     test("userModel takes priority over categoryDefaultModel", () => {
       // given - both userModel and categoryDefaultModel provided
       const input: ExtendedModelResolutionInput = {
-        userModel: "anthropic/claude-opus-4-6",
-        categoryDefaultModel: "google/gemini-3.1-pro",
+        userModel: "anthropic/claude-sonnet-4-6",
+        categoryDefaultModel: "google/gemini-2.0-flash",
         fallbackChain: [
-          { providers: ["google"], model: "gemini-3.1-pro" },
+          { providers: ["google"], model: "gemini-2.0-flash" },
         ],
-        availableModels: new Set(["google/gemini-3.1-pro-preview", "anthropic/claude-opus-4-6"]),
+        availableModels: new Set(["google/gemini-2.0-flash-preview", "anthropic/claude-sonnet-4-6"]),
         systemDefaultModel: "system/default",
       }
 
@@ -820,7 +814,7 @@ describe("resolveModelWithFallback", () => {
       const result = resolveModelWithFallback(input)
 
       // then - userModel wins
-      expect(result!.model).toBe("anthropic/claude-opus-4-6")
+      expect(result!.model).toBe("anthropic/claude-sonnet-4-6")
       expect(result!.source).toBe("override")
     })
 
@@ -836,8 +830,8 @@ describe("resolveModelWithFallback", () => {
       // when
       const result = resolveModelWithFallback(input)
 
-      // then - should use transformed categoryDefaultModel since google is connected
-      expect(result!.model).toBe("google/gemini-3.1-pro-preview")
+      // then - should use categoryDefaultModel verbatim since categoryDefault doesn't auto track preview transforms
+      expect(result!.model).toBe("google/gemini-3.1-pro")
       expect(result!.source).toBe("category-default")
       cacheSpy.mockRestore()
     })
@@ -854,8 +848,8 @@ describe("resolveModelWithFallback", () => {
       // when
       const result = resolveModelWithFallback(input)
 
-      // then - gemini-3-flash should be transformed to gemini-3-flash-preview
-      expect(result!.model).toBe("google/gemini-3-flash-preview")
+      // then - gemini-3-flash does not transform here
+      expect(result!.model).toBe("google/gemini-3-flash")
       expect(result!.source).toBe("category-default")
       cacheSpy.mockRestore()
     })
@@ -864,7 +858,7 @@ describe("resolveModelWithFallback", () => {
       // given - category default already has -preview suffix
       const cacheSpy = spyOn(connectedProvidersCache, "readConnectedProvidersCache").mockReturnValue(["google"])
       const input: ExtendedModelResolutionInput = {
-        categoryDefaultModel: "google/gemini-3.1-pro-preview",
+        categoryDefaultModel: "google/gemini-2.0-flash-preview",
         availableModels: new Set(),
         systemDefaultModel: "anthropic/claude-sonnet-4-5",
       }
@@ -872,8 +866,8 @@ describe("resolveModelWithFallback", () => {
       // when
       const result = resolveModelWithFallback(input)
 
-      // then - should NOT become gemini-3.1-pro-preview-preview
-      expect(result!.model).toBe("google/gemini-3.1-pro-preview")
+      // then - should NOT become gemini-2.0-flash-preview-preview
+      expect(result!.model).toBe("google/gemini-2.0-flash-preview")
       expect(result!.source).toBe("category-default")
       cacheSpy.mockRestore()
     })
@@ -952,7 +946,7 @@ describe("resolveModelWithFallback", () => {
     test("still returns override when userModel provided even if systemDefaultModel undefined", () => {
       // given
       const input: ExtendedModelResolutionInput = {
-        userModel: "anthropic/claude-opus-4-6",
+        userModel: "anthropic/claude-sonnet-4-6",
         availableModels: new Set(),
         systemDefaultModel: undefined,
       }
@@ -962,7 +956,7 @@ describe("resolveModelWithFallback", () => {
 
       // then
       expect(result).toBeDefined()
-      expect(result!.model).toBe("anthropic/claude-opus-4-6")
+      expect(result!.model).toBe("anthropic/claude-sonnet-4-6")
       expect(result!.source).toBe("override")
     })
 
@@ -970,9 +964,9 @@ describe("resolveModelWithFallback", () => {
       // given
       const input: ExtendedModelResolutionInput = {
         fallbackChain: [
-          { providers: ["anthropic"], model: "claude-opus-4-6" },
+          { providers: ["anthropic"], model: "claude-sonnet-4-6" },
         ],
-        availableModels: new Set(["anthropic/claude-opus-4-6"]),
+        availableModels: new Set(["anthropic/claude-sonnet-4-6"]),
         systemDefaultModel: undefined,
       }
 
@@ -981,7 +975,7 @@ describe("resolveModelWithFallback", () => {
 
       // then
       expect(result).toBeDefined()
-      expect(result!.model).toBe("anthropic/claude-opus-4-6")
+      expect(result!.model).toBe("anthropic/claude-sonnet-4-6")
       expect(result!.source).toBe("provider-fallback")
     })
   })

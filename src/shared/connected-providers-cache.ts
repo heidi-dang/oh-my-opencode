@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs"
+import { existsSync, readFileSync, writeFileSync, mkdirSync, statSync } from "fs"
 import { join } from "path"
 import { log } from "./logger"
 import { getOmoOpenCodeCacheDir } from "./data-path"
@@ -36,6 +36,9 @@ function ensureCacheDir(): void {
 	}
 }
 
+let memoryConnectedProviders: string[] | null = null
+let memoryConnectedProvidersMtime: number = 0
+
 /**
  * Read the connected providers cache.
  * Returns the list of connected provider IDs, or null if cache doesn't exist.
@@ -44,13 +47,23 @@ export function readConnectedProvidersCache(): string[] | null {
 	const cacheFile = getCacheFilePath(CONNECTED_PROVIDERS_CACHE_FILE)
 
 	if (!existsSync(cacheFile)) {
+		memoryConnectedProviders = null
+		memoryConnectedProvidersMtime = 0
 		log("[connected-providers-cache] Cache file not found", { cacheFile })
 		return null
 	}
 
 	try {
+		const mtime = statSync(cacheFile).mtimeMs
+		if (memoryConnectedProviders && memoryConnectedProvidersMtime === mtime) {
+			return memoryConnectedProviders
+		}
+
 		const content = readFileSync(cacheFile, "utf-8")
 		const data = JSON.parse(content) as ConnectedProvidersCache
+		
+		memoryConnectedProviders = data.connected
+		memoryConnectedProvidersMtime = mtime
 		log("[connected-providers-cache] Read cache", { count: data.connected.length, updatedAt: data.updatedAt })
 		return data.connected
 	} catch (err) {
@@ -81,11 +94,15 @@ function writeConnectedProvidersCache(connected: string[]): void {
 
 	try {
 		writeFileSync(cacheFile, JSON.stringify(data, null, 2))
+		memoryConnectedProviders = null // invalidate
 		log("[connected-providers-cache] Cache written", { count: connected.length })
 	} catch (err) {
 		log("[connected-providers-cache] Error writing cache", { error: String(err) })
 	}
 }
+
+let memoryProviderModels: ProviderModelsCache | null = null
+let memoryProviderModelsMtime: number = 0
 
 /**
  * Read the provider-models cache.
@@ -95,13 +112,23 @@ export function readProviderModelsCache(): ProviderModelsCache | null {
 	const cacheFile = getCacheFilePath(PROVIDER_MODELS_CACHE_FILE)
 
 	if (!existsSync(cacheFile)) {
+		memoryProviderModels = null
+		memoryProviderModelsMtime = 0
 		log("[connected-providers-cache] Provider-models cache file not found", { cacheFile })
 		return null
 	}
 
 	try {
+		const mtime = statSync(cacheFile).mtimeMs
+		if (memoryProviderModels && memoryProviderModelsMtime === mtime) {
+			return memoryProviderModels
+		}
+
 		const content = readFileSync(cacheFile, "utf-8")
 		const data = JSON.parse(content) as ProviderModelsCache
+		
+		memoryProviderModels = data
+		memoryProviderModelsMtime = mtime
 		log("[connected-providers-cache] Read provider-models cache", { 
 			providerCount: Object.keys(data.models).length, 
 			updatedAt: data.updatedAt 
@@ -135,6 +162,7 @@ export function writeProviderModelsCache(data: { models: Record<string, string[]
 
 	try {
 		writeFileSync(cacheFile, JSON.stringify(cacheData, null, 2))
+		memoryProviderModels = null // invalidate
 		log("[connected-providers-cache] Provider-models cache written", { 
 			providerCount: Object.keys(data.models).length 
 		})
