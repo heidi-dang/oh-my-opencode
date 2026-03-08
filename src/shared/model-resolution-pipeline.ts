@@ -10,8 +10,10 @@ export type ModelResolutionRequest = {
     uiSelectedModel?: string
     sessionModel?: string
     userModel?: string
+    userFallbackModel?: string
     userFallbackModels?: string[]
     categoryDefaultModel?: string
+    categoryFallbackModel?: string
   }
   constraints: {
     availableModels: Set<string>
@@ -20,12 +22,14 @@ export type ModelResolutionRequest = {
   policy?: {
     fallbackChain?: FallbackEntry[]
     systemDefaultModel?: string
+    systemDefaultFallbackModel?: string
   }
 }
 
 export type ModelResolutionProvenance =
   | "override"
   | "category-default"
+  | "user-fallback"
   | "provider-fallback"
   | "system-default"
 
@@ -47,165 +51,78 @@ export function resolveModelPipeline(
   const fallbackChain = policy?.fallbackChain
   const systemDefaultModel = policy?.systemDefaultModel
 
-  const normalizedUiModel = normalizeModel(intent?.uiSelectedModel)
-  if (normalizedUiModel) {
-    // When we have an availability cache, validate the UI-selected model before returning.
-    // This prevents unsupported models from reaching the runtime where they cause stuck-Queued states.
+  const tryResolve = (model?: string, provenance: ModelResolutionProvenance = "override"): ModelResolutionResult | undefined => {
+    const normalized = normalizeModel(model)
+    if (!normalized) return undefined
+
+    attempted.push(normalized)
+
     if (availableModels.size > 0) {
-      const parts = normalizedUiModel.split("/")
+      const parts = normalized.split("/")
       const providerHint = parts.length >= 2 ? [parts[0]] : undefined
-      const match = fuzzyMatchModel(normalizedUiModel, availableModels, providerHint)
+      const match = fuzzyMatchModel(normalized, availableModels, providerHint)
       if (match) {
-        log("Model resolved via UI selection (availability confirmed)", { model: match })
-        return { model: match, provenance: "override" }
+        log(`[MODEL-RESOLUTION] Resolved via ${provenance}`, { requested: normalized, resolved: match })
+        return { model: match, provenance, attempted }
       }
-      log("UI-selected model not available, falling through to fallback chain", { model: normalizedUiModel })
-      // Do NOT return — fall through to category-default / fallback chain
+      log(`[MODEL-RESOLUTION] Requested model not available in current providers`, { requested: normalized, provenance })
+      return undefined
     } else {
-      log("Model resolved via UI selection (no cache, first run)", { model: normalizedUiModel })
-      return { model: normalizedUiModel, provenance: "override" }
+      log(`[MODEL-RESOLUTION] Resolved via ${provenance} (no availability cache)`, { model: normalized })
+      return { model: normalized, provenance, attempted }
     }
   }
 
-  const normalizedSessionModel = normalizeModel(intent?.sessionModel)
+  // 1. UI Selection (from Dashboard)
+  const uiResult = tryResolve(intent?.uiSelectedModel)
+  if (uiResult) return uiResult
 
-  // userModel (agent-level config, e.g. agents.hephaestus.model) MUST take priority over sessionModel.
-  // sessionModel is the parent session's current model and should only be used as a fallback when
-  // the agent has no explicit model config. Without this ordering, sub-agents silently inherit the
-  // parent's model and ignore their own configuration.
-  const normalizedUserModel = normalizeModel(intent?.userModel)
-  if (normalizedUserModel) {
-    // When we have an availability cache, validate the config override before returning.
-    if (availableModels.size > 0) {
-      const parts = normalizedUserModel.split("/")
-      const providerHint = parts.length >= 2 ? [parts[0]] : undefined
-      const match = fuzzyMatchModel(normalizedUserModel, availableModels, providerHint)
-      if (match) {
-        log("Model resolved via config override (availability confirmed)", { model: match })
-        return { model: match, provenance: "override" }
-      }
-      log("Config-override model not available, skipping to next option", { model: normalizedUserModel })
-    } else {
-      log("Model resolved via config override (no cache, first run)", { model: normalizedUserModel })
-      return { model: normalizedUserModel, provenance: "override" }
-    }
-  }
+  // 2. Local Config Override (e.g. agents.sisyphus.model)
+  // userModel MUST take priority over sessionModel
+  const userResult = tryResolve(intent?.userModel)
+  if (userResult) return userResult
 
-  if (normalizedSessionModel) {
-    // Apply the same availability guard as uiSelectedModel:
-    // a stale or unsupported inherited session model must be skipped, not silently accepted.
-    if (availableModels.size > 0) {
-      const parts = normalizedSessionModel.split("/")
-      const providerHint = parts.length >= 2 ? [parts[0]] : undefined
-      const match = fuzzyMatchModel(normalizedSessionModel, availableModels, providerHint)
-      if (match) {
-        log("Model resolved via session state (availability confirmed)", { model: match })
-        return { model: match, provenance: "override" }
-      }
-      log("Session model not available, skipping to fallback chain", { model: normalizedSessionModel })
-      // Do NOT return — fall through to category-default / fallback chain
-    } else {
-      log("Model resolved via session state (no cache, first run)", { model: normalizedSessionModel })
-      return { model: normalizedSessionModel, provenance: "override" }
-    }
-  }
+  // 3. Local Config Fallback (e.g. agents.sisyphus.fallback_model)
+  const userFallbackResult = tryResolve(intent?.userFallbackModel, "user-fallback")
+  if (userFallbackResult) return userFallbackResult
 
-  const normalizedCategoryDefault = normalizeModel(intent?.categoryDefaultModel)
-  if (normalizedCategoryDefault) {
-    attempted.push(normalizedCategoryDefault)
-    if (availableModels.size > 0) {
-      const parts = normalizedCategoryDefault.split("/")
-      const providerHint = parts.length >= 2 ? [parts[0]] : undefined
-      const match = fuzzyMatchModel(normalizedCategoryDefault, availableModels, providerHint)
-      if (match) {
-        log("Model resolved via category default (fuzzy matched)", {
-          original: normalizedCategoryDefault,
-          matched: match,
-        })
-        return { model: match, provenance: "category-default", attempted }
-      }
-    } else {
-      const connectedProviders = constraints.connectedProviders ?? connectedProvidersCache.readConnectedProvidersCache()
-      if (connectedProviders === null) {
-        log("Model resolved via category default (no cache, first run)", {
-          model: normalizedCategoryDefault,
-        })
-        return { model: normalizedCategoryDefault, provenance: "category-default", attempted }
-      }
-      const parts = normalizedCategoryDefault.split("/")
-      if (parts.length >= 2) {
-        const provider = parts[0]
-        if (connectedProviders.includes(provider)) {
-          const modelName = parts.slice(1).join("/")
-          const transformedModel = `${provider}/${transformModelForProvider(provider, modelName)}`
-          log("Model resolved via category default (connected provider)", {
-            model: transformedModel,
-            original: normalizedCategoryDefault,
-          })
-          return { model: transformedModel, provenance: "category-default", attempted }
-        }
-      }
-    }
-    log("Category default model not available, falling through to fallback chain", {
-      model: normalizedCategoryDefault,
-    })
-  }
+  // 4. Session Inheritance
+  const sessionResult = tryResolve(intent?.sessionModel)
+  if (sessionResult) return sessionResult
 
-  //#when - user configured fallback_models, try them before hardcoded fallback chain
+  // 5. Category Defaults (from oh-my-opencode.json categories section)
+  const categoryResult = tryResolve(intent?.categoryDefaultModel, "category-default")
+  if (categoryResult) return categoryResult
+
+  const categoryFallbackResult = tryResolve(intent?.categoryFallbackModel, "category-default")
+  if (categoryFallbackResult) return categoryFallbackResult
+
+  // 6. User-defined secondary fallback list (fallback_models array)
   const userFallbackModels = intent?.userFallbackModels
   if (userFallbackModels && userFallbackModels.length > 0) {
-    if (availableModels.size === 0) {
-      const connectedProviders = constraints.connectedProviders ?? connectedProvidersCache.readConnectedProvidersCache()
-      const connectedSet = connectedProviders ? new Set(connectedProviders) : null
-
-      if (connectedSet !== null) {
-        for (const model of userFallbackModels) {
-          attempted.push(model)
-          const parts = model.split("/")
-          if (parts.length >= 2) {
-            const provider = parts[0]
-            if (connectedSet.has(provider)) {
-              const modelName = parts.slice(1).join("/")
-              const transformedModel = `${provider}/${transformModelForProvider(provider, modelName)}`
-              log("Model resolved via user fallback_models (connected provider)", { model: transformedModel, original: model })
-              return { model: transformedModel, provenance: "provider-fallback", attempted }
-            }
-          }
-        }
-        log("No connected provider found in user fallback_models, falling through to hardcoded chain")
-      }
-    } else {
-      for (const model of userFallbackModels) {
-        attempted.push(model)
-        const parts = model.split("/")
-        const providerHint = parts.length >= 2 ? [parts[0]] : undefined
-        const match = fuzzyMatchModel(model, availableModels, providerHint)
-        if (match) {
-          log("Model resolved via user fallback_models (availability confirmed)", { model: model, match })
-          return { model: match, provenance: "provider-fallback", attempted }
-        }
-      }
-      log("No available model found in user fallback_models, falling through to hardcoded chain")
+    for (const model of userFallbackModels) {
+      const res = tryResolve(model, "user-fallback")
+      if (res) return res
     }
   }
 
+  // 7. Hardcoded Fallback Chain (PROVIDER-BASED)
+  // This is the LAST RESORT before system default.
+  // It only maps high-level intents (e.g. "gpt-5") to provider-specific IDs.
   if (fallbackChain && fallbackChain.length > 0) {
     if (availableModels.size === 0) {
       const connectedProviders = constraints.connectedProviders ?? connectedProvidersCache.readConnectedProvidersCache()
       const connectedSet = connectedProviders ? new Set(connectedProviders) : null
 
-      if (connectedSet === null) {
-        log("Model fallback chain skipped (no connected providers cache) - falling through to system default")
-      } else {
+      if (connectedSet !== null) {
         for (const entry of fallbackChain) {
           for (const provider of entry.providers) {
             if (connectedSet.has(provider)) {
               const transformedModelId = transformModelForProvider(provider, entry.model)
               const model = `${provider}/${transformedModelId}`
-              log("Model resolved via fallback chain (connected provider)", {
+              log("[MODEL-RESOLUTION] Resolved via provider-specific fallback chain (no cache)", {
                 provider,
                 model: transformedModelId,
-                variant: entry.variant,
               })
               return {
                 model,
@@ -216,7 +133,6 @@ export function resolveModelPipeline(
             }
           }
         }
-        log("No connected provider found in fallback chain, falling through to system default")
       }
     } else {
       for (const entry of fallbackChain) {
@@ -224,11 +140,10 @@ export function resolveModelPipeline(
           const fullModel = `${provider}/${entry.model}`
           const match = fuzzyMatchModel(fullModel, availableModels, [provider])
           if (match) {
-            log("Model resolved via fallback chain (availability confirmed)", {
+            log("[MODEL-RESOLUTION] Resolved via provider-specific fallback chain", {
               provider,
               model: entry.model,
               match,
-              variant: entry.variant,
             })
             return {
               model: match,
@@ -238,31 +153,17 @@ export function resolveModelPipeline(
             }
           }
         }
-
-        const crossProviderMatch = fuzzyMatchModel(entry.model, availableModels)
-        if (crossProviderMatch) {
-          log("Model resolved via fallback chain (cross-provider fuzzy match)", {
-            model: entry.model,
-            match: crossProviderMatch,
-            variant: entry.variant,
-          })
-          return {
-            model: crossProviderMatch,
-            provenance: "provider-fallback",
-            variant: entry.variant,
-            attempted,
-          }
-        }
       }
-      log("No available model found in fallback chain, falling through to system default")
     }
   }
 
-  if (systemDefaultModel === undefined) {
-    log("No model resolved - systemDefaultModel not configured")
-    return undefined
-  }
+  // 8. Global System Default (from oh-my-opencode.json)
+  const systemDefaultResult = tryResolve(systemDefaultModel, "system-default")
+  if (systemDefaultResult) return systemDefaultResult
 
-  log("Model resolved via system default", { model: systemDefaultModel })
-  return { model: systemDefaultModel, provenance: "system-default", attempted }
+  const systemDefaultFallbackResult = tryResolve(policy?.systemDefaultFallbackModel, "system-default")
+  if (systemDefaultFallbackResult) return systemDefaultFallbackResult
+
+  log("[MODEL-RESOLUTION] FAILED to resolve any supported model", { attempted })
+  return undefined
 }

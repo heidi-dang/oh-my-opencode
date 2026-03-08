@@ -7,6 +7,12 @@ export const EDIT_ERROR_PATTERNS = [
   "oldString and newString must be different",
   "oldString not found",
   "oldString found multiple times",
+  "could not find",
+  "patch failed",
+  "hunk failed",
+  "no exact match",
+  "refused to edit",
+  "hash mismatch"
 ] as const
 
 /**
@@ -26,6 +32,8 @@ You made an Edit mistake. STOP and do this NOW:
 DO NOT attempt another edit until you've read and verified the file state.
 `
 
+const TARGET_TOOLS = new Set(["edit", "apply_patch", "hashline_edit"])
+
 /**
  * Detects Edit tool errors caused by AI mistakes and injects a recovery reminder
  *
@@ -33,6 +41,7 @@ DO NOT attempt another edit until you've read and verified the file state.
  * - oldString and newString must be different (trying to "edit" to same content)
  * - oldString not found (wrong assumption about file content)
  * - oldString found multiple times (ambiguous match, need more context)
+ * - patch failed / could not find (apply_patch rejections)
  *
  * @see https://github.com/sst/opencode/issues/4718
  */
@@ -42,7 +51,7 @@ export function createEditErrorRecoveryHook(_ctx: PluginInput) {
       input: { tool: string; sessionID: string; callID: string },
       output: { title: string; output: string; metadata: unknown }
     ) => {
-      if (input.tool.toLowerCase() !== "edit") return
+      if (!TARGET_TOOLS.has(input.tool.toLowerCase())) return
       if (typeof output.output !== "string") return
 
       const outputLower = (output.output ?? "").toLowerCase()

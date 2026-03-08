@@ -131,6 +131,34 @@ describe("createEditErrorRecoveryHook", () => {
         })
       })
     })
+
+    describe("#given apply_patch tool with failure", () => {
+      describe("#when generic patch failure occurs", () => {
+        it("#then should append the recovery reminder", async () => {
+          const input = createInput("apply_patch")
+          const output = createOutput("Error: could not find exact match")
+
+          await hook["tool.execute.after"](input, output)
+
+          expect(output.output).toContain(EDIT_ERROR_REMINDER)
+          expect(output.output).toContain("could not find")
+        })
+      })
+    })
+
+    describe("#given hashline_edit tool with failure", () => {
+      describe("#when hash mismatch occurs", () => {
+        it("#then should append the recovery reminder", async () => {
+          const input = createInput("hashline_edit")
+          const output = createOutput("hash mismatch for line 42")
+
+          await hook["tool.execute.after"](input, output)
+
+          expect(output.output).toContain(EDIT_ERROR_REMINDER)
+        })
+      })
+    })
+
   })
 
   describe("EDIT_ERROR_PATTERNS", () => {
@@ -138,6 +166,9 @@ describe("createEditErrorRecoveryHook", () => {
       expect(EDIT_ERROR_PATTERNS).toContain("oldString and newString must be different")
       expect(EDIT_ERROR_PATTERNS).toContain("oldString not found")
       expect(EDIT_ERROR_PATTERNS).toContain("oldString found multiple times")
+      expect(EDIT_ERROR_PATTERNS).toContain("could not find")
+      expect(EDIT_ERROR_PATTERNS).toContain("patch failed")
+      expect(EDIT_ERROR_PATTERNS).toContain("hash mismatch")
     })
   })
 })

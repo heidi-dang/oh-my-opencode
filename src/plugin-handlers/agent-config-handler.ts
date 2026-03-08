@@ -99,13 +99,12 @@ export async function applyAgentConfig(params: {
 
   const builtinAgents = await createBuiltinAgents(
     migratedDisabledAgents,
-    params.pluginConfig.agents,
+    params.pluginConfig,
     params.ctx.directory,
     systemDefaultModel,
-    params.pluginConfig.categories,
     params.pluginConfig.git_master,
     allDiscoveredSkills,
-    params.ctx.client,
+    params.pluginComponents.agents,
     browserProvider,
     uiSelectedModel,
     sessionModel,

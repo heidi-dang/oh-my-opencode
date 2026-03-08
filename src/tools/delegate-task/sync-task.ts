@@ -21,6 +21,7 @@ export async function executeSyncTask(
   systemContent: string | undefined,
   modelInfo?: ModelFallbackInfo,
   fallbackChain?: import("../../shared/model-requirements").FallbackEntry[],
+  fallbackModel?: string,
   deps: SyncTaskDeps = syncTaskDeps
 ): Promise<string> {
   const { client, directory, onSyncSessionCreated, syncPollTimeoutMs } = executorCtx
@@ -105,6 +106,7 @@ export async function executeSyncTask(
       args,
       systemContent,
       categoryModel,
+      fallbackModel,
       toastManager,
       taskId,
     })

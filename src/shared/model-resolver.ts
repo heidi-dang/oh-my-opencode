@@ -11,6 +11,7 @@ export type ModelResolutionInput = {
 export type ModelSource =
 	| "override"
 	| "category-default"
+	| "user-fallback"
 	| "provider-fallback"
 	| "system-default"
 
@@ -23,11 +24,14 @@ export type ModelResolutionResult = {
 export type ExtendedModelResolutionInput = {
 	uiSelectedModel?: string
 	userModel?: string
+	userFallbackModel?: string
 	userFallbackModels?: string[]
 	categoryDefaultModel?: string
+	categoryFallbackModel?: string
 	fallbackChain?: FallbackEntry[]
 	availableModels: Set<string>
 	systemDefaultModel?: string
+	systemDefaultFallbackModel?: string
 }
 
 
@@ -42,11 +46,29 @@ export function resolveModel(input: ModelResolutionInput): string | undefined {
 export function resolveModelWithFallback(
 	input: ExtendedModelResolutionInput,
 ): ModelResolutionResult | undefined {
-	const { uiSelectedModel, userModel, userFallbackModels, categoryDefaultModel, fallbackChain, availableModels, systemDefaultModel } = input
+	const {
+		uiSelectedModel,
+		userModel,
+		userFallbackModel,
+		userFallbackModels,
+		categoryDefaultModel,
+		categoryFallbackModel,
+		fallbackChain,
+		availableModels,
+		systemDefaultModel,
+		systemDefaultFallbackModel,
+	} = input
 	const resolved = resolveModelPipeline({
-		intent: { uiSelectedModel, userModel, userFallbackModels, categoryDefaultModel },
+		intent: {
+			uiSelectedModel,
+			userModel,
+			userFallbackModel,
+			userFallbackModels,
+			categoryDefaultModel,
+			categoryFallbackModel,
+		},
 		constraints: { availableModels },
-		policy: { fallbackChain, systemDefaultModel },
+		policy: { fallbackChain, systemDefaultModel, systemDefaultFallbackModel },
 	})
 
 	if (!resolved) {
@@ -61,11 +83,16 @@ export function resolveModelWithFallback(
 }
 
 /**
- * Normalizes fallback_models config (which can be string or string[]) to string[]
+ * Normalizes fallback_models config (which can be string or objects) to string[]
  * Centralized helper to avoid duplicated normalization logic
  */
-export function normalizeFallbackModels(models: string | string[] | undefined): string[] | undefined {
+export function normalizeFallbackModels(
+	models: string | (string | { model: string, providers?: string[], variant?: string })[] | undefined
+): string[] | undefined {
 	if (!models) return undefined
 	if (typeof models === "string") return [models]
-	return models
+	if (Array.isArray(models)) {
+		return models.map(m => (typeof m === "string" ? m : m.model))
+	}
+	return undefined
 }

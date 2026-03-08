@@ -19,7 +19,7 @@ describe("resolveModelPipeline", () => {
       : false
 
     // then
-    expect(result).toEqual({ model: "openai/gpt-5.3-codex", provenance: "override" })
+    expect(result).toMatchObject({ model: "openai/gpt-5.3-codex", provenance: "override" })
     expect(hasExplicitUserConfigField).toBe(false)
   })
 
@@ -92,5 +92,53 @@ describe("resolveModelPipeline", () => {
 
     //#then - sessionModel is returned since it is available
     expect(result?.model).toBe("anthropic/claude-3.5-sonnet")
+  })
+
+  test("respects userFallbackModel when primary userModel is unsupported", () => {
+    const result = resolveModelPipeline({
+      intent: {
+        userModel: "openai/gpt-5", // Not available
+        userFallbackModel: "anthropic/claude-3-haiku" // Available
+      },
+      constraints: { availableModels: new Set(["anthropic/claude-3-haiku"]) }
+    })
+    expect(result).toMatchObject({ model: "anthropic/claude-3-haiku", provenance: "user-fallback" })
+  })
+
+  test("respects userFallbackModels array when primary userModel is unsupported", () => {
+    const result = resolveModelPipeline({
+      intent: {
+        userModel: "openai/gpt-5", // Not available
+        userFallbackModels: ["gemini-5", "anthropic/claude-3-haiku"] // Only second is available
+      },
+      constraints: { availableModels: new Set(["anthropic/claude-3-haiku"]) }
+    })
+    expect(result).toMatchObject({ model: "anthropic/claude-3-haiku", provenance: "user-fallback" })
+  })
+
+  test("respects categoryFallbackModel when categoryDefaultModel is unsupported", () => {
+    const result = resolveModelPipeline({
+      intent: {
+        categoryDefaultModel: "openai/gpt-5", // Not available
+        categoryFallbackModel: "openai/gpt-4o" // Available
+      },
+      constraints: { availableModels: new Set(["openai/gpt-4o"]) }
+    })
+    expect(result).toMatchObject({ model: "openai/gpt-4o", provenance: "category-default" })
+  })
+
+  test("rejects userFallbackModel if it is also unsupported and falls back to system provider chain", () => {
+    const result = resolveModelPipeline({
+      intent: {
+        userModel: "openai/gpt-5", // Not available
+        userFallbackModel: "openai/gpt-4-magic" // Not available
+      },
+      constraints: { availableModels: new Set(["google/gemini-pro"]) },
+      policy: {
+        fallbackChain: [{ providers: ["google"], model: "gemini-pro" }]
+      }
+    })
+    // Both userModel and userFallbackModel are rejected, drops to fallback chain
+    expect(result).toMatchObject({ model: "google/gemini-pro", provenance: "provider-fallback" })
   })
 })

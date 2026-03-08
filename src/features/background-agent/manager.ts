@@ -170,6 +170,7 @@ export class BackgroundManager {
       parentTools: input.parentTools,
       model: input.model,
       fallbackChain: input.fallbackChain,
+      fallbackModel: input.fallbackModel,
       attemptCount: 0,
       category: input.category,
     }
@@ -377,6 +378,7 @@ export class BackgroundManager {
         agent: input.agent,
         ...(launchModel ? { model: launchModel } : {}),
         ...(launchVariant ? { variant: launchVariant } : {}),
+        ...(input.fallbackModel ? { fallback_model: input.fallbackModel } : {}),
         system: input.skillContent,
         tools: (() => {
           const tools = {
@@ -745,6 +747,7 @@ export class BackgroundManager {
         agent: existingTask.agent,
         ...(resumeModel ? { model: resumeModel } : {}),
         ...(resumeVariant ? { variant: resumeVariant } : {}),
+        ...(existingTask.fallbackModel ? { fallback_model: existingTask.fallbackModel } : {}),
         tools: (() => {
           const tools = {
             task: false,
