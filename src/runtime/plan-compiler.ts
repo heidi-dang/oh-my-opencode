@@ -3,6 +3,8 @@ export interface ExecutionGraphNode {
     action: string      // e.g. "run_tests", "fix", "commit"
     dependencies: string[]
     status: "pending" | "running" | "completed" | "failed"
+    deterministic?: boolean
+    toolArgs?: any
 }
 
 export type PlanMode = "planned" | "recovery" | "bootstrap"
@@ -56,8 +58,9 @@ export class PlanCompiler {
         state.lastTouchTimestamp = Date.now()
 
         if (state.currentStepIndex >= 0 && state.currentStepIndex < state.graph.length) {
+            const node = state.graph[state.currentStepIndex]
             return {
-                ...state.graph[state.currentStepIndex],
+                ...node,
                 mode: state.mode,
                 taskID: state.taskID,
                 runID: state.runID,
@@ -141,7 +144,8 @@ export class PlanCompiler {
                     id: `${node.id}_verify`,
                     action: "verify_action",
                     dependencies: [node.id],
-                    status: "pending"
+                    status: "pending",
+                    deterministic: true
                 })
             }
         }

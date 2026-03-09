@@ -17,6 +17,7 @@ export async function injectBoulderContinuation(input: {
   worktreePath?: string
   backgroundManager?: BackgroundManager
   sessionState: SessionState
+  bypassContext?: string
 }): Promise<void> {
   const {
     ctx,
@@ -43,7 +44,8 @@ export async function injectBoulderContinuation(input: {
   const prompt =
     BOULDER_CONTINUATION_PROMPT.replace(/{PLAN_NAME}/g, planName) +
     `\n\n[Status: ${total - remaining}/${total} completed, ${remaining} remaining]` +
-    worktreeContext
+    worktreeContext +
+    (input.bypassContext ? `\n\n${input.bypassContext}` : "")
 
   try {
     log(`[${HOOK_NAME}] Injecting boulder continuation`, { sessionID, planName, remaining })

@@ -7,6 +7,7 @@ import { HOOK_NAME } from "./hook-name"
 import { isAbortError } from "./is-abort-error"
 import { injectBoulderContinuation } from "./boulder-continuation-injector"
 import { getLastAgentFromSession } from "./session-last-agent"
+import { compiler } from "../../runtime/plan-compiler"
 import type { AtlasHookOptions, SessionState } from "./types"
 
 const CONTINUATION_COOLDOWN_MS = 5000
@@ -122,16 +123,38 @@ export function createAtlasEventHandler(input: {
         return
       }
 
-      if (state.lastContinuationInjectedAt && now - state.lastContinuationInjectedAt < CONTINUATION_COOLDOWN_MS) {
-        log(`[${HOOK_NAME}] Skipped: continuation cooldown active`, {
-          sessionID,
-          cooldownRemaining: CONTINUATION_COOLDOWN_MS - (now - state.lastContinuationInjectedAt),
-        })
-        return
+      const activeStep = compiler.getActiveStep(sessionID)
+      if (activeStep?.deterministic) {
+          log(`[${HOOK_NAME}] Triggering auto-execution for deterministic step: ${activeStep.action}`, { sessionID })
+          
+          const { executeDeterministicStep } = await import("./auto-executor")
+          const { summarizeOutput } = await import("../../shared/result-compactor")
+          
+          const result = await executeDeterministicStep(ctx, sessionID, activeStep.action, activeStep.toolArgs)
+          
+          if (result.success) {
+              compiler.markStepComplete(sessionID, activeStep.id)
+              log(`[${HOOK_NAME}] Auto-execution successful, step marked complete.`, { sessionID })
+              
+              if (!state.autoExecutionSummaries) state.autoExecutionSummaries = []
+              state.autoExecutionSummaries.push(summarizeOutput(activeStep.action, result.output))
+              
+              return
+          } else {
+              log(`[${HOOK_NAME}] Auto-execution failed, falling back to LLM.`, { sessionID, error: result.output })
+          }
       }
 
       state.lastContinuationInjectedAt = now
       const remaining = progress.total - progress.completed
+      
+      // Inject buffered auto-execution summaries into the prompt
+      let bypassContext = ""
+      if (state.autoExecutionSummaries && state.autoExecutionSummaries.length > 0) {
+          bypassContext = "\n\n### Recent Auto-Executed Steps (Bypassed LLM):\n" + state.autoExecutionSummaries.join("\n---\n")
+          state.autoExecutionSummaries = [] // Clear buffer after use
+      }
+
       try {
         await injectBoulderContinuation({
           ctx,
@@ -143,6 +166,7 @@ export function createAtlasEventHandler(input: {
           worktreePath: boulderState.worktree_path,
           backgroundManager,
           sessionState: state,
+          bypassContext // New param
         })
       } catch (err) {
         log(`[${HOOK_NAME}] Failed to inject boulder continuation`, { sessionID, error: err })
