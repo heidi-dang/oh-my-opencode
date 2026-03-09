@@ -30,7 +30,7 @@ export interface LedgerEntry {
 export class StateLedger {
     private static instance: StateLedger
     private entries: LedgerEntry[] = []
-    private lastFlowStartTime: number = 0
+    private lastFlowStartTimeMap = new Map<string, number>()
 
     private constructor() { }
 
@@ -42,11 +42,12 @@ export class StateLedger {
     }
 
     /**
-     * Mark the absolute start of a new completion flow.
+     * Mark the absolute start of a new completion flow for a specific session.
      * All entries recorded before this timestamp will be ignored by has().
      */
-    public startNewFlow(): void {
-        this.lastFlowStartTime = Date.now()
+    public startNewFlow(sessionID?: string): void {
+        const key = sessionID || "default"
+        this.lastFlowStartTimeMap.set(key, Date.now())
     }
 
     /**
@@ -76,10 +77,12 @@ export class StateLedger {
     }
 
     /**
-     * Verify if a specific state change has actually occurred in the current flow.
+     * Verify if a specific state change has actually occurred in the current flow of a session.
      */
-    public has(type: LedgerEntryType, keyOrCondition: string | ((entry: LedgerEntry) => boolean)): boolean {
-        const flowEntries = this.entries.filter(e => e.timestamp >= this.lastFlowStartTime)
+    public has(type: LedgerEntryType, keyOrCondition: string | ((entry: LedgerEntry) => boolean), sessionID?: string): boolean {
+        const key = sessionID || "default"
+        const startTime = this.lastFlowStartTimeMap.get(key) || 0
+        const flowEntries = this.entries.filter(e => e.timestamp >= startTime && (!sessionID || e.sessionID === sessionID))
 
         if (typeof keyOrCondition === "string") {
             return flowEntries.some(e => e.type === type && e.key === keyOrCondition)
@@ -88,13 +91,21 @@ export class StateLedger {
     }
 
     /**
-     * Get all entries of a specific type.
+     * Get all entries, optionally filtered by type and sessionID(s).
      */
-    public getEntries(type?: LedgerEntryType): LedgerEntry[] {
-        if (!type) {
-            return [...this.entries]
-        }
-        return this.entries.filter(e => e.type === type)
+    public getEntries(type?: LedgerEntryType, sessionID?: string | string[]): LedgerEntry[] {
+        return this.entries.filter(e => {
+            const typeMatch = !type || e.type === type
+            let sessionMatch = true
+            if (sessionID) {
+                if (Array.isArray(sessionID)) {
+                    sessionMatch = e.sessionID ? sessionID.includes(e.sessionID) : false
+                } else {
+                    sessionMatch = e.sessionID === sessionID
+                }
+            }
+            return typeMatch && sessionMatch
+        })
     }
 
     /**
@@ -109,7 +120,7 @@ export class StateLedger {
      */
     public clear(): void {
         this.entries = []
-        this.lastFlowStartTime = 0
+        this.lastFlowStartTimeMap.clear()
     }
 }
 

@@ -63,7 +63,7 @@ describe("Tool Contract Hook", () => {
             metadata: { success: true, verified: false, changedState: false }
         };
 
-        await expect(executeAfter(input, output)).rejects.toThrow(/NOT verified/);
+        await expect(executeAfter(input, output)).rejects.toThrow(/Unconfirmed/);
     });
 
     it("should reject state change without payload", async () => {

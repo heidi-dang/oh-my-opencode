@@ -24,7 +24,7 @@ export function createSemanticLoopGuardHook(_ctx: PluginInput) {
             output: { args: any }
         ) => {
             // 1. Compute current state hash from Ledger
-            const stateEntries = ledger.getEntries()
+            const stateEntries = ledger.getEntries(undefined, input.sessionID)
             const stateString = JSON.stringify(stateEntries.map(e => ({ type: e.type, key: e.key })))
 
             // 2. Compute intent hash (Tool + Args)

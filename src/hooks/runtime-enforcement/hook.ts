@@ -37,7 +37,8 @@ export function createRuntimeEnforcementHook(_ctx: PluginInput) {
         ) => {
             // Mark the start of a new completion flow verification.
             // This ensures entries from previous turns/flows in the same session are ignored.
-            ledger.startNewFlow()
+            const sessionID = output.messages[0]?.info.sessionID
+            ledger.startNewFlow(sessionID)
 
             // 1. Redact False Success Claims
             // If an assistant message claimed success but the actual tool execution failed

@@ -73,7 +73,8 @@ export function createToolContractHook(_ctx: PluginInput) {
                         e.sessionID === input.sessionID &&
                         e.success === true &&
                         e.verified === true &&
-                        e.changedState === true
+                        e.changedState === true,
+                        input.sessionID
                     )
 
                     if (!actuallyInLedger) {

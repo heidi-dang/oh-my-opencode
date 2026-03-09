@@ -19,13 +19,12 @@ export function createQueryLedgerTool(options?: { backgroundManager?: any }): an
             const sessionIDs = [toolContext.sessionID, ...descendantSessions];
 
             // Default to verified, successful entries from the CURRENT session flow (or descendants)
-            const entries = ledger.getEntries().filter(e =>
+            const entries = ledger.getEntries(args.type, sessionIDs).filter(e =>
                 e.verified === true &&
-                e.success === true &&
-                (!e.sessionID || sessionIDs.includes(e.sessionID))
+                e.success === true
             )
 
-            const filtered = args.type ? entries.filter(e => e.type === args.type) : entries
+            const filtered = entries
 
             const result = createSuccessResult({
                 verified: true,
