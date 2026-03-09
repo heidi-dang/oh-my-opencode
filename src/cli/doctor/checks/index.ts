@@ -13,6 +13,7 @@ import { checkEditAtomicity } from "./edit-atomicity"
 import { checkIssueResolutionWorkflow } from "./issue-resolution"
 import { checkToolMetadataContract } from "./tool-metadata"
 import { checkRunStateWatchdog } from "./run-state-watchdog"
+import { checkMemoryRisk } from "./memory-risk"
 
 export type { CheckDefinition }
 export * from "./model-resolution-types"
@@ -85,6 +86,11 @@ export function getAllCheckDefinitions(): CheckDefinition[] {
       id: "TOOL_CONTRACT",
       name: "Tool Contract Compliance",
       check: checkToolContract,
+    },
+    {
+      id: CHECK_IDS.MEMORY_RISK,
+      name: CHECK_NAMES[CHECK_IDS.MEMORY_RISK],
+      check: checkMemoryRisk,
     },
   ]
 }

@@ -1,3 +1,5 @@
+import { readStreamWithLimit } from "../../shared/stream-limiter"
+
 type SpawnedProcess = {
 	stdout: ReadableStream | null
 	stderr: ReadableStream | null
@@ -17,8 +19,8 @@ export async function collectProcessOutputWithTimeout(
 		process.exited.then(() => clearTimeout(timeoutId))
 	})
 
-	const stdoutPromise = process.stdout ? new Response(process.stdout).text() : Promise.resolve("")
-	const stderrPromise = process.stderr ? new Response(process.stderr).text() : Promise.resolve("")
+	const stdoutPromise = readStreamWithLimit(process.stdout, 10 * 1024 * 1024)
+	const stderrPromise = readStreamWithLimit(process.stderr, 1 * 1024 * 1024)
 
 	const stdout = await Promise.race([stdoutPromise, timeoutPromise])
 	const stderr = await stderrPromise

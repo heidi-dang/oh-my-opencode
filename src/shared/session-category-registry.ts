@@ -7,12 +7,17 @@
 
 // Map of sessionID -> category name
 const sessionCategoryMap = new Map<string, string>()
+const MAX_ENTRIES = 1000
 
 export const SessionCategoryRegistry = {
   /**
    * Register a session with its category
    */
   register: (sessionID: string, category: string): void => {
+    if (sessionCategoryMap.size >= MAX_ENTRIES && !sessionCategoryMap.has(sessionID)) {
+      const firstKey = sessionCategoryMap.keys().next().value
+      if (firstKey) sessionCategoryMap.delete(firstKey)
+    }
     sessionCategoryMap.set(sessionID, category)
   },
 

@@ -14,6 +14,7 @@ import {
 } from "./constants"
 import type { GrepOptions, GrepMatch, GrepResult, CountResult } from "./types"
 import { rgSemaphore } from "../shared/semaphore"
+import { readStreamWithLimit } from "../../shared/stream-limiter"
 
 function buildRgArgs(options: GrepOptions): string[] {
   const args: string[] = [
@@ -184,8 +185,8 @@ async function runRgInternal(options: GrepOptions): Promise<GrepResult> {
   })
 
   try {
-    const stdout = await Promise.race([new Response(proc.stdout).text(), timeoutPromise])
-    const stderr = await new Response(proc.stderr).text()
+    const stdout = await Promise.race([readStreamWithLimit(proc.stdout, DEFAULT_MAX_OUTPUT_BYTES), timeoutPromise])
+    const stderr = await readStreamWithLimit(proc.stderr, 1 * 1024 * 1024)
     const exitCode = await proc.exited
 
     const truncated = stdout.length >= DEFAULT_MAX_OUTPUT_BYTES

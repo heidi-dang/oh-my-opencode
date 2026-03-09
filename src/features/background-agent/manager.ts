@@ -16,6 +16,7 @@ import {
   createInternalAgentTextPart,
   verifyTaskCompletionState,
 } from "../../shared"
+import { memoryMonitor } from "../../shared/memory-monitor"
 import { saveActiveTasks, ActiveTaskInfo } from "../../shared/active-task-storage"
 import { setSessionTools } from "../../shared/session-tools-store"
 import { SessionCategoryRegistry } from "../../shared/session-category-registry"
@@ -95,7 +96,8 @@ export type OnSubagentSessionCreated = (event: SubagentSessionCreatedEvent) => P
 export class BackgroundManager {
 
 
-  private tasks: Map<string, BackgroundTask>
+  private tasks: Map<string, BackgroundTask> = new Map()
+  private readonly MAX_COMPLETED_TASKS = 100
   private notifications: Map<string, BackgroundTask[]>
   private pendingNotifications: Map<string, string[]>
   private pendingByParent: Map<string, Set<string>>  // Track pending tasks per parent for batching
@@ -144,6 +146,7 @@ export class BackgroundManager {
   }
 
   async launch(input: LaunchInput): Promise<BackgroundTask> {
+    memoryMonitor.logMemory("BackgroundManager launch start")
     log("[background-agent] launch() called with:", {
       agent: input.agent,
       model: input.model,
@@ -1140,6 +1143,7 @@ export class BackgroundManager {
    * Prevents premature completion when session.idle fires before agent responds.
    */
   private async validateSessionHasOutput(sessionID: string): Promise<boolean> {
+    memoryMonitor.logMemory(`validateSessionHasOutput start: ${sessionID}`)
     try {
       const response = await this.client.session.messages({
         path: { id: sessionID },
@@ -1375,6 +1379,11 @@ export class BackgroundManager {
     task.completedAt = new Date()
     this.taskHistory.record(task.parentSessionID, { id: task.id, sessionID: task.sessionID, agent: task.agent, description: task.description, status: "completed", category: task.category, startedAt: task.startedAt, completedAt: task.completedAt })
 
+    memoryMonitor.logMemory(`BackgroundManager task completed: ${task.id}`)
+    
+    // Schedule individual cleanup for this task
+    this.scheduleTaskCleanup(task.id)
+
     // Release concurrency BEFORE any async operations to prevent slot leaks
     if (task.concurrencyKey) {
       this.concurrencyManager.release(task.concurrencyKey)
@@ -1592,32 +1601,48 @@ Use \`background_output(task_id="${task.id}")\` to retrieve this result when rea
             log("[background-agent] Failed to send notification:", error)
           }
         }
-      } else {
-        log("[background-agent] Parent session notifications disabled, skipping prompt injection:", {
-          taskId: task.id,
-          parentSessionID: task.parentSessionID,
-        })
-      }
-      this.persistActiveTasks()
+    } else {
+      log("[background-agent] Parent session notifications disabled, skipping prompt injection:", {
+        taskId: task.id,
+        parentSessionID: task.parentSessionID,
+      })
+    }
+    this.persistActiveTasks()
+  }
 
-    if (allComplete) {
-      for (const completedTask of completedTasks) {
-        const taskId = completedTask.id
-        const existingTimer = this.completionTimers.get(taskId)
-        if (existingTimer) {
-          clearTimeout(existingTimer)
-          this.completionTimers.delete(taskId)
-        }
-        const timer = setTimeout(() => {
-          this.completionTimers.delete(taskId)
-          if (this.tasks.has(taskId)) {
-            this.clearNotificationsForTask(taskId)
-            this.tasks.delete(taskId)
-            log("[background-agent] Removed completed task from memory:", taskId)
-          }
-        }, TASK_CLEANUP_DELAY_MS)
-        this.completionTimers.set(taskId, timer)
+  private scheduleTaskCleanup(taskId: string): void {
+    const existingTimer = this.completionTimers.get(taskId)
+    if (existingTimer) {
+      clearTimeout(existingTimer)
+      this.completionTimers.delete(taskId)
+    }
+    memoryMonitor.logMemory("BackgroundManager scheduleTaskCleanup")
+    this.pruneCompletedTasks()
+    const timer = setTimeout(() => {
+      this.completionTimers.delete(taskId)
+      if (this.tasks.has(taskId)) {
+        this.clearNotificationsForTask(taskId)
+        this.tasks.delete(taskId)
+        log("[background-agent] Removed completed task from memory:", taskId)
+        memoryMonitor.logMemory("BackgroundManager post-cleanup")
       }
+    }, TASK_CLEANUP_DELAY_MS)
+    this.completionTimers.set(taskId, timer)
+  }
+
+  private pruneCompletedTasks(): void {
+    const completedTasks = Array.from(this.tasks.entries())
+      .filter(([, task]) => task.status === "completed" || task.status === "cancelled" || task.status === "error")
+      .sort(([, a], [, b]) => (a.completedAt?.getTime() ?? 0) - (b.completedAt?.getTime() ?? 0))
+
+    if (completedTasks.length > this.MAX_COMPLETED_TASKS) {
+      const toRemove = completedTasks.slice(0, completedTasks.length - this.MAX_COMPLETED_TASKS)
+      for (const [id] of toRemove) {
+        this.clearNotificationsForTask(id)
+        this.tasks.delete(id)
+        log("[background-agent] Pruned oldest task to stay under limit:", id)
+      }
+      memoryMonitor.logMemory("BackgroundManager post-prune")
     }
   }
 
@@ -1697,6 +1722,7 @@ Use \`background_output(task_id="${task.id}")\` to retrieve this result when rea
     if (this.pollingInFlight) return
     this.pollingInFlight = true
     try {
+    memoryMonitor.logMemory("BackgroundManager polling start")
     this.pruneStaleTasksAndNotifications()
 
     const statusResult = await this.client.session.status()
