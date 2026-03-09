@@ -214,7 +214,7 @@ export function createEventHandler(args: {
     const props = event.properties as Record<string, unknown> | undefined;
 
     // FIX: Trigger continuation on tool.result to prevent stall if session.idle missing
-    if (event.type === "tool.result") {
+    if ((event.type as string) === "tool.result") {
       const sessionID = props?.sessionID as string | undefined;
       if (sessionID) {
         log(`[event] tool.result → synthetic idle queued for ${sessionID}`);
