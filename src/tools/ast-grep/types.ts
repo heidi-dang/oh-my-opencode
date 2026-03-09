@@ -24,6 +24,11 @@ export interface CliMatch {
   lines: string
   charCount: { leading: number; trailing: number }
   language: string
+  metaVariables?: {
+    [name: string]: {
+      text: string
+    }
+  }
 }
 
 export interface SearchMatch {

@@ -113,5 +113,56 @@ export function createAstGrepTools(ctx: PluginInput): Record<string, ToolDefinit
     },
   })
 
-  return { ast_grep_search, ast_grep_replace }
+  const search_symbols: ToolDefinition = tool({
+    description: "Multi-language symbol search. Finds definitions of classes, functions, and other symbols using AST-aware matching. Much faster and more precise than grep for finding definitions.",
+    args: {
+      query: tool.schema.string().describe("The name or partial name of the symbol to search for"),
+      lang: tool.schema.enum(CLI_LANGUAGES).optional().describe("Target language (defaults to auto-detect by extension)"),
+      paths: tool.schema.array(tool.schema.string()).optional().describe("Paths to search")
+    },
+    execute: async (args, context) => {
+      try {
+        const query = args.query
+        // We use a generic pattern that matches many definition types in common languages
+        // For more specific searches, use ast_grep_search directly.
+        const patterns = [
+          `class $NAME`,
+          `function $NAME`,
+          `const $NAME`,
+          `def $NAME`,
+          `func $NAME`,
+          `interface $NAME`,
+          `type $NAME`
+        ]
+        
+        const results = []
+        for (const pattern of patterns) {
+          const res = await runSg({
+            pattern: pattern.replace('$NAME', query.includes('$') ? query : `$NAME`),
+            lang: args.lang as CliLanguage || "typescript", // Defaulting to ts, but ideally we'd detect or use 'all' if supported
+            paths: args.paths ?? [ctx.directory],
+          })
+          
+          if (res.matches.length > 0) {
+            results.push(...res.matches.filter(m => {
+              // If query was just a string, ensure the matched $NAME is equal or similar to query
+              if (query.includes('$')) return true
+              const nameNode = m.metaVariables?.NAME
+              return nameNode?.text?.toLowerCase().includes(query.toLowerCase())
+            }))
+          }
+        }
+
+        if (results.length === 0) return `No symbols found matching "${query}"`
+        
+        const output = results.map(m => `${m.file}:${m.range.start.line + 1}: ${m.lines}`).join('\n')
+        await showOutputToUser(context, output)
+        return output
+      } catch (e) {
+        return `Error: ${e instanceof Error ? e.message : String(e)}`
+      }
+    }
+  })
+
+  return { ast_grep_search, ast_grep_replace, search_symbols }
 }

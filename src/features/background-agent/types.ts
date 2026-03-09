@@ -17,6 +17,13 @@ export interface TaskProgress {
   phase?: string
   percent?: number
   message?: string
+  tokenUsage?: {
+    inputTokens: number
+    outputTokens: number
+    totalTokens: number
+    cacheCreationInputTokens?: number
+    cacheReadInputTokens?: number
+  }
 }
 
 export interface BackgroundTask {
@@ -57,6 +64,14 @@ export interface BackgroundTask {
   fallbackModel?: string
   /** Files affected by this task (collected from sub-agent session) */
   affectedFiles?: string[]
+  /** Cumulative token usage for this task's session */
+  tokenUsage?: {
+    inputTokens: number
+    outputTokens: number
+    totalTokens: number
+    cacheCreationInputTokens?: number
+    cacheReadInputTokens?: number
+  }
 }
 
 export interface LaunchInput {

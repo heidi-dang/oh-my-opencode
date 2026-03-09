@@ -196,4 +196,17 @@ export class TaskStateManager {
     log("[background-agent] Cancelled pending task:", { taskId, key })
     return true
   }
+
+  updateTokenUsage(taskId: string, usage: BackgroundTask["tokenUsage"]): void {
+    const task = this.tasks.get(taskId)
+    if (task && usage) {
+      task.tokenUsage = {
+        inputTokens: usage.inputTokens,
+        outputTokens: usage.outputTokens,
+        totalTokens: usage.totalTokens,
+        cacheCreationInputTokens: usage.cacheCreationInputTokens,
+        cacheReadInputTokens: usage.cacheReadInputTokens,
+      }
+    }
+  }
 }

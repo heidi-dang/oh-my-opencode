@@ -19,6 +19,7 @@ import {
 import { saveActiveTasks, ActiveTaskInfo } from "../../shared/active-task-storage"
 import { setSessionTools } from "../../shared/session-tools-store"
 import { SessionCategoryRegistry } from "../../shared/session-category-registry"
+import { TokenUsageRegistry } from "../../shared/token-usage-registry"
 import { ConcurrencyManager } from "./concurrency"
 import type { BackgroundTaskConfig, TmuxConfig } from "../../config/schema"
 import { isInsideTmux } from "../../shared/tmux"
@@ -821,6 +822,18 @@ export class BackgroundManager {
 
       const task = this.findBySession(sessionID)
       if (!task || task.status !== "running") return
+
+      const usage = (info as any).tokens
+      if (usage) {
+        task.tokenUsage = {
+          inputTokens: usage.input,
+          outputTokens: usage.output,
+          totalTokens: (usage.input || 0) + (usage.output || 0) + (usage.cache?.read || 0) + (usage.cache?.write || 0),
+          cacheCreationInputTokens: usage.cache?.write,
+          cacheReadInputTokens: usage.cache?.read,
+        }
+        TokenUsageRegistry.update(sessionID, task.tokenUsage)
+      }
 
       const assistantError = (info as Record<string, unknown>)["error"]
       if (!assistantError) return

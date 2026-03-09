@@ -1,5 +1,6 @@
 import type { PluginInput } from "@opencode-ai/plugin";
 import { normalizeSDKResponse } from "./normalize-sdk-response"
+import { TokenUsageRegistry } from "./token-usage-registry"
 
 const DEFAULT_ANTHROPIC_ACTUAL_LIMIT = 200_000;
 const CHARS_PER_TOKEN_ESTIMATE = 4;
@@ -125,6 +126,21 @@ export async function getContextWindowUsage(
 	usagePercentage: number;
 } | null> {
 	try {
+		const anthropicActualLimit = getAnthropicActualLimit(modelCacheState);
+
+		// --- LOCAL CACHE CHECK ---
+		const cached = TokenUsageRegistry.get(sessionID)
+
+		if (cached && (Date.now() - cached.lastUpdated < 60000)) { // 1 min cache
+			const usedTokens = cached.inputTokens + (cached.cacheReadInputTokens ?? 0) + cached.outputTokens
+			return {
+				usedTokens,
+				remainingTokens: anthropicActualLimit - usedTokens,
+				usagePercentage: usedTokens / anthropicActualLimit
+			}
+		}
+		// -------------------------
+
 		const response = await ctx.client.session.messages({
 			path: { id: sessionID },
 		});
@@ -143,7 +159,6 @@ export async function getContextWindowUsage(
 			(lastTokens?.input ?? 0) +
 			(lastTokens?.cache?.read ?? 0) +
 			(lastTokens?.output ?? 0);
-		const anthropicActualLimit = getAnthropicActualLimit(modelCacheState);
 		const remainingTokens = anthropicActualLimit - usedTokens;
 
 		return {

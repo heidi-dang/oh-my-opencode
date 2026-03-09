@@ -7,12 +7,14 @@ export function categorizeTools(toolNames: string[]): AvailableTool[] {
             category = "lsp"
         } else if (name.startsWith("ast_grep")) {
             category = "ast"
-        } else if (name === "grep" || name === "glob") {
+        } else if (name === "grep" || name === "glob" || name === "batch_grep" || name === "batch_read" || name === "search_symbols") {
             category = "search"
         } else if (name.startsWith("session_")) {
             category = "session"
         } else if (name === "skill") {
             category = "command"
+        } else if (name === "multi_replace_file_content") {
+            category = "edit"
         }
         return { name, category }
     })
@@ -26,7 +28,7 @@ function formatToolsForPrompt(tools: AvailableTool[]): string {
     const parts: string[] = []
 
     if (searchTools.length > 0) {
-        parts.push(...searchTools.map((t) => `\`${t.name}\``))
+        parts.push("`batch_read`, `batch_grep`, `search_symbols`")
     }
 
     if (lspTools.length > 0) {
@@ -35,6 +37,10 @@ function formatToolsForPrompt(tools: AvailableTool[]): string {
 
     if (astTools.length > 0) {
         parts.push("`ast_grep`")
+    }
+
+    if (tools.some(t => t.name === "multi_replace_file_content")) {
+        parts.push("`multi_replace_file_content`")
     }
 
     return parts.join(", ")
@@ -80,6 +86,11 @@ export function buildToolSelectionTable(
 
     rows.push("")
     rows.push("**Default flow**: explore/librarian (background) + tools → oracle (if required)")
+    rows.push("")
+    rows.push("### Batch & Bulk Efficiency (Performance Hardening):")
+    rows.push("- Use `batch_read` and `batch_grep` to minimize round-trips during research.")
+    rows.push("- Use `multi_replace_file_content` for complex or non-contiguous edits in a single turn.")
+    rows.push("- High-speed navigation: Always prefer `search_symbols` for finding definitions before falling back to `grep`.")
     rows.push("")
     rows.push("### Persistent Memory Bank (Memory over Time):")
     rows.push("Check `memo_query` on session start for architectural gotchas or past research. Use `memo_save` to persist critical findings.")
@@ -308,20 +319,21 @@ Plan Agent returns a structured work breakdown with parallel execution opportuni
 }
 
 export function buildDeepParallelSection(model: string, categories: AvailableCategory[]): string {
-    const isNonClaude = !model.toLowerCase().includes('claude')
     const hasDeepCategory = categories.some(c => c.name === 'deep')
+    const isClaude = model.toLowerCase().includes('claude')
 
-    if (!isNonClaude || !hasDeepCategory) return ""
+    if (!hasDeepCategory) return ""
 
-    return `### Deep Parallel Delegation
+    return `### Speculative Parallel Research (Performance Hardening)
+${isClaude ? "\nAnthropic Prompt Caching is active. Parallel searches are extremely cheap and fast." : ""}
 
-Delegate EVERY independent unit to a \`deep\` agent in parallel (\`run_in_background=true\`).
-If a task decomposes into 4 independent units, spawn 4 agents simultaneously — not 1 at a time.
+Delegate EVERY independent research or implementation unit to a \`deep\` agent in parallel (\`run_in_background=true\`).
+Do NOT wait for one task to finish before starting the next if they are independent.
 
-1. Decompose the implementation into independent work units
-2. Assign one \`deep\` agent per unit — all via \`run_in_background=true\`
-3. Give each agent a clear GOAL with success criteria, not step-by-step instructions
-4. Collect all results, integrate, verify coherence across units`
+1. Decompose the goal into independent work units (e.g. searching 3 different modules)
+2. Spawn \`deep\` agents simultaneously for each unit via \`run_in_background=true\`
+3. Provide each agent with clear objectives and success criteria
+4. Integrate results once background notifications arrive`
 }
 
 export function buildUltraworkSection(
