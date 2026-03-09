@@ -80,6 +80,9 @@ export function buildToolSelectionTable(
 
     rows.push("")
     rows.push("**Default flow**: explore/librarian (background) + tools → oracle (if required)")
+    rows.push("")
+    rows.push("### Persistent Memory Bank (Memory over Time):")
+    rows.push("Check `memo_query` on session start for architectural gotchas or past research. Use `memo_save` to persist critical findings.")
 
     return rows.join("\n")
 }
