@@ -24,5 +24,9 @@ export function createMessagesTransformHandler(args: {
     await args.hooks.thinkingBlockValidator?.[
       "experimental.chat.messages.transform"
     ]?.(input, output)
+
+    await args.hooks.anthropicPromptCaching?.[
+      "experimental.chat.messages.transform"
+    ]?.(input, output)
   }
 }

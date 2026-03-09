@@ -26,6 +26,7 @@ import {
   createTaskUpdateTool,
   createHashlineEditTool,
   createMemoryBankTools,
+  createMultiReplaceTool,
 } from "../tools"
 import { getMainSessionID } from "../features/claude-code-session-state"
 import { filterDisabledTools } from "../shared/disabled-tools"
@@ -140,6 +141,7 @@ export function createToolRegistry(args: {
     ...taskToolsRecord,
     ...hashlineToolsRecord,
     ...createMemoryBankTools(),
+    multi_replace_file_content: createMultiReplaceTool(),
     git_safe: DETERMINISTIC_TOOLS["git_safe"](),
     fs_safe: DETERMINISTIC_TOOLS["fs_safe"](),
     verify_action: DETERMINISTIC_TOOLS["verify_action"](),

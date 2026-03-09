@@ -9,23 +9,19 @@ export interface FileContext {
     content: string
 }
 
+import { SemanticTrimmer } from "./semantic-trimmer"
+
 export const ContextTrimmer = {
     /**
      * Trims an array of files down to a budget of items and lines.
-     * If a file is too large, it summarizes its top section only, 
-     * assuming that's where imports and class definitions reside.
+     * Uses SemanticTrimmer to preserve structure (signatures) while hiding bodies.
      */
-    trimFiles: (files: FileContext[], maxFiles: number = 8, maxLinesPerFile: number = 20): string[] => {
+    trimFiles: (files: FileContext[], maxFiles: number = 8, maxLinesPerFile: number = 50): string[] => {
         const selectedFiles = files.slice(0, maxFiles)
 
         return selectedFiles.map(f => {
-            const lines = f.content.split('\n')
-            if (lines.length <= maxLinesPerFile) {
-                return `// File: ${f.path}\n${f.content}`
-            }
-
-            const summary = lines.slice(0, maxLinesPerFile).join('\n')
-            return `// File: ${f.path} (TRUNCATED - showing first ${maxLinesPerFile} lines of ${lines.length})\n${summary}\n// ... [${lines.length - maxLinesPerFile} lines omitted]`
+            const trimmedContent = SemanticTrimmer.trim(f.path, f.content, maxLinesPerFile)
+            return `// File: ${f.path}\n${trimmedContent}`
         })
     },
 

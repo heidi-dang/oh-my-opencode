@@ -5,6 +5,7 @@ import {
   createClaudeCodeHooksHook,
   createKeywordDetectorHook,
   createThinkingBlockValidatorHook,
+  createAnthropicPromptCachingHook,
 } from "../../hooks"
 import {
   contextCollector,
@@ -17,6 +18,7 @@ export type TransformHooks = {
   keywordDetector: ReturnType<typeof createKeywordDetectorHook> | null
   contextInjectorMessagesTransform: ReturnType<typeof createContextInjectorMessagesTransformHook>
   thinkingBlockValidator: ReturnType<typeof createThinkingBlockValidatorHook> | null
+  anthropicPromptCaching: ReturnType<typeof createAnthropicPromptCachingHook> | null
 }
 
 export function createTransformHooks(args: {
@@ -63,10 +65,19 @@ export function createTransformHooks(args: {
       )
     : null
 
+  const anthropicPromptCaching = isHookEnabled("anthropic-prompt-caching")
+    ? safeCreateHook(
+        "anthropic-prompt-caching",
+        () => createAnthropicPromptCachingHook(),
+        { enabled: safeHookEnabled },
+      )
+    : null
+
   return {
     claudeCodeHooks,
     keywordDetector,
     contextInjectorMessagesTransform,
     thinkingBlockValidator,
+    anthropicPromptCaching,
   }
 }
