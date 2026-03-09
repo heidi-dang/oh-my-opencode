@@ -42,9 +42,25 @@ export function createGhSafeTool(): any {
                     stderr: "pipe"
                 })
 
-                const stdoutText = await new Response(proc.stdout).text()
-                const stderrText = await new Response(proc.stderr).text()
-                const exitCode = await proc.exited
+                const TIMEOUT_MS = 30000;
+                let isTimeout = false;
+                const timeoutPromise = new Promise<{ stdoutText: string, stderrText: string, exitCode: number }>((_, reject) => {
+                    const timeoutId = setTimeout(() => {
+                        isTimeout = true;
+                        proc.kill();
+                        reject(new Error(`GH command timed out after ${TIMEOUT_MS}ms`));
+                    }, TIMEOUT_MS);
+                    proc.exited.then(() => clearTimeout(timeoutId));
+                });
+
+                const processPromise = async () => {
+                    const stdoutText = await new Response(proc.stdout).text()
+                    const stderrText = await new Response(proc.stderr).text()
+                    const exitCode = await proc.exited
+                    return { stdoutText, stderrText, exitCode }
+                };
+
+                const { stdoutText, stderrText, exitCode } = await Promise.race([processPromise(), timeoutPromise])
 
                 const success = exitCode === 0
 
