@@ -5,10 +5,16 @@ export interface ExecutionGraphNode {
     status: "pending" | "running" | "completed" | "failed"
 }
 
+export type PlanMode = "planned" | "recovery" | "bootstrap"
+
 interface SessionState {
     graph: ExecutionGraphNode[]
     currentStepIndex: number
     taskID: string
+    runID: string
+    mode: PlanMode
+    lastTouchTimestamp: number
+    recoveryAttempts: number
 }
 
 export class PlanCompiler {
@@ -33,20 +39,50 @@ export class PlanCompiler {
         this.sessionStates.set(sessionID, {
             graph,
             currentStepIndex: 0,
-            taskID
+            taskID,
+            runID: taskID, // Initial runID matches taskID
+            mode: "planned",
+            lastTouchTimestamp: Date.now(),
+            recoveryAttempts: 0
         })
 
         return taskID
     }
 
-    public getActiveStep(sessionID: string): ExecutionGraphNode | null {
+    public getActiveStep(sessionID: string): (ExecutionGraphNode & { mode: PlanMode; taskID: string; runID: string; lastTouch: number; recoveryAttempts: number }) | null {
         const state = this.sessionStates.get(sessionID)
         if (!state) return null
 
+        state.lastTouchTimestamp = Date.now()
+
         if (state.currentStepIndex >= 0 && state.currentStepIndex < state.graph.length) {
-            return state.graph[state.currentStepIndex]
+            return {
+                ...state.graph[state.currentStepIndex],
+                mode: state.mode,
+                taskID: state.taskID,
+                runID: state.runID,
+                lastTouch: state.lastTouchTimestamp,
+                recoveryAttempts: state.recoveryAttempts
+            }
         }
         return null
+    }
+
+    public incrementRecoveryAttempts(sessionID: string): number {
+        const state = this.sessionStates.get(sessionID)
+        if (state) {
+            state.recoveryAttempts++
+            return state.recoveryAttempts
+        }
+        return 0
+    }
+
+    public setMode(sessionID: string, mode: PlanMode): void {
+        const state = this.sessionStates.get(sessionID)
+        if (state) {
+            state.mode = mode
+            state.lastTouchTimestamp = Date.now()
+        }
     }
 
     public markStepComplete(sessionID: string, id: string): void {

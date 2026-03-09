@@ -98,54 +98,77 @@ export function createPlanEnforcementHook(_ctx: PluginInput) {
             _output: { args: any }
         ) => {
             const activeStep = compiler.getActiveStep(input.sessionID)
-            if (!activeStep) return // No active plan, agent is in freestyle mode
+            
+            // If no active plan, we are in freestyle or bootstrap mode
+            if (!activeStep) {
+                // If the tool is one that usually requires a plan, we might want to bootstrap
+                return
+            }
 
             // Always allow essential tools
             if (ALWAYS_ALLOWED_TOOLS.has(input.tool)) {
                 return
             }
 
-            // STALE STATE AUTO-RECOVERY
-            const isStaleLock =
-                (input.tool === "todowrite" || input.tool === "task" || input.tool === "read" || input.tool === "task_create" || input.tool === "submit_plan") &&
-                !activeStep.action.toLowerCase().includes(input.tool.replace("_safe", "").replace("_create", ""))
-
-            if (isStaleLock) {
-                console.warn(`[Plan Compiler Guard] Stale lock detected in session ${input.sessionID} (Tool: ${input.tool}). Auto-clearing plan.`)
-                compiler.clear(input.sessionID)
-                return
+            // Recovery mode allows wider access to fix things
+            if (activeStep.mode === "recovery") {
+                const recoveryTools = new Set(["edit", "write", "apply_patch", "interactive_bash", "bash"])
+                if (recoveryTools.has(input.tool)) {
+                    return
+                }
             }
+
+            // STALE STATE / MISMATCH DETECTION
+            const isStaleLock = 
+                (Date.now() - activeStep.lastTouch > 5 * 60 * 1000) || // 5 min timeout
+                ((input.tool === "todowrite" || input.tool === "task" || input.tool === "submit_plan") &&
+                 !activeStep.action.toLowerCase().includes(input.tool.replace("_safe", "").replace("_create", "")))
 
             const actionMatchesTool =
                 activeStep.action.toLowerCase().includes(input.tool.replace("_safe", "")) ||
                 input.tool.includes(activeStep.action.toLowerCase().split("_")[0] || "")
 
-            if (!actionMatchesTool) {
-                // Log the guard decision
-                console.log(`[Plan Compiler Guard] Blocking tool call`, {
-                    activeStepId: activeStep.id,
-                    activeStepAction: activeStep.action,
-                    requestedTool: input.tool,
-                    allowedTools: Array.from(ALWAYS_ALLOWED_TOOLS),
-                    reason: "Tool does not match active step intent and is not in always-allowed list"
+            if (isStaleLock || !actionMatchesTool) {
+                const recoveryCount = compiler.incrementRecoveryAttempts(input.sessionID)
+                
+                if (recoveryCount > 3) {
+                    throw new Error(`[Plan Governor] Recovery limit exceeded (3 attempts). Manual intervention required. The agent is stuck in a replanning loop.`)
+                }
+
+                const reason = isStaleLock ? "Stale lock/Timeout" : "Tool mismatch"
+                console.log(`[Plan Compiler Guard] ${reason} detected (Attempt ${recoveryCount}). Transitioning to recovery.`, {
+                    sessionID: input.sessionID,
+                    activeStep: activeStep.id,
+                    requestedTool: input.tool
                 })
 
-                // Enforce the plan!
-                throw new PlanCompilerGuardError(
-                    `[Plan Compiler Guard] Action Rejected.\n` +
-                    `Active Step: ${activeStep.action} (ID: ${activeStep.id})\n` +
-                    `Current Tool: ${input.tool}\n\n` +
-                    `You are currently locked into a deterministic plan. You MUST finish the active step ` +
-                    `or use 'mark_step_complete' if the work is done. If you need to break out of this plan, ` +
-                    `use 'unlock_plan' or complete all steps.\n\n` +
-                    `**RECOVERY**: If you believe this is a stale lock or the plan is no longer valid, ` +
-                    `you MUST run 'unlock_plan' now to return to freestyle mode.`,
-                    activeStep.id,
-                    activeStep.action,
-                    input.tool,
-                    Array.from(ALWAYS_ALLOWED_TOOLS),
-                    "Tool mismatch"
-                )
+                // ATOMIC RECOVERY TRANSITION
+                compiler.setMode(input.sessionID, "recovery")
+                // etc...
+                
+                // 2. Build recovery context/prompt
+                const recoveryPrompt = `
+[Plan Governor] Plan drift detected during step '${activeStep.id}' (${activeStep.action}).
+The requested tool '${input.tool}' does not match the active plan intent.
+
+Current Status:
+- Original Goal: still active
+- Repo State: partially modified
+- Last Action: ${activeStep.action}
+
+RECOVERY INSTRUCTIONS:
+1. Re-evaluate the current state of the repository.
+2. If the previous plan is still valid but the steps were too narrow, generate a micro-replan.
+3. If the plan is no longer valid, submit a full replacement plan via 'submit_plan'.
+4. Continue toward the user's original goal.
+
+Do not block. Forward motion is required.`
+
+                // 3. Inject recovery signal (we do this by throwing a specific "Retry" error that the SDK handles, 
+                // or by returning a message that the agent reads as its next input. 
+                // In OpenCode, throwing an error with instructions is a common pattern for "Correction").
+                
+                throw new Error(recoveryPrompt)
             }
         }
     }

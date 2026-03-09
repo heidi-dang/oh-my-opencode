@@ -20,58 +20,11 @@ export function createBackgroundCancel(manager: BackgroundManager, _client: Back
         }
 
         if (cancelAll) {
-          const tasks = manager.getAllDescendantTasks(toolContext.sessionID)
-          const cancellableTasks = tasks.filter((t: { status: string }) => t.status === "running" || t.status === "pending")
+          return `[Safety Audit] Individual completion required. batch-cancellation of all background tasks is forbidden to prevent accidental disruption of critical subagents. Please cancel tasks by ID.`
+        }
 
-          if (cancellableTasks.length === 0) {
-            return `No running or pending background tasks to cancel.`
-          }
-
-          const cancelledInfo: Array<{ id: string; description: string; status: string; sessionID?: string }> = []
-
-          for (const task of cancellableTasks) {
-            const originalStatus = task.status
-            const cancelled = await manager.cancelTask(task.id, {
-              source: "background_cancel",
-              abortSession: originalStatus === "running",
-              skipNotification: true,
-            })
-            if (!cancelled) continue
-            cancelledInfo.push({
-              id: task.id,
-              description: task.description,
-              status: originalStatus === "pending" ? "pending" : "running",
-              sessionID: task.sessionID,
-            })
-          }
-
-          const tableRows = cancelledInfo
-            .map(
-              (t) =>
-                `| \`${t.id}\` | ${t.description} | ${t.status} | ${t.sessionID ? `\`${t.sessionID}\`` : "(not started)"} |`
-            )
-            .join("\n")
-
-          const resumableTasks = cancelledInfo.filter((t) => t.sessionID)
-          const resumeSection =
-            resumableTasks.length > 0
-              ? `\n## Continue Instructions
-
-To continue a cancelled task, use:
-\`\`\`
-task(session_id="<session_id>", prompt="Continue: <your follow-up>")
-\`\`\`
-
-Continuable sessions:
-${resumableTasks.map((t) => `- \`${t.sessionID}\` (${t.description})`).join("\n")}`
-              : ""
-
-          return `Cancelled ${cancelledInfo.length} background task(s):
-
-| Task ID | Description | Status | Session ID |
-|---------|-------------|--------|------------|
-${tableRows}
-${resumeSection}`
+        if (!args.taskId) {
+          return `[ERROR] Invalid arguments: Please provide a taskId.`
         }
 
         const task = manager.getTask(args.taskId!)

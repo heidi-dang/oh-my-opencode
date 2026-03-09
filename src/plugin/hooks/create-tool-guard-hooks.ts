@@ -21,6 +21,8 @@ import {
   createSemanticLoopGuardHook,
   createEditSafeguardHook,
   createWorkspaceGuardHook,
+  createBashSafetyHook,
+  createWebSafetyHook,
 } from "../../hooks"
 import {
   getOpenCodeVersion,
@@ -49,6 +51,8 @@ export type ToolGuardHooks = {
   semanticLoopGuard: ReturnType<typeof createSemanticLoopGuardHook> | null
   editSafeguard: ReturnType<typeof createEditSafeguardHook> | null
   workspaceGuard: ReturnType<typeof createWorkspaceGuardHook> | null
+  bashSafety: ReturnType<typeof createBashSafetyHook> | null
+  webSafety: ReturnType<typeof createWebSafetyHook> | null
 }
 
 export function createToolGuardHooks(args: {
@@ -132,6 +136,8 @@ export function createToolGuardHooks(args: {
   const semanticLoopGuard = safeHook("semantic-loop-guard", () => createSemanticLoopGuardHook(ctx))
   const editSafeguard = safeHook("edit-safeguard", () => createEditSafeguardHook(ctx))
   const workspaceGuard = safeHook("workspace-guard", () => createWorkspaceGuardHook(ctx))
+  const bashSafety = safeHook("bash-safety", () => createBashSafetyHook(ctx))
+  const webSafety = safeHook("web-safety", () => createWebSafetyHook(ctx))
 
   return {
     commentChecker,
@@ -152,5 +158,7 @@ export function createToolGuardHooks(args: {
     semanticLoopGuard,
     editSafeguard,
     workspaceGuard,
+    bashSafety,
+    webSafety,
   }
 }

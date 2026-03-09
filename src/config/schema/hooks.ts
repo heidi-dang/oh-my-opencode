@@ -58,6 +58,8 @@ export const HookNameSchema = z.enum([
   "edit-safeguard",
   "xai-usage-patch",
   "workspace-guard",
+  "bash-safety",
+  "web-safety",
 ])
 
 export type HookName = z.infer<typeof HookNameSchema>

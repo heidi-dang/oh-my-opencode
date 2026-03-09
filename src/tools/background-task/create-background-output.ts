@@ -89,6 +89,11 @@ export function createBackgroundOutput(manager: BackgroundOutputManager, client:
         const timeoutMs = Math.min(args.timeout ?? 60000, 600000)
         const fullSession = args.full_session ?? true
 
+        // SAFETY WARNING FOR BLOCKING CALLS
+        if (shouldBlock && (task.agent?.toLowerCase().includes("oracle") || task.agent?.toLowerCase().includes("momus"))) {
+            console.warn(`[Safety Audit] Blocking call detected for long-running agent: ${task.agent}. This may stall progress for minutes.`)
+        }
+
         let resolvedTask = task
 
         let didTimeoutWhileActive = false

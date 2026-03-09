@@ -62,3 +62,5 @@ export { createXaiUsagePatchHook } from "./xai-usage-patch/hook"
 
 
 export { createWorkspaceGuardHook } from "./workspace-guard"
+export { createBashSafetyHook } from "./bash-safety/hook"
+export { createWebSafetyHook } from "./web-safety/hook"

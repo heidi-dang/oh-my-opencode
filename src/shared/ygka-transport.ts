@@ -141,6 +141,20 @@ export class YGKATransport {
             if (!response.ok) return null;
             const data = (await response.json()) as any;
 
+            // PRE-VALIDATION PROVIDER ERROR CHECK
+            if (data && (data.error || data.message || data.code)) {
+                const errorObj = data.error || data;
+                const errorMessage = errorObj.message || errorObj.error || data.message || "";
+                const errorCode = errorObj.code || data.code || "";
+
+                if (errorMessage.toLowerCase().includes("at capacity") || 
+                    errorMessage.toLowerCase().includes("unavailable") ||
+                    errorCode === "model_at_capacity" ||
+                    errorCode === "service_unavailable") {
+                    throw new Error(`ProviderTemporaryUnavailable: ${errorMessage || "The model is currently at capacity or unavailable."}`);
+                }
+            }
+
             if (data.accessToken) {
                 // Update config with new access token
                 if (this.config) { // Ensure config is not null before updating
