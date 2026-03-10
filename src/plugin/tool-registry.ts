@@ -29,6 +29,7 @@ import {
   createMultiReplaceTool,
   createBatchReadTool,
   createBatchGrepTool,
+  createRecallMemoryTool,
 } from "../tools"
 import { getMainSessionID } from "../features/claude-code-session-state"
 import { filterDisabledTools } from "../shared/disabled-tools"
@@ -146,6 +147,7 @@ export function createToolRegistry(args: {
     multi_replace_file_content: createMultiReplaceTool(),
     batch_read: createBatchReadTool(),
     batch_grep: createBatchGrepTool(ctx),
+    recall_memory: createRecallMemoryTool(),
     git_safe: DETERMINISTIC_TOOLS["git_safe"](),
     fs_safe: DETERMINISTIC_TOOLS["fs_safe"](),
     verify_action: DETERMINISTIC_TOOLS["verify_action"](),
