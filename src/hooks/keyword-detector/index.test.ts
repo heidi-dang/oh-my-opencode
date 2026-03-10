@@ -146,7 +146,7 @@ describe("keyword-detector session filtering", () => {
     )
 
     // then - search keyword should be filtered out based on mainSessionID comparison
-    const skipLog = logCalls.find(c => c.msg.includes("Skipping non-ultrawork keywords in non-main session"))
+    const skipLog = logCalls.find(c => c.msg.includes("Skipping keywords in non-main session"))
     expect(skipLog).toBeDefined()
   })
 
