@@ -13,6 +13,8 @@ export const SandboxConfigSchema = z.object({
   daytona_server_url: z.string().optional(),
   /** Default project path inside the sandbox (default: "/home/daytona/project") */
   repo_path: z.string().default("/home/daytona/project").optional(),
+  /** Control how sessions are assigned to sandboxes (default: "auto") */
+  session_control: z.enum(["auto", "manual", "never"]).default("auto").optional(),
 })
 
 export type SandboxConfig = z.infer<typeof SandboxConfigSchema>

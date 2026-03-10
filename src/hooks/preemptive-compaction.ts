@@ -1,4 +1,5 @@
 import { log } from "../shared/logger"
+import { memoryMonitor } from "../shared/memory-monitor"
 import type { OhMyOpenCodeConfig } from "../config"
 
 import { resolveCompactionModel } from "./shared/compaction-model-resolver"
@@ -103,7 +104,16 @@ export function createPreemptiveCompactionHook(
     const totalInputTokens = (lastTokens?.input ?? 0) + (lastTokens?.cache?.read ?? 0)
     const usageRatio = totalInputTokens / actualLimit
 
-    if (usageRatio < PREEMPTIVE_COMPACTION_THRESHOLD) return
+    if (usageRatio < PREEMPTIVE_COMPACTION_THRESHOLD) {
+      // Emergency check: If memory usage is critically high, trigger compaction anyway
+      const stats = memoryMonitor.getUsage();
+      const rssMB = Math.round(stats.rss / 1024 / 1024);
+      if (rssMB > 1024) { // > 1GB RSS
+        log(`[preemptive-compaction] Triggering EMERGENCY compaction due to high memory usage (${rssMB}MB)`, { sessionID });
+      } else {
+        return;
+      }
+    }
 
     const modelID = cached.modelID
     if (!modelID) return

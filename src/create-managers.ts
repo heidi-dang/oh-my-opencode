@@ -79,6 +79,10 @@ export function createManagers(args: {
     modelCacheState,
   })
 
+  if (pluginConfig.sandbox) {
+    sandboxManager.setConfig(pluginConfig.sandbox, ctx.directory)
+  }
+
   return {
     tmuxSessionManager,
     backgroundManager,

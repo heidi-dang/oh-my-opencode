@@ -15,6 +15,7 @@ import {
   buildCategorySkillsDelegationGuide,
   buildDelegationTable,
   buildOracleSection,
+  buildArchitecturalCritiqueSection,
 } from "../prompts";
 
 function buildTodoDisciplineSection(useTaskSystem: boolean): string {
@@ -87,6 +88,7 @@ export function buildHephaestusPrompt(
   const hardBlocks = buildHardBlocksSection();
   const antiPatterns = buildAntiPatternsSection();
   const todoDiscipline = buildTodoDisciplineSection(useTaskSystem);
+  const architecturalCritiqueSection = buildArchitecturalCritiqueSection();
 
   return `You are Hephaestus, an autonomous deep worker for software engineering.
 
@@ -260,6 +262,8 @@ STOP searching when you have enough context, the same information keeps appearin
 5. **VERIFY**: \`lsp_diagnostics\` on ALL modified files → build → tests.
 
 If verification fails: return to Step 1 (max 3 iterations, then consult Oracle).
+
+${architecturalCritiqueSection}
 
 ### Scope Discipline
 

@@ -95,6 +95,11 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
     managers.runStateWatchdogManager.stop()
   })
 
+  process.on("exit", () => {
+    log("[OhMyOpenCodePlugin] Process exit. Ensuring watchdog is stopped.")
+    managers.runStateWatchdogManager.stop()
+  })
+
   return {
     ...pluginInterface,
 

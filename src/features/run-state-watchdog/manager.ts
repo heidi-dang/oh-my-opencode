@@ -82,67 +82,105 @@ export class RunStateWatchdogManager {
   }
 
   private async checkStalledRuns() {
-    const now = Date.now()
-    for (const [sessionID, ctx] of this.activeSessions.entries()) {
-      if (ctx.currentState !== "running" && ctx.currentState !== "waiting") continue
+    try {
+      const now = Date.now()
+      for (const [sessionID, ctx] of this.activeSessions.entries()) {
+        if (ctx.currentState !== "running" && ctx.currentState !== "waiting") continue
 
-      const timeSinceLastActivity = now - ctx.lastActivityAt
-      const timeSinceText = now - ctx.lastTextFragmentAt
-      const timeSinceTool = now - ctx.lastToolCallAt
+        const timeSinceLastActivity = now - ctx.lastActivityAt
+        const timeSinceText = now - ctx.lastTextFragmentAt
+        const timeSinceTool = now - ctx.lastToolCallAt
 
-      // Thresholds:
-      // Half-throttle: If stalled for > 50% of threshold, notify user we are still thinking
-      if (timeSinceLastActivity > this.stallThresholdMs * 0.5 && timeSinceLastActivity < this.stallThresholdMs * 0.6) {
-        log(`[RunStateWatchdog] Session ${sessionID} stalled for >45s. Sending status update.`)
-        this.notifyStall(sessionID).catch(() => {})
-      }
+        // Half-throttle: If stalled for > 50% of threshold, notify user we are still thinking
+        if (timeSinceLastActivity > this.stallThresholdMs * 0.5 && timeSinceLastActivity < this.stallThresholdMs * 0.6) {
+          log(`[RunStateWatchdog] Session ${sessionID} stalled for >45s. Sending status update.`)
+          this.notifyStall(sessionID).catch(() => {})
+        }
 
-      // If we are ostensibly running, but there's been no text generation and no tool calls for the threshold...
-      if (timeSinceText > this.stallThresholdMs && timeSinceTool > this.stallThresholdMs) {
-        log(`[RunStateWatchdog] Detected stalled run for session ${sessionID}.`, {
-          timeSinceText,
-          timeSinceTool,
-          openTodos: ctx.openTodos
-        })
-        
-        // Elevation to Hard Termination
-        log(`[RunStateWatchdog] TERMINATING stalled session ${sessionID}.`)
-        if (this.client?.session?.abort) {
-          this.client.session.abort({
-            path: { id: sessionID },
-          }).catch((err: any) => {
-            log(`[RunStateWatchdog] Failed to abort stalled session ${sessionID}`, { error: String(err) })
+        // If no text generation and no tool calls for the threshold, terminate
+        if (timeSinceText > this.stallThresholdMs && timeSinceTool > this.stallThresholdMs) {
+          log(`[RunStateWatchdog] Detected stalled run for session ${sessionID}.`, {
+            timeSinceText,
+            timeSinceTool,
+            openTodos: ctx.openTodos
           })
-        }
 
-        // Render a toast to show termination
-        const tuiClient = this.client as any
-        if (tuiClient.tui?.showToast) {
-          tuiClient.tui.showToast({
-            body: {
-              title: "Task Aborted",
-              message: "Session terminated due to auto-stall detection (90s inactivity).",
-              variant: "error",
-              duration: 5000
+          // Mark as terminal FIRST to prevent repeated abort attempts
+          ctx.currentState = "terminal"
+
+          // Attempt abort — guarded against missing client methods
+          try {
+            const session = this.client?.session
+            if (session && typeof session.abort === "function") {
+              log(`[RunStateWatchdog] TERMINATING stalled session ${sessionID}.`)
+              session.abort({
+                path: { id: sessionID },
+              }).catch((err: unknown) => {
+                log(`[RunStateWatchdog] Failed to abort stalled session ${sessionID}`, { error: String(err) })
+              })
+            } else {
+              log(`[RunStateWatchdog] Cannot abort session ${sessionID}: client.session.abort not available`)
             }
-          }).catch(() => {})
+          } catch (abortErr) {
+            log(`[RunStateWatchdog] Error during abort for session ${sessionID}`, { error: String(abortErr) })
+          }
+
+          // Toast notification — guarded
+          try {
+            const tuiClient = this.client as unknown as Record<string, unknown>
+            const tui = tuiClient?.tui as Record<string, unknown> | undefined
+            if (tui && typeof tui.showToast === "function") {
+              tui.showToast({
+                body: {
+                  title: "Task Aborted",
+                  message: "Session terminated due to auto-stall detection (90s inactivity).",
+                  variant: "error",
+                  duration: 5000
+                }
+              }).catch(() => {})
+            }
+          } catch {
+            // Swallow toast errors — never let UI calls crash the process
+          }
         }
-        
       }
+    } catch (err) {
+      log("[RunStateWatchdog] Unexpected error in checkStalledRuns — swallowed to prevent process crash", { error: String(err) })
     }
   }
 
   private async notifyStall(sessionID: string) {
-    const tuiClient = this.client as any
-    if (tuiClient.tui?.showToast) {
-      await tuiClient.tui.showToast({
-        body: {
-          title: "Still thinking...",
-          message: "The model is taking longer than expected. I'm keeping the session alive.",
-          variant: "warning",
-          duration: 3000
+    try {
+      const tuiClient = this.client as unknown as Record<string, unknown>
+      const tui = tuiClient?.tui as Record<string, unknown> | undefined
+      
+      // Attempt to get the active model for this session to provide contextual feedback
+      let stallMessage = "The model is taking longer than expected. I'm keeping the session alive."
+      let stallTitle = "Still thinking..."
+      
+      try {
+        const sessionState = (this.client as any).session?.state?.({ path: { id: sessionID } });
+        const modelID = sessionState?.modelID?.toLowerCase() || "";
+        if (modelID.includes("o1") || modelID.includes("reasoning") || modelID.includes("thinking")) {
+          stallTitle = "Deep reasoning in progress..."
+          stallMessage = "This model uses extended reasoning and may take several minutes. Please stand by."
         }
-      }).catch(() => {})
+      } catch {
+        // Fallback to default message if state lookup fails
+      }
+
+      if (tui && typeof tui.showToast === "function") {
+        await tui.showToast({
+          body: {
+            title: stallTitle,
+            message: stallMessage,
+            variant: "warning",
+            duration: 5000
+          }
+        }).catch(() => {})
+      }
+    } catch {
+      // Swallow toast errors
     }
   }
 }

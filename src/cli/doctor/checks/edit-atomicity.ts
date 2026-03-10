@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync, unlinkSync, existsSync } from "fs"
 import { join } from "path"
 import type { CheckDefinition, CheckResult } from "../types"
 import { createEditSafeguardHook } from "../../../hooks/edit-safeguard/hook"
+import { readTracker } from "../../../shared/read-permission-tracker"
 
 /**
  * Doctor check for Edit tool atomicity and syntax validation.
@@ -19,6 +20,9 @@ export const checkEditAtomicity: CheckDefinition = {
       const hook = createEditSafeguardHook({ directory: process.cwd() } as any)
       const sessionID = "test-session"
       const callID = "test-call"
+
+      // 0. Record read to satisfy edit-safeguard
+      readTracker.recordRead(sessionID, testFile)
 
       // 1. Verify Fail-Closed for Partial Mutation (Simulated)
       // We simulate a tool that changes the file but then reports an error

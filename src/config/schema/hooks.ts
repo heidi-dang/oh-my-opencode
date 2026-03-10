@@ -56,7 +56,7 @@ export const HookNameSchema = z.enum([
   "plan-enforcement",
   "semantic-loop-guard",
   "edit-safeguard",
-  "xai-usage-patch",
+  "usage-patch",
   "workspace-guard",
   "bash-safety",
   "web-safety",

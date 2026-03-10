@@ -25,8 +25,9 @@ import {
   createQuestionLabelTruncatorHook,
   createPreemptiveCompactionHook,
   createRuntimeFallbackHook,
-  createXaiUsagePatchHook,
+  createUsagePatchHook,
   createRunStateWatchdogHook,
+  createSandboxControlHook,
 } from "../../hooks"
 import { createAnthropicEffortHook } from "../../hooks/anthropic-effort"
 import {
@@ -62,8 +63,9 @@ export type SessionHooks = {
   taskResumeInfo: ReturnType<typeof createTaskResumeInfoHook> | null
   anthropicEffort: ReturnType<typeof createAnthropicEffortHook> | null
   runtimeFallback: ReturnType<typeof createRuntimeFallbackHook> | null
-  xaiUsagePatch: ReturnType<typeof createXaiUsagePatchHook> | null
+  usagePatch: ReturnType<typeof createUsagePatchHook> | null
   runStateWatchdog: ReturnType<typeof createRunStateWatchdogHook> | null
+  sandboxControl: ReturnType<typeof createSandboxControlHook> | null
 }
 
 export function createSessionHooks(args: {
@@ -267,9 +269,11 @@ export function createSessionHooks(args: {
       }))
     : null
 
-  const xaiUsagePatch = safeHook("xai-usage-patch", () => createXaiUsagePatchHook())
+  const usagePatch = safeHook("usage-patch" as any, () => createUsagePatchHook())
 
   const runStateWatchdog = safeHook("run-state-watchdog" as any, () => createRunStateWatchdogHook(runStateWatchdogManager))
+
+  const sandboxControl = safeHook("sandbox-control" as any, () => createSandboxControlHook())
 
   return {
     contextWindowMonitor,
@@ -295,7 +299,8 @@ export function createSessionHooks(args: {
     taskResumeInfo,
     anthropicEffort,
     runtimeFallback,
-    xaiUsagePatch,
+    usagePatch,
     runStateWatchdog,
+    sandboxControl,
   }
 }

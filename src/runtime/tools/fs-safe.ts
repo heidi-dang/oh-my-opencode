@@ -23,31 +23,6 @@ export function createFsSafeTool(): any {
                 const contextDir = context.directory || process.cwd()
                 const fullPath = path.resolve(contextDir, filePath)
 
-                const sessionID = getMainSessionID()
-                if (sessionID && sandboxManager.isSandboxEnabled(sessionID)) {
-                    if (operation === "write") {
-                        await sandboxManager.writeFile(sessionID, filePath, content || "")
-                    } else if (operation === "mkdir") {
-                        await sandboxManager.execute(sessionID, `mkdir -p ${path.dirname(filePath)}`)
-                        await sandboxManager.execute(sessionID, `mkdir ${filePath}`)
-                    } else if (operation === "delete") {
-                        await sandboxManager.execute(sessionID, `rm -rf ${filePath}`)
-                    }
-                    
-                    const result = createSuccessResult({
-                        verified: true,
-                        changedState: true,
-                        stateChange: { type: "file." + (operation === "mkdir" ? "create" : operation), key: filePath, details: { fullPath: filePath, sandbox: true } }
-                    });
-
-                    context.metadata({
-                        title: `fs ${operation} (sandbox)`,
-                        ...result
-                    })
-
-                    return `Successfully executed ${operation} on ${filePath} in sandbox`
-                }
-
                 // 🚨 SECURITY: Repo Boundary & Symlink Guard
                 if (!fullPath.startsWith(contextDir)) {
                     throw new Error(`Security Violation: Path escapes repository boundary (${filePath})`)

@@ -47,7 +47,7 @@ export type ToolRegistryResult = {
 export function createToolRegistry(args: {
   ctx: PluginContext
   pluginConfig: OhMyOpenCodeConfig
-  managers: Pick<Managers, "backgroundManager" | "tmuxSessionManager" | "skillMcpManager">
+  managers: Pick<Managers, "backgroundManager" | "tmuxSessionManager" | "skillMcpManager" | "sandboxManager">
   skillContext: SkillContext
   availableCategories: AvailableCategory[]
 }): ToolRegistryResult {
@@ -128,10 +128,14 @@ export function createToolRegistry(args: {
     ? { edit: createHashlineEditTool() }
     : {}
 
+  const wrap = (name: string, toolDef: ToolDefinition) => managers.sandboxManager.wrapTool(name, toolDef)
+
   const allTools: Record<string, ToolDefinition> = {
     ...builtinTools,
-    ...createGrepTools(ctx),
-    ...createGlobTools(ctx),
+    grep: wrap("grep", createGrepTools(ctx).grep),
+    setup_grep: wrap("setup_grep", createGrepTools(ctx).setup_grep),
+    ls: wrap("ls", createGlobTools(ctx).ls),
+    glob: wrap("glob", createGlobTools(ctx).glob),
     ...createAstGrepTools(ctx),
     ...createSessionManagerTools(ctx),
     ...backgroundTools,
@@ -140,16 +144,16 @@ export function createToolRegistry(args: {
     task: delegateTask,
     skill_mcp: skillMcpTool,
     skill: skillTool,
-    interactive_bash,
+    interactive_bash: wrap("interactive_bash", interactive_bash),
     ...taskToolsRecord,
     ...hashlineToolsRecord,
     ...createMemoryBankTools(),
-    multi_replace_file_content: createMultiReplaceTool(),
-    batch_read: createBatchReadTool(),
-    batch_grep: createBatchGrepTool(ctx),
+    multi_replace_file_content: wrap("multi_replace_file_content", createMultiReplaceTool()),
+    batch_read: wrap("batch_read", createBatchReadTool()),
+    batch_grep: wrap("batch_grep", createBatchGrepTool(ctx)),
     recall_memory: createRecallMemoryTool(),
-    git_safe: DETERMINISTIC_TOOLS["git_safe"](),
-    fs_safe: DETERMINISTIC_TOOLS["fs_safe"](),
+    git_safe: wrap("git_safe", DETERMINISTIC_TOOLS["git_safe"]()),
+    fs_safe: wrap("fs_safe", DETERMINISTIC_TOOLS["fs_safe"]()),
     verify_action: DETERMINISTIC_TOOLS["verify_action"](),
     submit_plan: DETERMINISTIC_TOOLS["submit_plan"](),
     mark_step_complete: DETERMINISTIC_TOOLS["mark_step_complete"](),
@@ -157,7 +161,9 @@ export function createToolRegistry(args: {
     query_ledger: DETERMINISTIC_TOOLS["query_ledger"]({ backgroundManager: managers.backgroundManager }),
     complete_task: DETERMINISTIC_TOOLS["complete_task"]({ client: ctx.client, backgroundManager: managers.backgroundManager }),
     report_issue_verification: DETERMINISTIC_TOOLS["report_issue_verification"](),
-    gh_safe: DETERMINISTIC_TOOLS["gh_safe"](),
+    gh_safe: wrap("gh_safe", DETERMINISTIC_TOOLS["gh_safe"]()),
+    read_file: wrap("read_file", builtinTools.read_file),
+    write_file: wrap("write_file", builtinTools.write_file),
   }
 
   const filteredTools = filterDisabledTools(allTools, pluginConfig.disabled_tools)

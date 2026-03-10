@@ -4445,6 +4445,15 @@
         "repo_path": {
           "default": "/home/daytona/project",
           "type": "string"
+        },
+        "session_control": {
+          "default": "auto",
+          "type": "string",
+          "enum": [
+            "auto",
+            "manual",
+            "never"
+          ]
         }
       },
       "additionalProperties": false

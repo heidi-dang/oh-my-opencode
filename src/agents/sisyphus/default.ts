@@ -20,6 +20,7 @@ import {
   buildOracleSection,
   buildDeepParallelSection,
   buildNonClaudePlannerSection,
+  buildArchitecturalCritiqueSection,
   categorizeTools,
 } from "../prompts";
 
@@ -155,6 +156,7 @@ export function buildDefaultSisyphusPrompt(
   );
   const delegationTable = buildDelegationTable(availableAgents);
   const oracleSection = buildOracleSection(availableAgents);
+  const architecturalCritiqueSection = buildArchitecturalCritiqueSection();
   const hardBlocks = buildHardBlocksSection();
   const antiPatterns = buildAntiPatternsSection();
   const deepParallelSection = buildDeepParallelSection(model, availableCategories);
@@ -352,6 +354,8 @@ STOP searching when:
 3. Mark \`completed\` as soon as done (don't batch) - OBSESSIVELY TRACK YOUR WORK USING TODO TOOLS
 
 ${categorySkillsGuide}
+
+${architecturalCritiqueSection}
 
 ${nonClaudePlannerSection}
 

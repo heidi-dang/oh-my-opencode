@@ -32,6 +32,25 @@ export class ContextCollector {
     });
   }
 
+  get(sessionID: string, contextID: string): ContextEntry | undefined {
+    const row = this.db.prepare(`
+      SELECT * FROM session_contexts 
+      WHERE session_id = ? AND id = ?
+    `).get(sessionID, contextID) as any;
+
+    if (!row) return undefined;
+
+    return {
+      id: row.id,
+      source: row.source,
+      content: row.content,
+      priority: row.priority as ContextPriority,
+      registrationOrder: row.registration_order,
+      metadata: row.metadata,
+      persistent: row.persistent === 1
+    };
+  }
+
   getPending(sessionID: string): PendingContext {
     const rows = this.db.prepare(`
       SELECT * FROM session_contexts 

@@ -62,16 +62,6 @@ export const interactive_bash: ToolDefinition = tool({
 
       const parts = tokenizeCommand(args.tmux_command)
 
-      const sessionID = getMainSessionID()
-      if (sessionID && sandboxManager.isSandboxEnabled(sessionID)) {
-        log(`[interactive_bash] Redirecting command to sandbox for session ${sessionID}: ${args.tmux_command}`)
-        const result = await sandboxManager.execute(sessionID, args.tmux_command)
-        if (result.exitCode !== 0) {
-          return `Error: ${result.stderr || result.stdout || `Command failed with exit code ${result.exitCode}`}`
-        }
-        return result.stdout || "(no output)"
-      }
-
       if (parts.length === 0) {
         return "Error: Empty tmux command"
       }
