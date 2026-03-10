@@ -93,6 +93,67 @@ oh-my-opencode init
 
 ---
 
+## Self-Audit Loop
+
+The repository includes a comprehensive self-audit system that systematically audits every function for correctness, performance, and code health.
+
+### Features
+
+- **Repo-wide function discovery**: Scans all TypeScript/JavaScript files (6,348 functions across 1,098 files)
+- **Stable function IDs**: Format `relative/path/to/file::functionName::language::lineN`
+- **Evidence-producing audits**: Detailed per-function reports with verification results
+- **Stateful and resumable**: Progress tracking allows interruption and continuation
+- **Automated commits**: Each audit iteration commits changes to main with structured messages
+- **Comprehensive verification**: Type checking, build verification, and function-specific analysis
+
+### Usage
+
+```bash
+# Generate function inventory
+bun run src/cli/index.ts self-audit inventory
+
+# Start full audit loop
+bun run src/cli/index.ts self-audit loop
+
+# Resume from previous state
+bun run src/cli/index.ts self-audit loop --resume
+
+# Limited iterations
+bun run src/cli/index.ts self-audit loop --max-iterations 10
+
+# Check current status
+bun run src/cli/index.ts self-audit status
+```
+
+### Audit Process
+
+Each iteration:
+1. Selects next pending function from inventory
+2. Performs comprehensive analysis for bugs, performance issues, and code health
+3. Applies minimal fixes or improvements when justified
+4. Runs verification (type checking, build, existing tests)
+5. Generates detailed proof report in `docs/self-audit/functions/`
+6. Updates progress tracking files
+7. Commits and pushes to main with structured commit message
+
+### Output Files
+
+- `docs/self-audit/index.txt`: Function inventory ledger with status tracking
+- `docs/self-audit/progress.txt`: Human-readable progress log
+- `docs/self-audit/functions/`: Individual function audit reports
+
+### Audit Categories
+
+- **runtime**: Core application logic
+- **ui**: User interface components
+- **api**: API endpoints and handlers
+- **tooling**: Build tools and utilities
+- **test-helper**: Test utilities and helpers
+
+The self-audit loop continues until all functions are audited or marked as blocked, providing systematic code quality improvement across the entire repository.
+
+---
+
 ## Verification & Integrity
 
 The reliability of this system is verified by:
