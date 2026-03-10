@@ -2,6 +2,7 @@ import { log } from "../../shared/logger"
 import { ContextCollector } from "../context-injector/collector"
 import { detectLanguage } from "./language-detector"
 import { routeLanguage, formatLanguageContext, formatFailureContext } from "./language-router"
+import { RepoExampleExtractor } from "./repo-example-extractor"
 import type { LanguagePack, LanguageProfile } from "./types"
 
 interface LanguageIntelligenceHookArgs {
@@ -39,7 +40,14 @@ export function createLanguageIntelligenceHook(args: LanguageIntelligenceHookArg
 
         activePacks.set(input.sessionID, route.pack)
 
-        const languageContext = formatLanguageContext(route, profile)
+        const extractor = new RepoExampleExtractor(directory)
+        const examples = await extractor.extractIfNeeded()
+        const examplesContext = extractor.formatForInjection()
+
+        let languageContext = formatLanguageContext(route, profile)
+        if (examplesContext) {
+          languageContext += `\n\n${examplesContext}`
+        }
 
         collector.register(input.sessionID, {
           id: "language-intelligence",
