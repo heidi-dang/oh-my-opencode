@@ -89,16 +89,16 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
     tools: toolsResult.filteredTools,
   })
 
-  // Cleanup on shutdown
-  process.on("SIGTERM", () => {
-    log("[OhMyOpenCodePlugin] SIGTERM received. Shutting down managers.")
+  // Cleanup on shutdown — full signal coverage for 10/10 stability
+  const gracefulShutdown = (signal: string) => {
+    log(`[OhMyOpenCodePlugin] ${signal} received. Shutting down managers.`)
     managers.runStateWatchdogManager.stop()
-  })
+  }
 
-  process.on("exit", () => {
-    log("[OhMyOpenCodePlugin] Process exit. Ensuring watchdog is stopped.")
-    managers.runStateWatchdogManager.stop()
-  })
+  process.on("SIGTERM", () => gracefulShutdown("SIGTERM"))
+  process.on("SIGINT", () => gracefulShutdown("SIGINT"))
+  process.on("SIGHUP", () => gracefulShutdown("SIGHUP"))
+  process.on("exit", () => gracefulShutdown("exit"))
 
   return {
     ...pluginInterface,

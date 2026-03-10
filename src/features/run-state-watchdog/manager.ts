@@ -14,17 +14,27 @@ export interface SessionRunContext {
   openTodos: number
 }
 
+interface StallEvent {
+  sessionID: string
+  timestamp: number
+  durationMs: number
+  stage: "warn" | "nudge" | "abort"
+  modelID?: string
+}
+
 export class RunStateWatchdogManager {
   private client: OpencodeClient
   private activeSessions = new Map<string, SessionRunContext>()
   private pollingIntervalMs: number
   private stallThresholdMs: number
   private timer: ReturnType<typeof setInterval> | null = null
+  private stallLog: StallEvent[] = []
+  private nudgedSessions = new Set<string>()
 
   constructor(client: OpencodeClient, opts?: { pollingIntervalMs?: number; stallThresholdMs?: number }) {
     this.client = client
     this.pollingIntervalMs = opts?.pollingIntervalMs ?? 5000
-    this.stallThresholdMs = opts?.stallThresholdMs ?? 90000 // 90s without text or tool activity
+    this.stallThresholdMs = opts?.stallThresholdMs ?? 90000
   }
 
   public start() {
@@ -43,6 +53,11 @@ export class RunStateWatchdogManager {
     const ctx = this.getOrCreate(sessionID)
     ctx.currentState = state
     ctx.lastActivityAt = Date.now()
+
+    // Clear nudge marker when session becomes active again
+    if (state === "running") {
+      this.nudgedSessions.delete(sessionID)
+    }
   }
 
   public recordActivity(sessionID: string, type: "text" | "tool" | "general") {
@@ -54,6 +69,8 @@ export class RunStateWatchdogManager {
     } else if (type === "tool") {
       ctx.lastToolCallAt = now
     }
+    // Activity resets nudge state
+    this.nudgedSessions.delete(sessionID)
   }
 
   public updateTodos(sessionID: string, count: number) {
@@ -63,6 +80,10 @@ export class RunStateWatchdogManager {
 
   public getContext(sessionID: string): SessionRunContext | undefined {
     return this.activeSessions.get(sessionID)
+  }
+
+  public getStallLog(): ReadonlyArray<StallEvent> {
+    return this.stallLog
   }
 
   private getOrCreate(sessionID: string): SessionRunContext {
@@ -81,6 +102,27 @@ export class RunStateWatchdogManager {
     return ctx
   }
 
+  private logStallEvent(sessionID: string, durationMs: number, stage: StallEvent["stage"], modelID?: string) {
+    const event: StallEvent = { sessionID, timestamp: Date.now(), durationMs, stage, modelID }
+    this.stallLog.push(event)
+
+    // Cap log size at 100 entries
+    if (this.stallLog.length > 100) {
+      this.stallLog.splice(0, this.stallLog.length - 100)
+    }
+
+    log(`[RunStateWatchdog] STALL EVENT`, event)
+  }
+
+  private getModelID(sessionID: string): string | undefined {
+    try {
+      const sessionState = (this.client as any).session?.state?.({ path: { id: sessionID } })
+      return sessionState?.modelID
+    } catch {
+      return undefined
+    }
+  }
+
   private async checkStalledRuns() {
     try {
       const now = Date.now()
@@ -90,25 +132,31 @@ export class RunStateWatchdogManager {
         const timeSinceLastActivity = now - ctx.lastActivityAt
         const timeSinceText = now - ctx.lastTextFragmentAt
         const timeSinceTool = now - ctx.lastToolCallAt
+        const stallRatio = timeSinceLastActivity / this.stallThresholdMs
 
-        // Half-throttle: If stalled for > 50% of threshold, notify user we are still thinking
-        if (timeSinceLastActivity > this.stallThresholdMs * 0.5 && timeSinceLastActivity < this.stallThresholdMs * 0.6) {
-          log(`[RunStateWatchdog] Session ${sessionID} stalled for >45s. Sending status update.`)
-          this.notifyStall(sessionID).catch(() => {})
+        // Stage 1: Warning toast at 50% threshold (~45s)
+        if (stallRatio >= 0.5 && stallRatio < 0.6) {
+          const modelID = this.getModelID(sessionID)
+          this.logStallEvent(sessionID, timeSinceLastActivity, "warn", modelID)
+          this.notifyStall(sessionID, "warn").catch(() => {})
         }
 
-        // If no text generation and no tool calls for the threshold, terminate
+        // Stage 2: Nudge at 78% threshold (~70s) — inject a corrective message
+        if (stallRatio >= 0.78 && stallRatio < 0.85 && !this.nudgedSessions.has(sessionID)) {
+          const modelID = this.getModelID(sessionID)
+          this.nudgedSessions.add(sessionID)
+          this.logStallEvent(sessionID, timeSinceLastActivity, "nudge", modelID)
+          this.notifyStall(sessionID, "nudge").catch(() => {})
+        }
+
+        // Stage 3: Abort at 100% threshold (90s)
         if (timeSinceText > this.stallThresholdMs && timeSinceTool > this.stallThresholdMs) {
-          log(`[RunStateWatchdog] Detected stalled run for session ${sessionID}.`, {
-            timeSinceText,
-            timeSinceTool,
-            openTodos: ctx.openTodos
-          })
+          const modelID = this.getModelID(sessionID)
+          this.logStallEvent(sessionID, timeSinceLastActivity, "abort", modelID)
 
-          // Mark as terminal FIRST to prevent repeated abort attempts
           ctx.currentState = "terminal"
+          this.nudgedSessions.delete(sessionID)
 
-          // Attempt abort — guarded against missing client methods
           try {
             const session = this.client?.session
             if (session && typeof session.abort === "function") {
@@ -125,7 +173,6 @@ export class RunStateWatchdogManager {
             log(`[RunStateWatchdog] Error during abort for session ${sessionID}`, { error: String(abortErr) })
           }
 
-          // Toast notification — guarded
           try {
             const tuiClient = this.client as unknown as Record<string, unknown>
             const tui = tuiClient?.tui as Record<string, unknown> | undefined
@@ -140,7 +187,7 @@ export class RunStateWatchdogManager {
               }).catch(() => {})
             }
           } catch {
-            // Swallow toast errors — never let UI calls crash the process
+            // Swallow toast errors
           }
         }
       }
@@ -149,24 +196,28 @@ export class RunStateWatchdogManager {
     }
   }
 
-  private async notifyStall(sessionID: string) {
+  private async notifyStall(sessionID: string, stage: "warn" | "nudge") {
     try {
       const tuiClient = this.client as unknown as Record<string, unknown>
       const tui = tuiClient?.tui as Record<string, unknown> | undefined
-      
-      // Attempt to get the active model for this session to provide contextual feedback
-      let stallMessage = "The model is taking longer than expected. I'm keeping the session alive."
-      let stallTitle = "Still thinking..."
-      
-      try {
-        const sessionState = (this.client as any).session?.state?.({ path: { id: sessionID } });
-        const modelID = sessionState?.modelID?.toLowerCase() || "";
-        if (modelID.includes("o1") || modelID.includes("reasoning") || modelID.includes("thinking")) {
-          stallTitle = "Deep reasoning in progress..."
-          stallMessage = "This model uses extended reasoning and may take several minutes. Please stand by."
-        }
-      } catch {
-        // Fallback to default message if state lookup fails
+
+      let stallTitle: string
+      let stallMessage: string
+      let variant: string
+
+      const modelID = this.getModelID(sessionID)?.toLowerCase() || ""
+      const isReasoningModel = modelID.includes("o1") || modelID.includes("reasoning") || modelID.includes("thinking")
+
+      if (stage === "warn") {
+        stallTitle = isReasoningModel ? "Deep reasoning in progress..." : "Still thinking..."
+        stallMessage = isReasoningModel
+          ? "This model uses extended reasoning and may take several minutes. Please stand by."
+          : "The model is taking longer than expected. I'm keeping the session alive."
+        variant = "warning"
+      } else {
+        stallTitle = "Possible stall detected"
+        stallMessage = "The session has been inactive for 70+ seconds. If the model doesn't respond soon, it will be automatically terminated."
+        variant = "error"
       }
 
       if (tui && typeof tui.showToast === "function") {
@@ -174,8 +225,8 @@ export class RunStateWatchdogManager {
           body: {
             title: stallTitle,
             message: stallMessage,
-            variant: "warning",
-            duration: 5000
+            variant,
+            duration: stage === "warn" ? 5000 : 8000
           }
         }).catch(() => {})
       }

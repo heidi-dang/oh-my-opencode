@@ -28,6 +28,7 @@ import {
   createUsagePatchHook,
   createRunStateWatchdogHook,
   createSandboxControlHook,
+  createCritiqueGateHook,
 } from "../../hooks"
 import { createAnthropicEffortHook } from "../../hooks/anthropic-effort"
 import {
@@ -66,6 +67,7 @@ export type SessionHooks = {
   usagePatch: ReturnType<typeof createUsagePatchHook> | null
   runStateWatchdog: ReturnType<typeof createRunStateWatchdogHook> | null
   sandboxControl: ReturnType<typeof createSandboxControlHook> | null
+  critiqueGate: ReturnType<typeof createCritiqueGateHook> | null
 }
 
 export function createSessionHooks(args: {
@@ -275,6 +277,8 @@ export function createSessionHooks(args: {
 
   const sandboxControl = safeHook("sandbox-control" as any, () => createSandboxControlHook())
 
+  const critiqueGate = safeHook("critique-gate" as any, () => createCritiqueGateHook())
+
   return {
     contextWindowMonitor,
     preemptiveCompaction,
@@ -302,5 +306,6 @@ export function createSessionHooks(args: {
     usagePatch,
     runStateWatchdog,
     sandboxControl,
+    critiqueGate,
   }
 }

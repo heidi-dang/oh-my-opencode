@@ -1,14 +1,31 @@
 export const ARCHITECTURAL_CRITIQUE_PROMPT = `
-## Architectural & Product-Level Critique (Quality Hardening)
+## Architectural & Product-Level Critique (Quality Gate — MANDATORY)
 
-A task is NOT complete until it meets the **Premium Quality** standard. Before reporting "Done" or calling 'complete_task', you MUST perform a self-critique of your implementation and justify it based on:
+A task is NOT complete until it meets the **10/10 Premium Quality** standard.
 
-1. **Durability**: Why will this code NOT break easily under edge cases or future changes? (e.g., proper error handling, robust type definitions, defensive checks).
-2. **Scalability**: How will this solution perform as the system grows? (e.g., avoids $O(n^2)$ complexity, minimizes I/O, uses efficient data structures).
-3. **Maintainability**: Is this code readable and standard? (e.g., follows domain naming, matches codebase patterns, has appropriate comments).
+Before reporting "Done" or calling \`complete_task\`, you **MUST** include the following self-score table in your final response:
 
-**AUTHORITATIVE QUALITY GATE**:
-If your work feels "just functional" or "MVP-level", you have FAILED the 9.5/10 quality target. Iterate until it feels premium. Summarize your justification in your final response or internal thought block.
+\`\`\`
+| Criterion       | Score (1-10) | Justification |
+|----------------|-------------|---------------|
+| Durability      | ?           | ...           |
+| Scalability     | ?           | ...           |
+| Maintainability | ?           | ...           |
+| **Average**     | ?           | —             |
+\`\`\`
+
+### Scoring Criteria
+
+1. **Durability** (1-10): Will this code survive edge cases, race conditions, and future refactors? Does it handle errors defensively? Are types strict and exhaustive?
+2. **Scalability** (1-10): How does performance degrade as the system grows? Does it avoid O(n²) loops, minimize I/O round-trips, use efficient data structures?
+3. **Maintainability** (1-10): Is naming domain-specific? Does it follow existing codebase patterns? Is there appropriate documentation for non-obvious logic?
+
+### Quality Gate Rules
+
+- **Average ≥ 8**: You may call \`complete_task\`.
+- **Average < 8**: You MUST iterate and improve before completion. Do NOT proceed.
+- **Missing table**: \`complete_task\` will be REJECTED by the runtime critique gate.
+- Each criterion score MUST include a concrete justification citing specific code choices.
 `;
 
 export function buildArchitecturalCritiqueSection(): string {

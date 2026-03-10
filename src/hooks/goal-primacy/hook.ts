@@ -2,6 +2,7 @@ import type { ChatMessageInput, ChatMessageHandlerOutput } from "../../plugin/ch
 import { ContextCollector } from "../../features/context-injector/collector"
 import { log } from "../../shared"
 import { createSystemDirective } from "../../shared/system-directive"
+import { computeKeywordOverlap, trackDriftScore, isDrifting } from "./goal-drift-detector"
 
 interface FirstMessageVariantGate {
   shouldOverride: (sessionID: string) => boolean
@@ -43,12 +44,32 @@ Note: This goal is persistent. Do NOT drift from this objective. Verify every tu
         }
       }
     },
+    "tool.execute.after": async (
+      input: { tool: string; sessionID: string; callID: string },
+      output: { title: string; output: string; metadata: unknown }
+    ) => {
+      const goal = collector.get(input.sessionID, "original-goal")
+      if (!goal) return
+
+      const driftScore = computeKeywordOverlap(goal.content, output.output)
+      trackDriftScore(input.sessionID, driftScore)
+
+      if (isDrifting(input.sessionID)) {
+        collector.register(input.sessionID, {
+          id: "drift-correction",
+          source: "custom",
+          content: `[GOAL DRIFT WARNING] Your recent tool calls appear unrelated to the original goal. Re-read your original objective and refocus immediately. Do NOT continue on tangential work.`,
+          priority: "critical",
+          persistent: false,
+          metadata: { type: "drift-correction" }
+        })
+        log("[goal-primacy] Drift correction injected", { sessionID: input.sessionID, tool: input.tool })
+      }
+    },
     "experimental.chat.messages.transform": async (input: { sessionID: string }, output: { messages: any[] }) => {
       const goal = collector.get(input.sessionID, "original-goal")
       if (goal) {
         const goalDirective = createSystemDirective(`PERSISTENT GOAL - ${goal.content}`)
-        // Inject at the end of the last message if it's from the system/user, 
-        // or add as a new system message to ensure the agent sees it right before thinking.
         output.messages.push({
           role: "user",
           content: [

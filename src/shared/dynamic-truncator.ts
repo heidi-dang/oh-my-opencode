@@ -48,6 +48,62 @@ function estimateTokens(text: string): number {
 	return Math.ceil(text.length / CHARS_PER_TOKEN_ESTIMATE);
 }
 
+interface ContentBlock {
+	type: "code" | "prose"
+	content: string
+	tokens: number
+}
+
+function extractContentBlocks(text: string): ContentBlock[] {
+	const blocks: ContentBlock[] = []
+	const lines = text.split("\n")
+	let inCodeBlock = false
+	let currentBlock: string[] = []
+	let currentType: "code" | "prose" = "prose"
+
+	for (const line of lines) {
+		if (line.trimStart().startsWith("```")) {
+			if (inCodeBlock) {
+				// End of code block
+				currentBlock.push(line)
+				blocks.push({
+					type: "code",
+					content: currentBlock.join("\n"),
+					tokens: estimateTokens(currentBlock.join("\n")),
+				})
+				currentBlock = []
+				currentType = "prose"
+				inCodeBlock = false
+			} else {
+				// Start of code block — flush any prose
+				if (currentBlock.length > 0) {
+					blocks.push({
+						type: "prose",
+						content: currentBlock.join("\n"),
+						tokens: estimateTokens(currentBlock.join("\n")),
+					})
+				}
+				currentBlock = [line]
+				currentType = "code"
+				inCodeBlock = true
+			}
+		} else {
+			currentBlock.push(line)
+		}
+	}
+
+	// Flush remaining
+	if (currentBlock.length > 0) {
+		blocks.push({
+			type: currentType,
+			content: currentBlock.join("\n"),
+			tokens: estimateTokens(currentBlock.join("\n")),
+		})
+	}
+
+	return blocks
+}
+
 export function truncateToTokenLimit(
 	output: string,
 	maxTokens: number,
@@ -63,6 +119,67 @@ export function truncateToTokenLimit(
 		return { result: output, truncated: false };
 	}
 
+	// Lossless compaction: preserve code blocks, truncate prose first
+	const blocks = extractContentBlocks(output)
+	const codeBlocks = blocks.filter((b) => b.type === "code")
+	const proseBlocks = blocks.filter((b) => b.type === "prose")
+
+	const totalCodeTokens = codeBlocks.reduce((sum, b) => sum + b.tokens, 0)
+	const truncationMessageTokens = 50
+
+	// If code blocks alone fit, preserve all code and truncate prose
+	if (totalCodeTokens + truncationMessageTokens < maxTokens) {
+		const availableForProse = maxTokens - totalCodeTokens - truncationMessageTokens
+		let proseTokensUsed = 0
+		const resultParts: string[] = []
+		let truncatedProseLines = 0
+		let totalProseLines = 0
+
+		for (const block of blocks) {
+			if (block.type === "code") {
+				resultParts.push(block.content)
+			} else {
+				totalProseLines += block.content.split("\n").length
+				if (proseTokensUsed + block.tokens <= availableForProse) {
+					resultParts.push(block.content)
+					proseTokensUsed += block.tokens
+				} else {
+					// Partial prose truncation
+					const remainingTokens = availableForProse - proseTokensUsed
+					if (remainingTokens > 0) {
+						const lines = block.content.split("\n")
+						const partialLines: string[] = []
+						let partialTokens = 0
+						for (const line of lines) {
+							const lineTokens = estimateTokens(line + "\n")
+							if (partialTokens + lineTokens > remainingTokens) break
+							partialLines.push(line)
+							partialTokens += lineTokens
+						}
+						if (partialLines.length > 0) {
+							resultParts.push(partialLines.join("\n"))
+						}
+						truncatedProseLines += lines.length - partialLines.length
+						proseTokensUsed += partialTokens
+					} else {
+						truncatedProseLines += block.content.split("\n").length
+					}
+				}
+			}
+		}
+
+		const result = resultParts.join("\n")
+		if (truncatedProseLines > 0) {
+			return {
+				result: result + `\n\n[${truncatedProseLines} prose lines truncated — ${codeBlocks.length} code blocks preserved intact]`,
+				truncated: true,
+				removedCount: truncatedProseLines,
+			}
+		}
+		return { result, truncated: false }
+	}
+
+	// Fallback: code blocks too large, do standard line-based truncation
 	const lines = output.split("\n");
 
 	if (lines.length <= preserveHeaderLines) {
@@ -80,7 +197,6 @@ export function truncateToTokenLimit(
 
 	const headerText = headerLines.join("\n");
 	const headerTokens = estimateTokens(headerText);
-	const truncationMessageTokens = 50;
 	const availableTokens = maxTokens - headerTokens - truncationMessageTokens;
 
 	if (availableTokens <= 0) {
