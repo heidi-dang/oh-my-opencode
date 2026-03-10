@@ -17,6 +17,8 @@ import {
 } from "../hooks/model-fallback/hook";
 import { resetMessageCursor } from "../shared";
 import { log } from "../shared/logger";
+import { memoSummarizer } from "../features/memo-summarizer";
+import { knowledgeGraph } from "../shared/knowledge-graph";
 import { shouldRetryError, isUnsupportedModelError } from "../shared/model-error-classifier";
 import { clearSessionModel, setSessionModel } from "../shared/session-model-state";
 import { deleteSessionTools } from "../shared/session-tools-store";
@@ -283,6 +285,17 @@ export function createEventHandler(args: {
           await lspManager.cleanupTempDirectoryClients();
           await managers.tmuxSessionManager.onSessionDeleted({
             sessionID: sessionInfo.id,
+          });
+
+          // Phase 3: Automated Memo-ing
+          await memoSummarizer.summarizeSession(sessionInfo.id);
+          
+          // Phase 2: Knowledge Graph tracking
+          knowledgeGraph.addNode({
+            id: `insight:${sessionInfo.id}`,
+            type: "insight",
+            label: `Summary of Session ${sessionInfo.id}`,
+            metadata: JSON.stringify({ source: "MemoSummarizer" })
           });
         }
       } catch (err) {

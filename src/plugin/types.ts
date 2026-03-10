@@ -1,5 +1,6 @@
 import type { Plugin, ToolDefinition } from "@opencode-ai/plugin"
 
+export type { Plugin, ToolDefinition }
 export type PluginContext = Parameters<Plugin>[0]
 export type PluginInstance = Awaited<ReturnType<Plugin>>
 

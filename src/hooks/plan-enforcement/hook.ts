@@ -64,7 +64,10 @@ const ALWAYS_ALLOWED_TOOLS = new Set([
     "hashline_edit",
     "ast_grep_search",
     "ls",
+    "read",
     "read_file",
+    "batch_read",
+    "recall_memory",
     "find_files",
     "unlock_plan",
 

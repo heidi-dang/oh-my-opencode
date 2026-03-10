@@ -1,114 +1,100 @@
+import { memoryDB } from "../../shared/memory-db";
 import type {
   ContextEntry,
   ContextPriority,
   PendingContext,
   RegisterContextOptions,
-} from "./types"
+} from "./types";
 
-const PRIORITY_ORDER: Record<ContextPriority, number> = {
-  critical: 0,
-  high: 1,
-  normal: 2,
-  low: 3,
-}
-
-const CONTEXT_SEPARATOR = "\n\n---\n\n"
-
-let registrationCounter = 0
+const CONTEXT_SEPARATOR = "\n\n---\n\n";
 
 export class ContextCollector {
-  private sessions: Map<string, Map<string, ContextEntry>> = new Map()
+  private get db() {
+    return (memoryDB as any).db;
+  }
 
   register(sessionID: string, options: RegisterContextOptions): void {
-    if (!this.sessions.has(sessionID)) {
-      this.sessions.set(sessionID, new Map())
-    }
+    const query = this.db.prepare(`
+      INSERT OR REPLACE INTO session_contexts 
+      (id, session_id, source, content, priority, persistent, registration_order, metadata)
+      VALUES ($id, $session_id, $source, $content, $priority, $persistent, 
+              (SELECT COALESCE(MAX(registration_order), 0) + 1 FROM session_contexts), $metadata)
+    `);
 
-    const sessionMap = this.sessions.get(sessionID)!
-    const key = `${options.source}:${options.id}`
-
-    const entry: ContextEntry = {
-      id: options.id,
-      source: options.source,
-      content: options.content,
-      priority: options.priority ?? "normal",
-      registrationOrder: ++registrationCounter,
-      metadata: options.metadata,
-      persistent: options.persistent ?? false,
-    }
-
-    sessionMap.set(key, entry)
+    query.run({
+      $id: options.id,
+      $session_id: sessionID,
+      $source: options.source,
+      $content: options.content,
+      $priority: options.priority ?? "normal",
+      $persistent: options.persistent ? 1 : 0,
+      $metadata: options.metadata || null
+    });
   }
 
   getPending(sessionID: string): PendingContext {
-    const sessionMap = this.sessions.get(sessionID)
+    const rows = this.db.prepare(`
+      SELECT * FROM session_contexts 
+      WHERE session_id = ? 
+      ORDER BY 
+        CASE priority 
+          WHEN 'critical' THEN 0 
+          WHEN 'high' THEN 1 
+          WHEN 'normal' THEN 2 
+          WHEN 'low' THEN 3 
+        END, registration_order ASC
+    `).all(sessionID) as any[];
 
-    if (!sessionMap || sessionMap.size === 0) {
-      return {
-        merged: "",
-        entries: [],
-        hasContent: false,
-      }
+    if (rows.length === 0) {
+      return { merged: "", entries: [], hasContent: false };
     }
 
-    const entries = this.sortEntries([...sessionMap.values()])
-    const merged = entries.map((e) => e.content).join(CONTEXT_SEPARATOR)
+    const entries: ContextEntry[] = rows.map(row => ({
+      id: row.id,
+      source: row.source,
+      content: row.content,
+      priority: row.priority as ContextPriority,
+      registrationOrder: row.registration_order,
+      metadata: row.metadata,
+      persistent: row.persistent === 1
+    }));
+
+    const merged = entries.map(e => e.content).join(CONTEXT_SEPARATOR);
 
     return {
       merged,
       entries,
       hasContent: entries.length > 0,
-    }
+    };
   }
 
   consume(sessionID: string): PendingContext {
-    const pending = this.getPending(sessionID)
-    this.clearNonPersistent(sessionID)
-    return pending
+    const pending = this.getPending(sessionID);
+    this.clearNonPersistent(sessionID);
+    return pending;
   }
 
   clearNonPersistent(sessionID: string): void {
-    const sessionMap = this.sessions.get(sessionID)
-    if (!sessionMap) return
-
-    for (const [key, entry] of sessionMap.entries()) {
-      if (!entry.persistent) {
-        sessionMap.delete(key)
-      }
-    }
+    this.db.run(`DELETE FROM session_contexts WHERE session_id = ? AND persistent = 0`, [sessionID]);
   }
 
   clearSession(sessionID: string): void {
-    this.sessions.delete(sessionID)
+    this.db.run(`DELETE FROM session_contexts WHERE session_id = ?`, [sessionID]);
   }
 
   clearAll(): void {
-    this.sessions.clear()
+    this.db.run(`DELETE FROM session_contexts`);
   }
 
   hasPending(sessionID: string): boolean {
-    const sessionMap = this.sessions.get(sessionID)
-    return sessionMap !== undefined && sessionMap.size > 0
+    const result = this.db.prepare(`SELECT COUNT(*) as count FROM session_contexts WHERE session_id = ?`).get(sessionID) as any;
+    return result.count > 0;
   }
 
   hasNonPersistentPending(sessionID: string): boolean {
-    const sessionMap = this.sessions.get(sessionID)
-    if (!sessionMap || sessionMap.size === 0) return false
-
-    for (const entry of sessionMap.values()) {
-      if (!entry.persistent) return true
-    }
-
-    return false
-  }
-
-  private sortEntries(entries: ContextEntry[]): ContextEntry[] {
-    return entries.sort((a, b) => {
-      const priorityDiff = PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority]
-      if (priorityDiff !== 0) return priorityDiff
-      return a.registrationOrder - b.registrationOrder
-    })
+    const result = this.db.prepare(`SELECT COUNT(*) as count FROM session_contexts WHERE session_id = ? AND persistent = 0`).get(sessionID) as any;
+    return result.count > 0;
   }
 }
 
-export const contextCollector = new ContextCollector()
+export const contextCollector = new ContextCollector();
