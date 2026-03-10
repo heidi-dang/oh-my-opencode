@@ -34,6 +34,7 @@ export class ContextCollector {
       priority: options.priority ?? "normal",
       registrationOrder: ++registrationCounter,
       metadata: options.metadata,
+      persistent: options.persistent ?? false,
     }
 
     sessionMap.set(key, entry)
@@ -62,17 +63,43 @@ export class ContextCollector {
 
   consume(sessionID: string): PendingContext {
     const pending = this.getPending(sessionID)
-    this.clear(sessionID)
+    this.clearNonPersistent(sessionID)
     return pending
   }
 
-  clear(sessionID: string): void {
+  clearNonPersistent(sessionID: string): void {
+    const sessionMap = this.sessions.get(sessionID)
+    if (!sessionMap) return
+
+    for (const [key, entry] of sessionMap.entries()) {
+      if (!entry.persistent) {
+        sessionMap.delete(key)
+      }
+    }
+  }
+
+  clearSession(sessionID: string): void {
     this.sessions.delete(sessionID)
+  }
+
+  clearAll(): void {
+    this.sessions.clear()
   }
 
   hasPending(sessionID: string): boolean {
     const sessionMap = this.sessions.get(sessionID)
     return sessionMap !== undefined && sessionMap.size > 0
+  }
+
+  hasNonPersistentPending(sessionID: string): boolean {
+    const sessionMap = this.sessions.get(sessionID)
+    if (!sessionMap || sessionMap.size === 0) return false
+
+    for (const entry of sessionMap.values()) {
+      if (!entry.persistent) return true
+    }
+
+    return false
   }
 
   private sortEntries(entries: ContextEntry[]): ContextEntry[] {

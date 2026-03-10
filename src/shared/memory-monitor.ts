@@ -13,6 +13,7 @@ class MemoryMonitor {
   private hwm = 0
   private lastLogTime = 0
   private readonly LOG_THROTTLE_MS = 5000 
+  private readonly COMPACTION_THRESHOLD_MB = 1024 // 1GB RSS trigger
 
   constructor() {
     this.hwm = process.memoryUsage().rss
@@ -41,6 +42,11 @@ class MemoryMonitor {
     }
 
     log(`[memory-monitor] ${label}:`, stats)
+
+    if (stats.rss > this.COMPACTION_THRESHOLD_MB) {
+      log(`[memory-monitor] CRITICAL MEMORY USAGE (${stats.rss}MB). Recommendation: Trigger compaction.`)
+      // Logic to trigger compaction will be implemented in the hook layer where ctx is available.
+    }
   }
 
   getUsage(): MemoryStats {

@@ -24,7 +24,7 @@ export class RunStateWatchdogManager {
   constructor(client: OpencodeClient, opts?: { pollingIntervalMs?: number; stallThresholdMs?: number }) {
     this.client = client
     this.pollingIntervalMs = opts?.pollingIntervalMs ?? 5000
-    this.stallThresholdMs = opts?.stallThresholdMs ?? 15000 // 15s without text or tool activity
+    this.stallThresholdMs = opts?.stallThresholdMs ?? 90000 // 90s without text or tool activity
   }
 
   public start() {
@@ -90,6 +90,13 @@ export class RunStateWatchdogManager {
       const timeSinceText = now - ctx.lastTextFragmentAt
       const timeSinceTool = now - ctx.lastToolCallAt
 
+      // Thresholds:
+      // Half-throttle: If stalled for > 50% of threshold, notify user we are still thinking
+      if (timeSinceLastActivity > this.stallThresholdMs * 0.5 && timeSinceLastActivity < this.stallThresholdMs * 0.6) {
+        log(`[RunStateWatchdog] Session ${sessionID} stalled for >45s. Sending status update.`)
+        this.notifyStall(sessionID).catch(() => {})
+      }
+
       // If we are ostensibly running, but there's been no text generation and no tool calls for the threshold...
       if (timeSinceText > this.stallThresholdMs && timeSinceTool > this.stallThresholdMs) {
         log(`[RunStateWatchdog] Detected stalled run for session ${sessionID}.`, {
@@ -100,11 +107,13 @@ export class RunStateWatchdogManager {
         
         // Elevation to Hard Termination
         log(`[RunStateWatchdog] TERMINATING stalled session ${sessionID}.`)
-        this.client.session.abort({
-          path: { id: sessionID },
-        }).catch((err: any) => {
-          log(`[RunStateWatchdog] Failed to abort stalled session ${sessionID}`, { error: String(err) })
-        })
+        if (this.client?.session?.abort) {
+          this.client.session.abort({
+            path: { id: sessionID },
+          }).catch((err: any) => {
+            log(`[RunStateWatchdog] Failed to abort stalled session ${sessionID}`, { error: String(err) })
+          })
+        }
 
         // Render a toast to show termination
         const tuiClient = this.client as any
@@ -112,15 +121,28 @@ export class RunStateWatchdogManager {
           tuiClient.tui.showToast({
             body: {
               title: "Task Aborted",
-              message: "Session terminated due to inactivity / stall detection.",
+              message: "Session terminated due to auto-stall detection (90s inactivity).",
               variant: "error",
               duration: 5000
             }
           }).catch(() => {})
         }
         
-        this.activeSessions.delete(sessionID)
       }
+    }
+  }
+
+  private async notifyStall(sessionID: string) {
+    const tuiClient = this.client as any
+    if (tuiClient.tui?.showToast) {
+      await tuiClient.tui.showToast({
+        body: {
+          title: "Still thinking...",
+          message: "The model is taking longer than expected. I'm keeping the session alive.",
+          variant: "warning",
+          duration: 3000
+        }
+      }).catch(() => {})
     }
   }
 }

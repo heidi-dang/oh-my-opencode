@@ -86,6 +86,12 @@ export async function verifyTaskCompletionState(
       }
     }
 
+    // If complete_task was required but not found, fail-closed early before soft checks
+    if (options?.requireCompleteTask && lastCompleteTaskIndex === -1) {
+      log("[verifyTaskCompletionState] complete_task was required but not found, fail-closed:", sessionID)
+      return false
+    }
+
     // 3. Soft Completion: If complete_task was missing, check for definitive success phrases in last 3 messages
     if (lastCompleteTaskIndex === -1) {
         const assistantMessages = messages.filter((m: any) => m.info?.role === "assistant")
@@ -103,12 +109,6 @@ export async function verifyTaskCompletionState(
                 return true
             }
         }
-    }
-
-    // If complete_task was required but not found, fail-closed
-    if (options?.requireCompleteTask && lastCompleteTaskIndex === -1) {
-      log("[verifyTaskCompletionState] complete_task was required but not found, fail-closed:", sessionID)
-      return false
     }
 
     return true

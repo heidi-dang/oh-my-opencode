@@ -321,7 +321,7 @@ describe("ContextCollector", () => {
       })
 
       // when
-      collector.clear(sessionID)
+      collector.clearSession(sessionID)
 
       // then
       expect(collector.getPending(sessionID).hasContent).toBe(false)

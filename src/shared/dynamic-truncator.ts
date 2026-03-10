@@ -3,7 +3,7 @@ import { normalizeSDKResponse } from "./normalize-sdk-response"
 import { TokenUsageRegistry } from "./token-usage-registry"
 
 const DEFAULT_ANTHROPIC_ACTUAL_LIMIT = 200_000;
-const CHARS_PER_TOKEN_ESTIMATE = 4;
+const CHARS_PER_TOKEN_ESTIMATE = 3;
 const DEFAULT_TARGET_MAX_TOKENS = 50_000;
 
 type ModelCacheStateLike = {

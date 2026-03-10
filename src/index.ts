@@ -25,6 +25,16 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
   injectYGKAInterceptor(ctx.client)
   startTmuxCheck()
 
+  // --- GLOBAL ERROR PROTECTION ---
+  process.on("unhandledRejection", (reason, _promise) => {
+    log("[OhMyOpenCodePlugin] UNHANDLED REJECTION:", { reason: String(reason) })
+  })
+
+  process.on("uncaughtException", (error) => {
+    log("[OhMyOpenCodePlugin] UNCAUGHT EXCEPTION:", { error: error.message, stack: error.stack })
+  })
+  // -------------------------------
+
   const pluginConfig = loadPluginConfig(ctx.directory, ctx)
   const disabledHooks = new Set(pluginConfig.disabled_hooks ?? [])
 
@@ -65,6 +75,7 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
     runStateWatchdogManager: managers.runStateWatchdogManager,
     isHookEnabled,
     safeHookEnabled,
+    firstMessageVariantGate,
     mergedSkills: toolsResult.mergedSkills,
     availableSkills: toolsResult.availableSkills,
   })
@@ -76,6 +87,12 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
     managers,
     hooks,
     tools: toolsResult.filteredTools,
+  })
+
+  // Cleanup on shutdown
+  process.on("SIGTERM", () => {
+    log("[OhMyOpenCodePlugin] SIGTERM received. Shutting down managers.")
+    managers.runStateWatchdogManager.stop()
   })
 
   return {
