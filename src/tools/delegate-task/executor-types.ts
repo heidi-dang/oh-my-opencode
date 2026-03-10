@@ -13,6 +13,7 @@ export interface ExecutorContext {
   agentOverrides?: AgentOverrides
   onSyncSessionCreated?: (event: { sessionID: string; parentID: string; title: string }) => Promise<void>
   syncPollTimeoutMs?: number
+  availableModelsOverride?: Set<string>
 }
 
 export interface ParentContext {

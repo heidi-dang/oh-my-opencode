@@ -110,7 +110,7 @@ Create the work plan directly - that's your job as the planning agent.`,
     const fallbackModel = agentRequirement?.fallbackModel
 
     if (agentOverride?.model || agentRequirement || matchedAgent.model) {
-      const availableModels = await getAvailableModelsForDelegateTask(client)
+      const availableModels = executorCtx.availableModelsOverride ?? await getAvailableModelsForDelegateTask(client)
 
       const normalizedMatchedModel = matchedAgent.model
         ? normalizeModelFormat(matchedAgent.model)

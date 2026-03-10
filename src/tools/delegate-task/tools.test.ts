@@ -19,7 +19,9 @@ const TEST_AVAILABLE_MODELS = new Set([
   "anthropic/claude-3-5-haiku",
   "anthropic/claude-3-5-sonnet",
   "google/gemini-2.0-flash",
+  "google/gemini-1.5-pro",
   "google/gemini-3-flash",
+  "openai/gpt-4o",
   "openai/gpt-5.2",
   "openai/o3-mini",
 ])
@@ -33,6 +35,21 @@ function createTestAvailableModels(): Set<string> {
 }
 
 describe("sisyphus-task", () => {
+  function createMockMessages(textContent: string = "Plan created") {
+    return {
+      data: [
+        { info: { role: "user", id: 1 } },
+        {
+          info: { role: "assistant", id: 2, finish: "final_response" },
+          parts: [
+            { type: "text", text: textContent },
+            { type: "tool", name: "complete_task", arguments: {} }
+          ]
+        }
+      ]
+    }
+  }
+
   let cacheSpy: ReturnType<typeof spyOn>
   let providerModelsSpy: ReturnType<typeof spyOn>
 
@@ -288,8 +305,8 @@ describe("sisyphus-task", () => {
           create: async () => ({ data: { id: "test-session" } }),
           prompt: async () => ({ data: {} }),
           promptAsync: async () => ({ data: {} }),
-          messages: async () => ({ data: [] }),
-          status: async () => ({ data: {} }),
+          messages: async () => createMockMessages(),
+          status: async () => ({ data: { "test-session": { type: "idle" } } }),
         },
       }
 
@@ -356,8 +373,8 @@ describe("sisyphus-task", () => {
           create: async () => ({ data: { id: "test-session" } }),
           prompt: async () => ({ data: {} }),
           promptAsync: async () => ({ data: {} }),
-          messages: async () => ({ data: [] }),
-          status: async () => ({ data: {} }),
+          messages: async () => createMockMessages(),
+          status: async () => ({ data: { "test-session": { type: "idle" } } }),
         },
       }
 
@@ -425,8 +442,8 @@ describe("sisyphus-task", () => {
           create: async () => ({ data: { id: "test-session" } }),
           prompt: async () => ({ data: {} }),
           promptAsync: async () => ({ data: {} }),
-          messages: async () => ({ data: [] }),
-          status: async () => ({ data: {} }),
+          messages: async () => createMockMessages(),
+          status: async () => ({ data: { "test-session": { type: "idle" } } }),
         },
       }
 
@@ -493,8 +510,8 @@ describe("sisyphus-task", () => {
           create: async () => ({ data: { id: "test-session" } }),
           prompt: async () => ({ data: {} }),
           promptAsync: async () => ({ data: {} }),
-          messages: async () => ({ data: [] }),
-          status: async () => ({ data: {} }),
+          messages: async () => createMockMessages(),
+          status: async () => ({ data: { "test-session": { type: "idle" } } }),
         },
       }
 
@@ -554,8 +571,8 @@ describe("sisyphus-task", () => {
           create: async () => ({ data: { id: "test-session" } }),
           prompt: async () => ({ data: {} }),
           promptAsync: async () => ({ data: {} }),
-          messages: async () => ({ data: [] }),
-          status: async () => ({ data: {} }),
+          messages: async () => createMockMessages(),
+          status: async () => ({ data: { "test-session": { type: "idle" } } }),
         },
       }
 
@@ -606,7 +623,8 @@ describe("sisyphus-task", () => {
           create: async () => ({ data: { id: "test-session" } }),
           prompt: async () => ({ data: {} }),
           promptAsync: async () => ({ data: {} }),
-          messages: async () => ({ data: [] }),
+          messages: async () => createMockMessages(),
+          status: async () => ({ data: { "test-session": { type: "idle" } } }),
         },
       }
 
@@ -676,8 +694,8 @@ describe("sisyphus-task", () => {
           create: async () => ({ data: { id: "test-session" } }),
           prompt: async () => ({ data: {} }),
           promptAsync: async () => ({ data: {} }),
-          messages: async () => ({ data: [] }),
-          status: async () => ({ data: {} }),
+          messages: async () => createMockMessages(),
+          status: async () => ({ data: { "test-session": { type: "idle" } } }),
         },
       }
 
@@ -970,7 +988,8 @@ describe("sisyphus-task", () => {
           create: async () => ({ data: { id: "test-session" } }),
           prompt: async () => ({ data: {} }),
           promptAsync: async () => ({ data: {} }),
-          messages: async () => ({ data: [] }),
+          messages: async () => createMockMessages(),
+          status: async () => ({ data: { "test-session": { type: "idle" } } }),
         },
       }
 
@@ -1041,7 +1060,8 @@ describe("sisyphus-task", () => {
           create: async () => ({ data: { id: "test-session" } }),
           prompt: async () => ({ data: {} }),
           promptAsync: async () => ({ data: {} }),
-          messages: async () => ({ data: [] }),
+          messages: async () => createMockMessages(),
+          status: async () => ({ data: { "test-session": { type: "idle" } } }),
         },
       }
 
@@ -1163,7 +1183,8 @@ describe("sisyphus-task", () => {
           create: async () => ({ data: { id: "test-session" } }),
           prompt: async () => ({ data: {} }),
           promptAsync: async () => ({ data: {} }),
-          messages: async () => ({ data: [] }),
+          messages: async () => createMockMessages(),
+          status: async () => ({ data: { "test-session": { type: "idle" } } }),
         },
       }
 
@@ -1208,7 +1229,8 @@ describe("sisyphus-task", () => {
           create: async () => ({ data: { id: "test-session" } }),
           prompt: async () => ({ data: {} }),
           promptAsync: async () => ({ data: {} }),
-          messages: async () => ({ data: [] }),
+          messages: async () => createMockMessages(),
+          status: async () => ({ data: { "test-session": { type: "idle" } } }),
         },
       }
 
@@ -1591,8 +1613,8 @@ describe("sisyphus-task", () => {
           create: async () => ({ data: { id: "ses_sync_error_test" } }),
           prompt: promptMock,
           promptAsync: promptMock,
-          messages: async () => ({ data: [] }),
-          status: async () => ({ data: {} }),
+          messages: async () => createMockMessages(),
+          status: async () => ({ data: { "test-session": { type: "idle" } } }),
         },
         config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
         app: {
@@ -1727,8 +1749,8 @@ describe("sisyphus-task", () => {
           create: async () => ({ data: { id: "ses_agent_notfound" } }),
           prompt: promptMock,
           promptAsync: promptMock,
-          messages: async () => ({ data: [] }),
-          status: async () => ({ data: {} }),
+          messages: async () => createMockMessages(),
+          status: async () => ({ data: { "test-session": { type: "idle" } } }),
         },
         config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
         app: {
@@ -3064,7 +3086,7 @@ describe("sisyphus-task", () => {
 
       // then - default model from DEFAULT_CATEGORIES is used
       expect(resolved).not.toBeNull()
-      expect(resolved!.config.model).toBe("anthropic/claude-sonnet-4-6")
+      expect(resolved!.config.model).toBe("anthropic/claude-3-5-sonnet")
     })
 
     test("category built-in model takes precedence over inheritedModel for builtin category", () => {
@@ -3294,7 +3316,7 @@ describe("sisyphus-task", () => {
           create: async () => ({ data: { id: "ses_ok" } }),
           prompt: async () => ({ data: {} }),
           promptAsync: async () => ({ data: {} }),
-          messages: async () => ({ data: [{ info: { role: "assistant" }, parts: [{ type: "text", text: "Plan created" }] }] }),
+          messages: async () => createMockMessages("Plan created"),
           status: async () => ({ data: { "ses_ok": { type: "idle" } } }),
         },
       }
@@ -3681,9 +3703,7 @@ describe("sisyphus-task", () => {
           create: async () => ({ data: { id: "ses_fallback_test" } }),
           prompt: promptMock,
           promptAsync: promptMock,
-          messages: async () => ({
-            data: [{ info: { role: "assistant" }, parts: [{ type: "text", text: "Done" }] }],
-          }),
+          messages: async () => createMockMessages("Done"),
           status: async () => ({ data: { "ses_fallback_test": { type: "idle" } } }),
         },
       }
@@ -3703,7 +3723,7 @@ describe("sisyphus-task", () => {
       metadata: () => {},
       ask: async () => {},
         messageID: "parent-message",
-        agent: "sisyphus",
+        agent: undefined, // Must be undefined to reach fallback chain (step 7) and bypass inheritance (step 4)
         abort: new AbortController().signal,
       }
 
@@ -3720,11 +3740,11 @@ describe("sisyphus-task", () => {
       )
 
       // then - should resolve via AGENT_MODEL_REQUIREMENTS fallback chain for oracle
-      // oracle fallback chain: gpt-5.2 (openai) > gemini-2.0-flash (google) > claude-sonnet-4-6 (anthropic)
-      // Since openai is in connectedProviders, should resolve to openai/gpt-5.2
+      // oracle fallback chain: gpt-4o (openai) > gemini-1.5-pro (google) > claude-3-5-sonnet (anthropic)
+      // Since openai is in connectedProviders, should resolve to openai/gpt-4o
       expect(promptBody.model).toBeDefined()
       expect(promptBody.model.providerID).toBe("openai")
-      expect(promptBody.model.modelID).toContain("gpt-5.2")
+      expect(promptBody.model.modelID).toContain("gpt-4o")
     }, { timeout: 20000 })
   })
 
@@ -3949,9 +3969,7 @@ describe("sisyphus-task", () => {
           create: async () => ({ data: { id: "ses_metadata_test" } }),
           prompt: async () => ({ data: {} }),
           promptAsync: async () => ({ data: {} }),
-          messages: async () => ({
-            data: [{ info: { role: "assistant" }, parts: [{ type: "text", text: "Task completed" }] }]
-          }),
+          messages: async () => createMockMessages("Task completed"),
           status: async () => ({ data: { "ses_metadata_test": { type: "idle" } } }),
         },
       }
