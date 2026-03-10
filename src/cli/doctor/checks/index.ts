@@ -14,6 +14,7 @@ import { checkIssueResolutionWorkflow } from "./issue-resolution"
 import { checkToolMetadataContract } from "./tool-metadata"
 import { checkRunStateWatchdog } from "./run-state-watchdog"
 import { checkMemoryRisk } from "./memory-risk"
+import { checkStability } from "./stability"
 
 export type { CheckDefinition }
 export * from "./model-resolution-types"
@@ -91,6 +92,11 @@ export function getAllCheckDefinitions(): CheckDefinition[] {
       id: CHECK_IDS.MEMORY_RISK,
       name: CHECK_NAMES[CHECK_IDS.MEMORY_RISK],
       check: checkMemoryRisk,
+    },
+    {
+      id: CHECK_IDS.STABILITY,
+      name: CHECK_NAMES[CHECK_IDS.STABILITY],
+      check: checkStability.check,
     },
   ]
 }

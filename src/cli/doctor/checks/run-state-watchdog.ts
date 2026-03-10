@@ -13,7 +13,10 @@ export const checkRunStateWatchdog: CheckDefinition = {
         let toastCalls = 0
         const mockClient = {
             tui: {
-                showToast: async () => { toastCalls++ }
+                showToast: async () => { toastCalls++; return { data: {} } }
+            },
+            session: {
+                abort: async () => ({ data: {} })
             }
         }
         
