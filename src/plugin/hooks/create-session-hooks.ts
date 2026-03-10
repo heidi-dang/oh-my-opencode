@@ -29,6 +29,7 @@ import {
   createRunStateWatchdogHook,
   createSandboxControlHook,
   createCritiqueGateHook,
+  createLanguageIntelligenceHook,
 } from "../../hooks"
 import { createAnthropicEffortHook } from "../../hooks/anthropic-effort"
 import {
@@ -37,6 +38,7 @@ import {
   log,
   normalizeSDKResponse,
 } from "../../shared"
+import { contextCollector } from "../../features/context-injector"
 import { safeCreateHook } from "../../shared/safe-create-hook"
 import { sessionExists } from "../../tools"
 
@@ -68,6 +70,7 @@ export type SessionHooks = {
   runStateWatchdog: ReturnType<typeof createRunStateWatchdogHook> | null
   sandboxControl: ReturnType<typeof createSandboxControlHook> | null
   critiqueGate: ReturnType<typeof createCritiqueGateHook> | null
+  languageIntelligence: ReturnType<typeof createLanguageIntelligenceHook> | null
 }
 
 export function createSessionHooks(args: {
@@ -279,6 +282,11 @@ export function createSessionHooks(args: {
 
   const critiqueGate = safeHook("critique-gate" as any, () => createCritiqueGateHook())
 
+  const languageIntelligence = safeHook("language-intelligence" as any, () => createLanguageIntelligenceHook({
+    collector: contextCollector,
+    directory: ctx.directory
+  }))
+
   return {
     contextWindowMonitor,
     preemptiveCompaction,
@@ -307,5 +315,6 @@ export function createSessionHooks(args: {
     runStateWatchdog,
     sandboxControl,
     critiqueGate,
+    languageIntelligence,
   }
 }
