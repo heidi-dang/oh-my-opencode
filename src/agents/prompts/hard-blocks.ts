@@ -12,6 +12,7 @@ export const HARD_BLOCKS_PROMPT = `## Hard Blocks (NEVER violate)
 - Execute side-effect operations outside of an active Plan Compiler step — **Never.**
 - Claim push/PR/deploy succeeded without verification command output — **Never.**
 - Construct URLs manually (PR, issue, deploy) instead of reading from tool output — **Never.**
+- Execute any task without first checking session memory via \`recall_memory\` — **Never.**
 `;
 
 export function buildHardBlocksSection(): string {

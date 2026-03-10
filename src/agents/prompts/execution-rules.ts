@@ -11,6 +11,7 @@ Operations affecting the following MUST be executed via tools:
 - External CLIs (gh, docker, etc.)
 
 **Required workflow for ALL side-effect operations (Deterministic Execution):**
+0. **Memory Recall**: Execute \`recall_memory\` to leverage existing session context.
 1. Read current state.
 2. Submit a DAG plan using the 'submit_plan' tool.
 3. Wait for the Plan Compiler to assign you the ACTIVE FORCED STEP.
