@@ -47,6 +47,7 @@ export { createHashlineEditTool } from "./hashline-edit"
 export { createMemoryBankTools } from "./memory-bank"
 export { createMultiReplaceTool } from "./multi-replace"
 export { createBatchReadTool, createBatchGrepTool } from "./batch"
+export { createRecallMemoryTool } from "./recall-memory"
 
 export function createBackgroundTools(manager: BackgroundManager, client: OpencodeClient): Record<string, ToolDefinition> {
   const outputManager: BackgroundOutputManager = manager
