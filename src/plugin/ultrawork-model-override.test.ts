@@ -366,7 +366,7 @@ describe("applyUltraworkModelOverrideOnMessage", () => {
   test("should log the model transition with deferred DB tag", () => {
     //#given
     const config = createConfig("sisyphus", { model: "anthropic/claude-sonnet-4-6" })
-    const existingModel = { providerID: "anthropic", modelID: "claude-sonnet-4-6" }
+    const existingModel = { providerID: "anthropic", modelID: "claude-3-5-sonnet" }
     const output = createOutput("ultrawork do something", {
       existingModel,
       messageId: "msg_123",

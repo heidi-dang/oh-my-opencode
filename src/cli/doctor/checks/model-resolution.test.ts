@@ -14,7 +14,7 @@ describe("model-resolution check", () => {
       // then: Should have agent entries
       const sisyphus = info.agents.find((a) => a.name === "sisyphus")
       expect(sisyphus).toBeDefined()
-      expect(sisyphus!.requirement.fallbackChain[0]?.model).toBe("claude-sonnet-4-6")
+      expect(sisyphus!.requirement.fallbackChain[0]?.model).toBe("claude-3-5-sonnet")
       expect(sisyphus!.requirement.fallbackChain[0]?.providers).toContain("anthropic")
     })
 
@@ -42,7 +42,7 @@ describe("model-resolution check", () => {
       // given: User has override for oracle agent
       const mockConfig = {
         agents: {
-          oracle: { model: "anthropic/claude-sonnet-4-6" },
+          oracle: { model: "anthropic/claude-3-5-sonnet" },
         },
       }
 
@@ -51,8 +51,8 @@ describe("model-resolution check", () => {
       // then: Oracle should show the override
       const oracle = info.agents.find((a) => a.name === "oracle")
       expect(oracle).toBeDefined()
-      expect(oracle!.userOverride).toBe("anthropic/claude-sonnet-4-6")
-      expect(oracle!.effectiveResolution).toBe("User override: anthropic/claude-sonnet-4-6")
+      expect(oracle!.userOverride).toBe("anthropic/claude-3-5-sonnet")
+      expect(oracle!.effectiveResolution).toBe("User override: anthropic/claude-3-5-sonnet")
     })
 
     it("shows user override for category when configured", async () => {
