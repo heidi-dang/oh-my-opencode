@@ -30,6 +30,7 @@ import {
   createBatchReadTool,
   createBatchGrepTool,
   createRecallMemoryTool,
+  createSaveLanguageFixTool,
 } from "../tools"
 import { getMainSessionID } from "../features/claude-code-session-state"
 import { filterDisabledTools } from "../shared/disabled-tools"
@@ -152,6 +153,7 @@ export function createToolRegistry(args: {
     batch_read: wrap("batch_read", createBatchReadTool()),
     batch_grep: wrap("batch_grep", createBatchGrepTool(ctx)),
     recall_memory: createRecallMemoryTool(),
+    save_language_fix: createSaveLanguageFixTool(ctx),
     git_safe: wrap("git_safe", DETERMINISTIC_TOOLS["git_safe"]()),
     fs_safe: wrap("fs_safe", DETERMINISTIC_TOOLS["fs_safe"]()),
     verify_action: DETERMINISTIC_TOOLS["verify_action"](),

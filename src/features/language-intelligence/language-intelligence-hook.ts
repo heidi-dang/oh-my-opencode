@@ -3,6 +3,7 @@ import { ContextCollector } from "../context-injector/collector"
 import { detectLanguage } from "./language-detector"
 import { routeLanguage, formatLanguageContext, formatFailureContext } from "./language-router"
 import { RepoExampleExtractor } from "./repo-example-extractor"
+import { LanguageMemory } from "./language-memory"
 import type { LanguagePack, LanguageProfile } from "./types"
 
 interface LanguageIntelligenceHookArgs {
@@ -44,9 +45,15 @@ export function createLanguageIntelligenceHook(args: LanguageIntelligenceHookArg
         const examples = await extractor.extractIfNeeded()
         const examplesContext = extractor.formatForInjection()
 
+        const memory = new LanguageMemory()
+        const memoryContext = memory.formatForInjection(profile.primary)
+
         let languageContext = formatLanguageContext(route, profile)
         if (examplesContext) {
           languageContext += `\n\n${examplesContext}`
+        }
+        if (memoryContext) {
+          languageContext += `\n\n${memoryContext}`
         }
 
         collector.register(input.sessionID, {
