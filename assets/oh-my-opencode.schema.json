@@ -4423,6 +4423,32 @@
       ],
       "additionalProperties": false
     },
+    "sandbox": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "provider": {
+          "type": "string",
+          "enum": [
+            "local",
+            "daytona"
+          ]
+        },
+        "daytona_api_key": {
+          "type": "string"
+        },
+        "daytona_server_url": {
+          "type": "string"
+        },
+        "repo_path": {
+          "default": "/home/daytona/project",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
     "sisyphus": {
       "type": "object",
       "properties": {

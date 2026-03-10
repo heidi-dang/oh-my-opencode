@@ -2,6 +2,9 @@ import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool"
 import { spawnWithWindowsHide } from "../../shared/spawn-with-windows-hide"
 import { BLOCKED_TMUX_SUBCOMMANDS, DEFAULT_TIMEOUT_MS, INTERACTIVE_BASH_DESCRIPTION } from "./constants"
 import { getCachedTmuxPath } from "./tmux-path-resolver"
+import { sandboxManager } from "../../features/sandbox/sandbox-manager"
+import { log } from "../../shared"
+import { getMainSessionID } from "../../features/claude-code-session-state"
 
 /**
  * Quote-aware command tokenizer with escape handling
@@ -58,6 +61,16 @@ export const interactive_bash: ToolDefinition = tool({
       const tmuxPath = getCachedTmuxPath() ?? "tmux"
 
       const parts = tokenizeCommand(args.tmux_command)
+
+      const sessionID = getMainSessionID()
+      if (sessionID && sandboxManager.isSandboxEnabled(sessionID)) {
+        log(`[interactive_bash] Redirecting command to sandbox for session ${sessionID}: ${args.tmux_command}`)
+        const result = await sandboxManager.execute(sessionID, args.tmux_command)
+        if (result.exitCode !== 0) {
+          return `Error: ${result.stderr || result.stdout || `Command failed with exit code ${result.exitCode}`}`
+        }
+        return result.stdout || "(no output)"
+      }
 
       if (parts.length === 0) {
         return "Error: Empty tmux command"
