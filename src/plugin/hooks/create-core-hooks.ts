@@ -14,8 +14,9 @@ export function createCoreHooks(args: {
   runStateWatchdogManager: RunStateWatchdogManager
   isHookEnabled: (hookName: HookName) => boolean
   safeHookEnabled: boolean
+  firstMessageVariantGate?: { shouldOverride: (sessionID: string) => boolean }
 }) {
-  const { ctx, pluginConfig, modelCacheState, runStateWatchdogManager, isHookEnabled, safeHookEnabled } = args
+  const { ctx, pluginConfig, modelCacheState, runStateWatchdogManager, isHookEnabled, safeHookEnabled, firstMessageVariantGate = { shouldOverride: () => false } } = args
 
   const session = createSessionHooks({
     ctx,
@@ -39,6 +40,7 @@ export function createCoreHooks(args: {
     pluginConfig,
     isHookEnabled: (name) => isHookEnabled(name as HookName),
     safeHookEnabled,
+    firstMessageVariantGate,
   })
 
   return {

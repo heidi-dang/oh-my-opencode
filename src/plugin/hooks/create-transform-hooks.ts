@@ -6,6 +6,7 @@ import {
   createKeywordDetectorHook,
   createThinkingBlockValidatorHook,
   createAnthropicPromptCachingHook,
+  createGoalPrimacyHook,
 } from "../../hooks"
 import {
   contextCollector,
@@ -19,16 +20,17 @@ export type TransformHooks = {
   contextInjectorMessagesTransform: ReturnType<typeof createContextInjectorMessagesTransformHook>
   thinkingBlockValidator: ReturnType<typeof createThinkingBlockValidatorHook> | null
   anthropicPromptCaching: ReturnType<typeof createAnthropicPromptCachingHook> | null
+  goalPrimacy: ReturnType<typeof createGoalPrimacyHook> | null
 }
 
 export function createTransformHooks(args: {
   ctx: PluginContext
   pluginConfig: OhMyOpenCodeConfig
-  isHookEnabled: (hookName: string) => boolean
-  safeHookEnabled?: boolean
+  isHookEnabled: (name: string) => boolean
+  safeHookEnabled: boolean
+  firstMessageVariantGate?: { shouldOverride: (sessionID: string) => boolean }
 }): TransformHooks {
-  const { ctx, pluginConfig, isHookEnabled } = args
-  const safeHookEnabled = args.safeHookEnabled ?? true
+  const { ctx, pluginConfig, isHookEnabled, safeHookEnabled, firstMessageVariantGate = { shouldOverride: () => false } } = args
 
   const claudeCodeHooks = isHookEnabled("claude-code-hooks")
     ? safeCreateHook(
@@ -73,11 +75,18 @@ export function createTransformHooks(args: {
       )
     : null
 
+  const goalPrimacy = safeCreateHook(
+    "goal-primacy" as any,
+    () => createGoalPrimacyHook({ collector: contextCollector, firstMessageVariantGate }),
+    { enabled: safeHookEnabled },
+  )
+
   return {
     claudeCodeHooks,
     keywordDetector,
     contextInjectorMessagesTransform,
     thinkingBlockValidator,
     anthropicPromptCaching,
+    goalPrimacy,
   }
 }
