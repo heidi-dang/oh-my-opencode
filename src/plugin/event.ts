@@ -220,18 +220,22 @@ export function createEventHandler(args: {
         log(`[event] tool.result → synthetic idle queued for ${sessionID}`);
         // Mirror syntheticIdle logic with 100ms delay to ensure tool metadata processed
         setTimeout(async () => {
-          const emittedAt = recentRealIdles.get(sessionID);
-          if (emittedAt && Date.now() - emittedAt < DEDUP_WINDOW_MS) {
-            return;
+          try {
+            const emittedAt = recentRealIdles.get(sessionID);
+            if (emittedAt && Date.now() - emittedAt < DEDUP_WINDOW_MS) {
+              return;
+            }
+            recentSyntheticIdles.set(sessionID, Date.now());
+            const syntheticIdleForTool: EventInput = {
+              event: {
+                type: "session.idle",
+                properties: { sessionID },
+              },
+            };
+            await dispatchToHooks(syntheticIdleForTool);
+          } catch (err) {
+            log("[event] Error in synthetic idle setTimeout for tool.result:", { sessionID, error: err });
           }
-          recentSyntheticIdles.set(sessionID, Date.now());
-          const syntheticIdleForTool: EventInput = {
-            event: {
-              type: "session.idle",
-              properties: { sessionID },
-            },
-          };
-          await dispatchToHooks(syntheticIdleForTool);
         }, 100);
       }
     }
@@ -256,29 +260,33 @@ export function createEventHandler(args: {
     }
 
     if (event.type === "session.deleted") {
-      const sessionInfo = props?.info as { id?: string } | undefined;
-      if (sessionInfo?.id === getMainSessionID()) {
-        setMainSession(undefined);
-      }
+      try {
+        const sessionInfo = props?.info as { id?: string } | undefined;
+        if (sessionInfo?.id === getMainSessionID()) {
+          setMainSession(undefined);
+        }
 
-      if (sessionInfo?.id) {
-        clearSessionAgent(sessionInfo.id);
-        lastHandledModelErrorMessageID.delete(sessionInfo.id);
-        lastHandledRetryStatusKey.delete(sessionInfo.id);
-        lastKnownModelBySession.delete(sessionInfo.id);
-        clearPendingModelFallback(sessionInfo.id);
-        clearSessionFallbackChain(sessionInfo.id);
-        resetMessageCursor(sessionInfo.id);
-        firstMessageVariantGate.clear(sessionInfo.id);
-        clearSessionModel(sessionInfo.id);
-        syncSubagentSessions.delete(sessionInfo.id);
-        deleteSessionTools(sessionInfo.id);
-        compiler.clear(sessionInfo.id);
-        await managers.skillMcpManager.disconnectSession(sessionInfo.id);
-        await lspManager.cleanupTempDirectoryClients();
-        await managers.tmuxSessionManager.onSessionDeleted({
-          sessionID: sessionInfo.id,
-        });
+        if (sessionInfo?.id) {
+          clearSessionAgent(sessionInfo.id);
+          lastHandledModelErrorMessageID.delete(sessionInfo.id);
+          lastHandledRetryStatusKey.delete(sessionInfo.id);
+          lastKnownModelBySession.delete(sessionInfo.id);
+          clearPendingModelFallback(sessionInfo.id);
+          clearSessionFallbackChain(sessionInfo.id);
+          resetMessageCursor(sessionInfo.id);
+          firstMessageVariantGate.clear(sessionInfo.id);
+          clearSessionModel(sessionInfo.id);
+          syncSubagentSessions.delete(sessionInfo.id);
+          deleteSessionTools(sessionInfo.id);
+          compiler.clear(sessionInfo.id);
+          await managers.skillMcpManager.disconnectSession(sessionInfo.id);
+          await lspManager.cleanupTempDirectoryClients();
+          await managers.tmuxSessionManager.onSessionDeleted({
+            sessionID: sessionInfo.id,
+          });
+        }
+      } catch (err) {
+        log("[event] Error in session.deleted handler:", { error: err });
       }
     }
 

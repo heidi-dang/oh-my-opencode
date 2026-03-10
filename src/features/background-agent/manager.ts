@@ -248,7 +248,13 @@ export class BackgroundManager {
       while (queue && queue.length > 0) {
         const item = queue[0]
 
-        await this.concurrencyManager.acquire(key)
+        try {
+          await this.concurrencyManager.acquire(key)
+        } catch (error) {
+          log("[background-agent] Concurrency acquisition failed in processKey:", error)
+          queue.shift()
+          continue
+        }
 
         if (item.task.status === "cancelled" || item.task.status === "error") {
           this.concurrencyManager.release(key)
@@ -619,7 +625,14 @@ export class BackgroundManager {
 
     // Acquire concurrency slot if a key is provided
     if (input.concurrencyKey) {
-      await this.concurrencyManager.acquire(input.concurrencyKey)
+      try {
+        await this.concurrencyManager.acquire(input.concurrencyKey)
+      } catch (error) {
+        log("[background-agent] Concurrency acquisition failed in trackTask:", error)
+        // If we fail to acquire concurrency for a task being tracked, we still register it 
+        // but it might lead to slot leaks if handled incorrectly. However, trackTask usually 
+        // tracks already running tasks from other sources.
+      }
     }
 
     const task: BackgroundTask = {
@@ -684,9 +697,19 @@ export class BackgroundManager {
 
     // Re-acquire concurrency using the persisted concurrency group
     const concurrencyKey = existingTask.concurrencyGroup ?? existingTask.agent
-    await this.concurrencyManager.acquire(concurrencyKey)
-    existingTask.concurrencyKey = concurrencyKey
-    existingTask.concurrencyGroup = concurrencyKey
+    try {
+      await this.concurrencyManager.acquire(concurrencyKey)
+      existingTask.concurrencyKey = concurrencyKey
+      existingTask.concurrencyGroup = concurrencyKey
+    } catch (error) {
+      log("[background-agent] Concurrency acquisition failed in resume:", error)
+      existingTask.status = "error"
+      existingTask.error = `Failed to resume: ${error instanceof Error ? error.message : String(error)}`
+      existingTask.completedAt = new Date()
+      this.cleanupPendingByParent(existingTask)
+      this.persistActiveTasks()
+      return existingTask
+    }
 
 
     existingTask.status = "running"
