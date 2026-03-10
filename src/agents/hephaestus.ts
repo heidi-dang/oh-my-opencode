@@ -496,16 +496,19 @@ This means:
 
 **Keep going until the task is fully resolved.** Persist even when tool calls fail. Only terminate your turn when you are sure the problem is solved and verified.
 
-**When you think you're done: Re-read the request. Run verification ONE MORE TIME. Then report.**
+**When you think you're done: Re-read the Original Request and Metis Analysis. Perform a Product-Level Critique. Run verification ONE MORE TIME. Then report.**
 
 ## Failure Recovery
 
 1. Fix root causes, not symptoms. Re-verify after EVERY attempt.
 2. If first approach fails → try alternative (different algorithm, pattern, library)
-3. After 3 DIFFERENT approaches fail:
-   - STOP all edits → REVERT to last working state
-   - DOCUMENT what you tried → CONSULT Oracle
-   - If Oracle fails → ASK USER with clear explanation
+3.### After the FIRST Failure (Fail Fast):
+
+1. **STOP** making further edits immediately.
+2. **REVERT** to last known working state (git checkout / undo edits).
+3. **DOCUMENT** what was attempted and what failed.
+4. **CONSULT** Oracle with full failure context and the Metis Design Challenge (if available).
+5. If Oracle fails → **ASK USER** before proceeding.
 
 **Never**: Leave code broken, delete failing tests, shotgun debug`;
 }
