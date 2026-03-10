@@ -66,8 +66,17 @@ export class MemoryDB {
         PRIMARY KEY (session_id, id)
       );
     `)
+    // Check for missing embeddings column (migration)
+    const columns = this.db.prepare("PRAGMA table_info(memories)").all() as any[]
+    const hasEmbeddings = columns.some(c => c.name === "embeddings")
+    if (!hasEmbeddings) {
+      log("[MemoryDB] Adding missing embeddings column to memories table")
+      this.db.run("ALTER TABLE memories ADD COLUMN embeddings BLOB")
+    }
+
     this.db.run(`CREATE INDEX IF NOT EXISTS idx_memories_category ON memories(category)`)
     this.db.run(`CREATE INDEX IF NOT EXISTS idx_memories_tags ON memories(tags)`)
+    this.db.run(`CREATE INDEX IF NOT EXISTS idx_memories_timestamp ON memories(timestamp)`)
   }
 
   public save(item: MemoryItem): number {
@@ -102,12 +111,13 @@ export class MemoryDB {
 
     if (params.tags) {
       sql += ` AND tags LIKE $tags`
-      args.$tags = `%${params.tags}%`
+      // Escape % and _ to prevent SQL injection wildcard abuse
+      args.$tags = `%${params.tags.replace(/[%_]/g, '\\$&')}%`
     }
 
     if (params.keyword) {
       sql += ` AND content LIKE $keyword`
-      args.$keyword = `%${params.keyword}%`
+      args.$keyword = `%${params.keyword.replace(/[%_]/g, '\\$&')}%`
     }
 
     sql += ` ORDER BY timestamp DESC LIMIT 50`
@@ -145,8 +155,9 @@ export class MemoryDB {
     return dotProduct / (mA * mB)
   }
 
-  public delete(id: number) {
-    this.db.run(`DELETE FROM memories WHERE id = ?`, [id])
+  public delete(id: number): number {
+    const result = this.db.prepare(`DELETE FROM memories WHERE id = ?`).run(id)
+    return result.changes
   }
 
   public close() {

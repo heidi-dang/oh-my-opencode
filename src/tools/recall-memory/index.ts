@@ -32,8 +32,8 @@ export function createRecallMemoryTool(): ToolDefinition {
           const vector = vectorize(args.query, vocab);
           memories = memoryDB.semanticQuery(vector, args.limit || 5);
         } else {
-          // Sequential fallback
-          memories = memoryDB.query({ category: "research" });
+          // Sequential fallback - return latest memories across all categories
+          memories = memoryDB.query({});
         }
 
         const result = createSuccessResult({
