@@ -10,7 +10,7 @@ import { RunStateWatchdogManager } from "./features/run-state-watchdog"
 import { TmuxSessionManager } from "./features/tmux-subagent"
 import { createConfigHandler } from "./plugin-handlers"
 import { log } from "./shared"
-import { sandboxManager, SandboxManager } from "./features/sandbox/sandbox-manager"
+
 
 export type Managers = {
   tmuxSessionManager: TmuxSessionManager
@@ -18,7 +18,7 @@ export type Managers = {
   skillMcpManager: SkillMcpManager
   runStateWatchdogManager: RunStateWatchdogManager
   configHandler: ReturnType<typeof createConfigHandler>
-  sandboxManager: SandboxManager
+  
 }
 
 export function createManagers(args: {
@@ -71,17 +71,12 @@ export function createManagers(args: {
     modelCacheState,
   })
 
-  if (pluginConfig.sandbox) {
-    sandboxManager.setConfig(pluginConfig.sandbox, ctx.directory)
-  }
-
   const result: Managers = {
     tmuxSessionManager,
     backgroundManager,
     skillMcpManager,
     runStateWatchdogManager,
     configHandler,
-    sandboxManager,
   }
   return result
-}
+

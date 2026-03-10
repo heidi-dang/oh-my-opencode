@@ -123,7 +123,7 @@ def run_git_doctor():
     if toplevel.returncode != 0:
         print("[FAIL] Not a git repository (or any of the parent directories).")
         return False
-        
+    
     print(f"[PASS] Git detected at: {toplevel.stdout.decode().strip()}")
     return True
 

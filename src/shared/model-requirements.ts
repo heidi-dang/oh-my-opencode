@@ -25,8 +25,10 @@ const DEFAULT_AGENT_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {
   },
   hephaestus: {
     fallbackChain: [
-      { providers: ["openai", "opencode"], model: "gpt-4o", variant: "medium" },
-      { providers: ["anthropic", "opencode"], model: "claude-3-5-sonnet", variant: "max" },
+      { providers: ["openai", "venice", "github-copilot", "opencode"], model: "gpt-5.3-codex", variant: "medium" },
+      { providers: ["github-copilot"], model: "gpt-5.2", variant: "medium" },
+      { providers: ["openai", "github-copilot", "opencode"], model: "gpt-4o", variant: "medium" },
+      { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-3-5-sonnet", variant: "max" },
     ],
     requiresAnyModel: true,
   },
@@ -39,8 +41,8 @@ const DEFAULT_AGENT_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {
   },
   librarian: {
     fallbackChain: [
-      { providers: ["google", "github-copilot", "opencode"], model: "gemini-1.5-flash" },
-      { providers: ["opencode"], model: "minimax-text-01" },
+      { providers: ["google", "github-copilot", "opencode"], model: "gemini-3-flash" },
+      { providers: ["opencode"], model: "minimax-m2.5-free" },
       { providers: ["opencode"], model: "big-pickle" },
     ],
   },

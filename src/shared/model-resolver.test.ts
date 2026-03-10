@@ -233,10 +233,11 @@ describe("resolveModelWithFallback", () => {
         userModel: "xai/grok-4-1-fast",
         fallbackChain: [
           { providers: ["openai", "venice", "opencode"], model: "o3-mini", variant: "medium" },
+          { providers: ["openai", "venice", "opencode"], model: "gpt-5.3-codex", variant: "medium" },
           { providers: ["github-copilot"], model: "gpt-5.2", variant: "medium" },
         ],
-        availableModels: new Set(["xai/grok-4-1-fast", "openai/o3-mini"]),
-        systemDefaultModel: "google/gemini-2.0-flash",
+        availableModels: new Set(["xai/grok-4-1-fast", "openai/o3-mini", "openai/gpt-5.3-codex"]),
+        systemDefaultModel: "google/gemini-3.1-pro",
       }
 
       // when
@@ -255,7 +256,7 @@ describe("resolveModelWithFallback", () => {
           { providers: ["openai", "venice", "opencode"], model: "o3-mini", variant: "medium" },
         ],
         availableModels: new Set(["openai/o3-mini", "xai/grok-4-1-fast"]),
-        systemDefaultModel: "google/gemini-2.0-flash",
+        systemDefaultModel: "google/gemini-3.1-pro",
       }
 
       // when

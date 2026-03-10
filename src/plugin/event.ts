@@ -24,7 +24,7 @@ import { clearSessionModel, setSessionModel } from "../shared/session-model-stat
 import { deleteSessionTools } from "../shared/session-tools-store";
 import { compiler } from "../runtime/plan-compiler";
 import { lspManager } from "../tools";
-import { sandboxManager } from "../features/sandbox/sandbox-manager";
+
 
 import type { CreatedHooks } from "../create-hooks";
 import type { Managers } from "../create-managers";
@@ -251,12 +251,6 @@ export function createEventHandler(args: {
       }
 
       const sessionID = sessionInfo?.id;
-      if (sessionID && pluginConfig.sandbox?.enabled) {
-        log(`[event] Sandbox enabled for session ${sessionID}, starting...`);
-        managers.sandboxManager.startSessionSandbox(sessionID).catch(err => {
-          log(`[event] Failed to start sandbox for session ${sessionID}:`, err);
-        });
-      }
 
       firstMessageVariantGate.markSessionCreated(sessionInfo);
 
@@ -291,10 +285,7 @@ export function createEventHandler(args: {
           deleteSessionTools(sessionInfo.id);
           compiler.clear(sessionInfo.id);
 
-          // Cleanup sandbox
-          managers.sandboxManager.stopSessionSandbox(sessionInfo.id).catch(err => {
-            log(`[event] Failed to stop sandbox for session ${sessionInfo.id}:`, err);
-          });
+          // Sandbox removed
           await managers.skillMcpManager.disconnectSession(sessionInfo.id);
           await lspManager.cleanupTempDirectoryClients();
           await managers.tmuxSessionManager.onSessionDeleted({

@@ -27,9 +27,10 @@ import {
   createRuntimeFallbackHook,
   createUsagePatchHook,
   createRunStateWatchdogHook,
-  createSandboxControlHook,
+
   createCritiqueGateHook,
   createLanguageIntelligenceHook,
+  createXaiUsagePatchHook,
 } from "../../hooks"
 import { createAnthropicEffortHook } from "../../hooks/anthropic-effort"
 import {
@@ -66,11 +67,13 @@ export type SessionHooks = {
   taskResumeInfo: ReturnType<typeof createTaskResumeInfoHook> | null
   anthropicEffort: ReturnType<typeof createAnthropicEffortHook> | null
   runtimeFallback: ReturnType<typeof createRuntimeFallbackHook> | null
+
   usagePatch: ReturnType<typeof createUsagePatchHook> | null
   runStateWatchdog: ReturnType<typeof createRunStateWatchdogHook> | null
-  sandboxControl: ReturnType<typeof createSandboxControlHook> | null
+
   critiqueGate: ReturnType<typeof createCritiqueGateHook> | null
   languageIntelligence: ReturnType<typeof createLanguageIntelligenceHook> | null
+  xaiUsagePatch: ReturnType<typeof createXaiUsagePatchHook> | null
 }
 
 export function createSessionHooks(args: {
@@ -278,14 +281,14 @@ export function createSessionHooks(args: {
 
   const runStateWatchdog = safeHook("run-state-watchdog" as any, () => createRunStateWatchdogHook(runStateWatchdogManager))
 
-  const sandboxControl = safeHook("sandbox-control" as any, () => createSandboxControlHook())
-
-  const critiqueGate = safeHook("critique-gate" as any, () => createCritiqueGateHook())
+    const critiqueGate = safeHook("critique-gate" as any, () => createCritiqueGateHook())
 
   const languageIntelligence = safeHook("language-intelligence" as any, () => createLanguageIntelligenceHook({
     collector: contextCollector,
     directory: ctx.directory
   }))
+
+  const xaiUsagePatch = safeHook("xai-usage-patch" as any, () => createXaiUsagePatchHook())
 
   return {
     contextWindowMonitor,
@@ -313,8 +316,8 @@ export function createSessionHooks(args: {
     runtimeFallback,
     usagePatch,
     runStateWatchdog,
-    sandboxControl,
     critiqueGate,
     languageIntelligence,
+    xaiUsagePatch,
   }
 }

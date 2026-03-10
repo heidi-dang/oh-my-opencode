@@ -1,5 +1,4 @@
 // @ts-nocheck
-// @ts-nocheck
 import { spawn } from "bun"
 import { tool } from "@opencode-ai/plugin"
 import { z } from "zod"
@@ -33,43 +32,49 @@ export function createVerifyTool(): any {
                 }
             }
 
-            const commandArgs = cmdString.split(" ")
-            const proc = spawn(commandArgs, {
-                cwd: toolContext.directory || process.cwd(),
-                stdout: "pipe",
-                stderr: "pipe"
-            })
+            try {
+                const commandArgs = cmdString.split(" ")
+                const proc = spawn(commandArgs, {
+                    cwd: toolContext.directory || process.cwd(),
+                    stdout: "pipe",
+                    stderr: "pipe"
+                })
 
-            const stdoutText = await new Response(proc.stdout).text()
-            const exitCode = await proc.exited
+                const stdoutText = await new Response(proc.stdout).text()
+                const exitCode = await proc.exited
 
-            let isSuccess = false
-            if (config.successCondition === 'output === "0"') {
-                isSuccess = stdoutText.trim() === "0"
-            } else if (config.successCondition === 'exit code === 0') {
-                isSuccess = exitCode === 0
-            } else if (config.successCondition === 'output starts with "https://"') {
-                isSuccess = stdoutText.trim().startsWith("https://")
-            } else if (config.successCondition === 'output is empty') {
-                isSuccess = stdoutText.trim() === ""
-            } else {
-                isSuccess = exitCode === 0
+                let isSuccess = false
+                if (config.successCondition === 'output === "0"') {
+                    isSuccess = stdoutText.trim() === "0"
+                } else if (config.successCondition === 'exit code === 0') {
+                    isSuccess = exitCode === 0
+                } else if (config.successCondition === 'output starts with "https://"') {
+                    isSuccess = stdoutText.trim().startsWith("https://")
+                } else if (config.successCondition === 'output is empty') {
+                    isSuccess = stdoutText.trim() === ""
+                } else {
+                    isSuccess = exitCode === 0
+                }
+
+                const result = createSuccessResult({
+                    verified: isSuccess,
+                    changedState: false,
+                    message: isSuccess ? undefined : config.failureMessage
+                });
+
+                toolContext.metadata({
+                    title: `Verify: ${config.name}`,
+                    ...result
+                })
+
+                return isSuccess
+                    ? `Verification SUCCESS. (Output: ${stdoutText.trim()})`
+                    : `Verification FAILED. ${config.failureMessage} (Output: ${stdoutText.trim()})`
+            } catch (e: any) {
+                const result = createFailureResult(`Verify execution failed: ${e.message}`);
+                toolContext.metadata({ title: "Verify Error", ...result })
+                return result.message
             }
-
-            const result = createSuccessResult({
-                verified: isSuccess,
-                changedState: false,
-                message: isSuccess ? undefined : config.failureMessage
-            });
-
-            toolContext.metadata({
-                title: `Verify: ${config.name}`,
-                ...result
-            })
-
-            return isSuccess
-                ? `Verification SUCCESS. (Output: ${stdoutText.trim()})`
-                : `Verification FAILED. ${config.failureMessage} (Output: ${stdoutText.trim()})`
         })
     })
 }

@@ -31,7 +31,7 @@ import {
   createBatchGrepTool,
   createRecallMemoryTool,
   createSaveLanguageFixTool,
-  createSandboxEnvironmentTool,
+
 } from "../tools"
 import { getMainSessionID } from "../features/claude-code-session-state"
 import { filterDisabledTools } from "../shared/disabled-tools"
@@ -49,7 +49,7 @@ export type ToolRegistryResult = {
 export function createToolRegistry(args: {
   ctx: PluginContext
   pluginConfig: OhMyOpenCodeConfig
-  managers: Pick<Managers, "backgroundManager" | "tmuxSessionManager" | "skillMcpManager" | "sandboxManager">
+  managers: Pick<Managers, "backgroundManager" | "tmuxSessionManager" | "skillMcpManager">
   skillContext: SkillContext
   availableCategories: AvailableCategory[]
 }): ToolRegistryResult {
@@ -130,7 +130,7 @@ export function createToolRegistry(args: {
     ? { edit: createHashlineEditTool() }
     : {}
 
-  const wrap = (name: string, toolDef: ToolDefinition) => managers.sandboxManager.wrapTool(name, toolDef)
+  const wrap = (name: string, toolDef: ToolDefinition) => toolDef
 
   const allTools: Record<string, ToolDefinition> = {
     ...builtinTools,
@@ -153,7 +153,7 @@ export function createToolRegistry(args: {
     batch_grep: wrap("batch_grep", createBatchGrepTool(ctx)),
     recall_memory: createRecallMemoryTool(),
     save_language_fix: createSaveLanguageFixTool(ctx),
-    sandbox_environment: createSandboxEnvironmentTool(),
+  
     git_safe: wrap("git_safe", DETERMINISTIC_TOOLS["git_safe"]()),
     fs_safe: wrap("fs_safe", DETERMINISTIC_TOOLS["fs_safe"]()),
     verify_action: DETERMINISTIC_TOOLS["verify_action"](),
