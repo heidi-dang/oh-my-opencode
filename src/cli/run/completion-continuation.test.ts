@@ -29,6 +29,8 @@ function createMockContext(directory: string): RunContext {
         todo: mock(() => Promise.resolve({ data: [] })),
         children: mock(() => Promise.resolve({ data: [] })),
         status: mock(() => Promise.resolve({ data: {} })),
+        messages: mock(() => Promise.resolve({ data: [] })),
+        abort: mock(() => Promise.resolve({ data: {} })),
       },
     } as unknown as RunContext["client"],
     sessionID: "test-session",

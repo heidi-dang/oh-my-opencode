@@ -28,6 +28,7 @@ export const CHECK_IDS = {
   PROGRESS: "progress",
   EDIT_ATOMICITY: "edit-atomicity",
   MEMORY_RISK: "memory-risk",
+  STABILITY: "stability",
 } as const
 
 export const CHECK_NAMES: Record<string, string> = {
@@ -41,6 +42,7 @@ export const CHECK_NAMES: Record<string, string> = {
   [CHECK_IDS.PROGRESS]: "Subagent Progress",
   [CHECK_IDS.EDIT_ATOMICITY]: "Edit Atomicity & Validation",
   [CHECK_IDS.MEMORY_RISK]: "Memory Growth & Leak Audit",
+  [CHECK_IDS.STABILITY]: "Production-Grade Stability (9.5 Goal)",
 } as const
 
 export const EXIT_CODES = {

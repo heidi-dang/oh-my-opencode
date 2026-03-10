@@ -20,6 +20,7 @@ export function createHooks(args: {
   runStateWatchdogManager: RunStateWatchdogManager
   isHookEnabled: (hookName: HookName) => boolean
   safeHookEnabled: boolean
+  firstMessageVariantGate: any
   mergedSkills: LoadedSkill[]
   availableSkills: AvailableSkill[]
 }) {
@@ -31,6 +32,7 @@ export function createHooks(args: {
     runStateWatchdogManager,
     isHookEnabled,
     safeHookEnabled,
+    firstMessageVariantGate,
     mergedSkills,
     availableSkills,
   } = args
@@ -42,6 +44,7 @@ export function createHooks(args: {
     runStateWatchdogManager,
     isHookEnabled,
     safeHookEnabled,
+    firstMessageVariantGate,
   })
 
   const continuation = createContinuationHooks({

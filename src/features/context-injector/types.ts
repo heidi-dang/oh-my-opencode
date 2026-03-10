@@ -31,6 +31,8 @@ export interface ContextEntry {
   registrationOrder: number
   /** Optional metadata for debugging/logging */
   metadata?: Record<string, unknown>
+  /** Whether this entry persists across turns */
+  persistent: boolean
 }
 
 /**
@@ -47,6 +49,8 @@ export interface RegisterContextOptions {
   priority?: ContextPriority
   /** Optional metadata */
   metadata?: Record<string, unknown>
+  /** Set to true to make this context persist across turns */
+  persistent?: boolean
 }
 
 /**

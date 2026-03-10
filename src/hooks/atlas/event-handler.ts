@@ -57,6 +57,11 @@ export function createAtlasEventHandler(input: {
       const state = getState(sessionID)
       const now = Date.now()
 
+      if (state.lastContinuationInjectedAt && (now - state.lastContinuationInjectedAt) < CONTINUATION_COOLDOWN_MS) {
+          log(`[${HOOK_NAME}] Skipped: debounced continuation injection`, { sessionID })
+          return
+      }
+
       if (state.lastEventWasAbortError) {
         state.lastEventWasAbortError = false
         log(`[${HOOK_NAME}] Skipped: abort error immediately before idle`, { sessionID })

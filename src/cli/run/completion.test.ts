@@ -20,6 +20,8 @@ const createMockContext = (overrides: {
           Promise.resolve({ data: childrenBySession[opts.path.id] ?? [] })
         ),
         status: mock(() => Promise.resolve({ data: statuses })),
+        messages: mock(() => Promise.resolve({ data: [] })),
+        abort: mock(() => Promise.resolve({ data: {} })),
       },
     } as unknown as RunContext["client"],
     sessionID: "test-session",
