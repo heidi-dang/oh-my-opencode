@@ -8,6 +8,7 @@ import type { Managers } from "./create-managers"
 import { createAvailableCategories } from "./plugin/available-categories"
 import { createSkillContext } from "./plugin/skill-context"
 import { createToolRegistry } from "./plugin/tool-registry"
+import { log } from "./shared"
 
 export type CreateToolsResult = {
   filteredTools: ToolsRecord

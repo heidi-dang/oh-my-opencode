@@ -13,6 +13,10 @@ export { lspManager }
 export { createAstGrepTools } from "./ast-grep"
 export { createGrepTools } from "./grep"
 export { createGlobTools } from "./glob"
+import { createReadFileTool, createWriteFileTool } from "./fs"
+export { createReadFileTool, createWriteFileTool }
+import { createSandboxEnvironmentTool } from "./sandbox-environment"
+export { createSandboxEnvironmentTool }
 export { createSkillTool } from "./skill"
 export { discoverCommandsSync } from "./slashcommand"
 export { createSessionManagerTools } from "./session-manager"
@@ -66,4 +70,6 @@ export const builtinTools: Record<string, ToolDefinition> = {
   lsp_diagnostics,
   lsp_prepare_rename,
   lsp_rename,
+  read_file: createReadFileTool(),
+  write_file: createWriteFileTool(),
 }

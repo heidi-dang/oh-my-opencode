@@ -38,12 +38,6 @@ export function createManagers(args: {
     {
       tmuxConfig,
       onSubagentSessionCreated: async (event: SubagentSessionCreatedEvent) => {
-        log("[index] onSubagentSessionCreated callback received", {
-          sessionID: event.sessionID,
-          parentID: event.parentID,
-          title: event.title,
-        })
-
         await tmuxSessionManager.onSessionCreated({
           type: "session.created",
           properties: {
@@ -54,8 +48,6 @@ export function createManagers(args: {
             },
           },
         })
-
-        log("[index] onSubagentSessionCreated callback completed")
       },
       onShutdown: () => {
         tmuxSessionManager.cleanup().catch((error) => {
@@ -83,7 +75,7 @@ export function createManagers(args: {
     sandboxManager.setConfig(pluginConfig.sandbox, ctx.directory)
   }
 
-  return {
+  const result: Managers = {
     tmuxSessionManager,
     backgroundManager,
     skillMcpManager,
@@ -91,4 +83,5 @@ export function createManagers(args: {
     configHandler,
     sandboxManager,
   }
+  return result
 }

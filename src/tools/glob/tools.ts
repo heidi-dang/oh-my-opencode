@@ -1,4 +1,5 @@
 import { resolve } from "node:path"
+import { promises as fs } from "node:fs"
 import type { PluginInput } from "@opencode-ai/plugin"
 import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool"
 import { runRgFiles } from "./cli"
@@ -45,5 +46,29 @@ export function createGlobTools(ctx: PluginInput): Record<string, ToolDefinition
     },
   })
 
-  return { glob }
+  const ls: ToolDefinition = tool({
+    description: "List files and directories in a directory.",
+    args: {
+      path: tool.schema
+        .string()
+        .optional()
+        .describe("The directory to list. Defaults to the current working directory."),
+    },
+    execute: async (args, context) => {
+      try {
+        const runtimeCtx = context as Record<string, unknown>
+        const dir = typeof runtimeCtx.directory === "string" ? runtimeCtx.directory : ctx.directory
+        const listPath = args.path ? resolve(dir, args.path) : dir
+        const entries = await fs.readdir(listPath, { withFileTypes: true })
+        const result = entries
+          .map((entry) => `${entry.isDirectory() ? "[DIR]" : "[FILE]"} ${entry.name}`)
+          .join("\n")
+        return result || "(Empty directory)"
+      } catch (err: any) {
+        return `Error listing directory: ${err.message}`
+      }
+    },
+  })
+
+  return { glob, ls }
 }

@@ -3,6 +3,7 @@ import type { PluginInput } from "@opencode-ai/plugin"
 import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool"
 import { runRg, runRgCount } from "./cli"
 import { formatGrepResult, formatCountResult } from "./result-formatter"
+import { downloadAndInstallRipgrep } from "./downloader"
 
 export function createGrepTools(ctx: PluginInput): Record<string, ToolDefinition> {
   const grep: ToolDefinition = tool({
@@ -69,5 +70,18 @@ export function createGrepTools(ctx: PluginInput): Record<string, ToolDefinition
     },
   })
 
-  return { grep }
+  const setup_grep: ToolDefinition = tool({
+    description: "Install or update the ripgrep binary required for grep tools.",
+    args: {},
+    execute: async () => {
+      try {
+        const path = await downloadAndInstallRipgrep()
+        return `Ripgrep successfully installed at: ${path}`
+      } catch (e) {
+        return `Error installing ripgrep: ${e instanceof Error ? e.message : String(e)}`
+      }
+    },
+  })
+
+  return { grep, setup_grep }
 }

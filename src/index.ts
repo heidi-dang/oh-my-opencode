@@ -66,7 +66,6 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
     pluginConfig,
     managers,
   })
-
   const hooks = createHooks({
     ctx,
     pluginConfig,
