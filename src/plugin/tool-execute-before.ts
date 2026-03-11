@@ -20,6 +20,7 @@ export function createToolExecuteBeforeHandler(args: {
   return async (input, output): Promise<void> => {
     await hooks.planEnforcement?.["tool.execute.before"]?.(input, output)
     await hooks.semanticLoopGuard?.["tool.execute.before"]?.(input, output)
+    await hooks.carRuntime?.["tool.execute.before"]?.(input, output)
 
     await hooks.writeExistingFileGuard?.["tool.execute.before"]?.(input, output)
     await hooks.questionLabelTruncator?.["tool.execute.before"]?.(input, output)

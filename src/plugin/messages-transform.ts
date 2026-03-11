@@ -30,6 +30,10 @@ export function createMessagesTransformHandler(args: {
         "experimental.chat.messages.transform"
       ]?.(input, output)
 
+      await args.hooks.carRuntime?.[
+        "experimental.chat.messages.transform"
+      ]?.(input, output)
+
       await args.hooks.proactiveThinker?.[
         "experimental.chat.messages.transform"
       ]?.(input, output)

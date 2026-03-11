@@ -7,6 +7,8 @@ import { isSessionIssueMode } from "../../features/claude-code-session-state"
 import { getIssueState } from "../../features/issue-resolution/state"
 import { withToolContract } from "../../utils/tool-contract-wrapper"
 import { normalizeSDKResponse } from "../../shared/normalize-sdk-response"
+import { evaluateCompletion } from "../../features/controlled-agent-runtime/completion-firewall"
+import { taskStateMachine } from "../../features/controlled-agent-runtime/task-state-machine"
 
 export function createCompleteTaskTool(options?: { client?: any, backgroundManager?: any }): any {
     return tool({
@@ -52,6 +54,19 @@ export function createCompleteTaskTool(options?: { client?: any, backgroundManag
                     
                     const result = createFailureResult(failMsg)
                     toolContext.metadata({ title: "Task Completion Rejected", ...result })
+                    return failMsg
+                }
+            }
+
+            // 3. CAR Completion Firewall Check
+            const carTask = taskStateMachine.getTask(sessionID)
+            if (carTask) {
+                const decision = evaluateCompletion(sessionID)
+                if (!decision.approved && !(args.overrideStrict && args.verification_summary)) {
+                    const failMsg = `[ERROR] CAR COMPLETION FIREWALL REJECTED.\n\nReason: ${decision.reason}\nAcceptance: ${decision.acceptance_score.passed}/${decision.acceptance_score.total} criteria passed.\n${decision.missing_criteria.length > 0 ? `Missing: ${decision.missing_criteria.join(", ")}` : ""}\n\nTo bypass (if you have manually verified), use 'overrideStrict: true' with a 'verification_summary'.`
+                    
+                    const result = createFailureResult(failMsg)
+                    toolContext.metadata({ title: "CAR Completion Rejected", ...result })
                     return failMsg
                 }
             }

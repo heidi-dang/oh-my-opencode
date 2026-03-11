@@ -75,6 +75,7 @@ export function createToolExecuteAfterHandler(args: {
     await hooks.readImageResizer?.["tool.execute.after"]?.(input, output)
     await hooks.hashlineReadEnhancer?.["tool.execute.after"]?.(input, output)
     await hooks.jsonErrorRecovery?.["tool.execute.after"]?.(input, output)
+    await hooks.carRuntime?.["tool.execute.after"]?.(input, output)
 
       await hooks.languageIntelligence?.["tool.execute.after"]?.(input, output as any)
     } catch (err: any) {

@@ -23,6 +23,7 @@ import {
   createWorkspaceGuardHook,
   createBashSafetyHook,
   createWebSafetyHook,
+  createCARRuntimeHook,
 } from "../../hooks"
 import {
   getOpenCodeVersion,
@@ -53,6 +54,7 @@ export type ToolGuardHooks = {
   workspaceGuard: ReturnType<typeof createWorkspaceGuardHook> | null
   bashSafety: ReturnType<typeof createBashSafetyHook> | null
   webSafety: ReturnType<typeof createWebSafetyHook> | null
+  carRuntime: ReturnType<typeof createCARRuntimeHook> | null
 }
 
 export function createToolGuardHooks(args: {
@@ -138,6 +140,7 @@ export function createToolGuardHooks(args: {
   const workspaceGuard = safeHook("workspace-guard", () => createWorkspaceGuardHook(ctx))
   const bashSafety = safeHook("bash-safety", () => createBashSafetyHook(ctx))
   const webSafety = safeHook("web-safety", () => createWebSafetyHook(ctx))
+  const carRuntime = safeHook("car-runtime" as any, () => createCARRuntimeHook(ctx))
 
   return {
     commentChecker,
@@ -160,5 +163,6 @@ export function createToolGuardHooks(args: {
     workspaceGuard,
     bashSafety,
     webSafety,
+    carRuntime,
   }
 }
