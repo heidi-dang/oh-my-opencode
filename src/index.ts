@@ -14,9 +14,47 @@ import { createFirstMessageVariantGate } from "./shared/first-message-variant"
 import { injectServerAuthIntoClient, log, injectYGKAInterceptor } from "./shared"
 import { startTmuxCheck } from "./tools"
 
+/**
+ * Detect and decode base64-encoded directory paths.
+ *
+ * The OpenCode server sometimes encodes the workspace directory as base64
+ * before passing it to plugins. A valid Unix directory starts with "/" and
+ * a valid Windows directory starts with a drive letter (e.g. "C:\").
+ * If neither is true and the string is valid base64 that decodes to an
+ * absolute path, we use the decoded version.
+ */
+function resolveDirectory(raw: string): string {
+  if (!raw) return raw
+
+  const looksAbsolute = raw.startsWith("/") || /^[A-Za-z]:[/\\]/.test(raw)
+  if (looksAbsolute) return raw
+
+  try {
+    const decoded = Buffer.from(raw, "base64").toString("utf8")
+    if (decoded.startsWith("/") || /^[A-Za-z]:[/\\]/.test(decoded)) {
+      return decoded
+    }
+  } catch {
+    // Not valid base64 — keep as-is
+  }
+
+  return raw
+}
+
 const OhMyOpenCodePlugin: Plugin = async (ctx) => {
   // Initialize config context for plugin runtime (prevents warnings from hooks)
   initConfigContext("opencode", null)
+
+  // Decode base64-encoded directory if the server passed one
+  const resolvedDir = resolveDirectory(ctx.directory)
+  if (resolvedDir !== ctx.directory) {
+    log("[OhMyOpenCodePlugin] Decoded base64 directory", {
+      raw: ctx.directory,
+      decoded: resolvedDir,
+    })
+    ;(ctx as any).directory = resolvedDir
+  }
+
   log("[OhMyOpenCodePlugin] ENTRY - plugin loading", {
     directory: ctx.directory,
   })
