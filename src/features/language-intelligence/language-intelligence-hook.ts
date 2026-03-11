@@ -18,21 +18,22 @@ export function createLanguageIntelligenceHook(args: LanguageIntelligenceHookArg
 
   return {
     "chat.message": async (
-      input: { sessionID: string; parts: Array<{ type: string; text?: string }> },
-      output: { parts: Array<{ type: string; text: string }> }
+      input: { sessionID: string; agent?: string },
+      output: { parts: Array<{ type: string; text?: string; [key: string]: unknown }> }
     ) => {
-      // Only detect on first message (if profile not already cached for this session)
-      if (detectedProfiles.has(input.sessionID)) return
-
+      // Re-scan if profile not set or if session might benefit from refresh
+      // We check sessionID to avoid double injection in the same session turn
       try {
-        const profile = await detectLanguage(directory)
-        if (profile.primary === "unknown") return
-
-        detectedProfiles.set(input.sessionID, profile)
+        let profile = detectedProfiles.get(input.sessionID)
+        if (!profile) {
+          profile = await detectLanguage(directory)
+          if (profile.primary === "unknown") return
+          detectedProfiles.set(input.sessionID, profile)
+        }
 
         // Extract user message text for stepbook matching
         const userMessage = output.parts
-          .filter((p) => p.type === "text" && p.text)
+          .filter((p) => p.type === "text" && typeof p.text === "string")
           .map((p) => p.text)
           .join("\n")
 
@@ -42,7 +43,9 @@ export function createLanguageIntelligenceHook(args: LanguageIntelligenceHookArg
         activePacks.set(input.sessionID, route.pack)
 
         const extractor = new RepoExampleExtractor(directory)
-        const examples = await extractor.extractIfNeeded()
+        const [examples] = await Promise.all([
+           extractor.extractIfNeeded()
+        ])
         const examplesContext = extractor.formatForInjection()
 
         const memory = new LanguageMemory()
@@ -56,6 +59,7 @@ export function createLanguageIntelligenceHook(args: LanguageIntelligenceHookArg
           languageContext += `\n\n${memoryContext}`
         }
 
+        // We use a stable ID to ensure we overwrite previous detections in the same session if they change
         collector.register(input.sessionID, {
           id: "language-intelligence",
           source: "custom",
@@ -74,11 +78,10 @@ export function createLanguageIntelligenceHook(args: LanguageIntelligenceHookArg
           sessionID: input.sessionID,
           language: profile.primary,
           confidence: profile.confidence,
-          buildTool: profile.buildTool,
           stepbook: route.stepbook?.id ?? "none",
         })
       } catch (error) {
-        log("[Heidi Language Intelligence] Detection failed — continuing without language context", {
+        log("[Heidi Language Intelligence] Detection/Injection failed", {
           error: String(error),
         })
       }
@@ -92,14 +95,15 @@ export function createLanguageIntelligenceHook(args: LanguageIntelligenceHookArg
       if (!pack) return
 
       // Only scan command-execution tools for failure signatures
-      const commandTools = ["bash", "terminal", "execute_command", "shell"]
-      if (!commandTools.some((t) => input.tool.toLowerCase().includes(t))) return
+      const commandTools = ["bash", "terminal", "execute_command", "shell", "git"]
+      const toolName = input.tool.toLowerCase()
+      if (!commandTools.some((t) => toolName.includes(t))) return
 
       try {
         const failureContext = formatFailureContext(pack, output.output)
         if (failureContext) {
           collector.register(input.sessionID, {
-            id: "failure-diagnosis",
+            id: `failure-diagnosis-${input.callID}`, // unique per call to allow multiple diagnoses
             source: "custom",
             content: failureContext,
             priority: "critical",
@@ -107,14 +111,14 @@ export function createLanguageIntelligenceHook(args: LanguageIntelligenceHookArg
             metadata: { type: "failure-diagnosis", tool: input.tool },
           })
 
-          log("[Heidi Language Intelligence] Failure signature matched — diagnosis injected", {
+          log("[Heidi Language Intelligence] Failure signature matched", {
             sessionID: input.sessionID,
             tool: input.tool,
             language: pack.language,
           })
         }
-      } catch {
-        // Swallow — never crash on diagnosis
+      } catch (error) {
+        log("[Heidi Language Intelligence] Diagnosis failed", { error: String(error) })
       }
     },
   }

@@ -109,6 +109,8 @@ export function createChatMessageHandler(args: {
       await hooks.startWork["chat.message"]?.(input, output)
     }
 
+    await hooks.languageIntelligence?.["chat.message"]?.(input, output)
+
     if (!hasConnectedProvidersCache()) {
       pluginContext.client.tui
         .showToast({

@@ -16,18 +16,26 @@ export class LanguageMemory {
     return this.db.save({
       category: "language_fix",
       content: fix,
-      tags: `${language.toLowerCase()},${signature}`,
-      metadata: JSON.stringify({ language, signature })
+      tags: language.toLowerCase(),
+      metadata: JSON.stringify({ language: language.toLowerCase(), signature })
     })
   }
 
   public getFixes(language: string): LanguageMemoryItem[] {
+    const langLower = language.toLowerCase()
     const records = this.db.query({ category: "language_fix" })
     
-    // Filter down to the requested language
-    // tags are stored as "python,TypeMismatch"
     return records
-      .filter(r => r.tags?.split(",").includes(language.toLowerCase()))
+      .filter(r => {
+        if (r.tags === langLower) return true
+        try {
+          if (r.metadata) {
+            const meta = JSON.parse(r.metadata)
+            return meta.language === langLower
+          }
+        } catch { /* ignore */ }
+        return false
+      })
       .map(r => {
         let meta: any = {}
         try {
@@ -35,7 +43,7 @@ export class LanguageMemory {
         } catch { /* ignore */ }
         
         return {
-          signature: meta.signature || (r.tags ? r.tags.split(",")[1] : "unknown") || "unknown",
+          signature: meta.signature || "unknown_signature",
           fix: r.content
         }
       })
@@ -45,14 +53,10 @@ export class LanguageMemory {
     const fixes = this.getFixes(language)
     if (fixes.length === 0) return ""
 
-    const sections = ["### [LANGUAGE MEMORY]"]
-    sections.push(`Previous successful fixes for ${language} in this repository:`)
+    const sections = ["### [LANGUAGE MEMORY]\nPrevious successful fixes for similar patterns in this repository:"]
     
     for (const item of fixes) {
-      sections.push(`\n#### Signature: ${item.signature}`)
-      sections.push("```")
-      sections.push(item.fix)
-      sections.push("```")
+      sections.push(`\n#### Pattern: ${item.signature}\n\`\`\`\n${item.fix}\n\`\`\``)
     }
 
     return sections.join("\n")
