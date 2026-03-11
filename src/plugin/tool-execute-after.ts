@@ -1,4 +1,5 @@
 import { consumeToolMetadata } from "../features/tool-metadata-store"
+import { log } from "../shared"
 import type { CreatedHooks } from "../create-hooks"
 
 export function createToolExecuteAfterHandler(args: {
@@ -17,8 +18,9 @@ export function createToolExecuteAfterHandler(args: {
   ): Promise<void> => {
     if (!output) return
 
-    const stored = consumeToolMetadata(input.sessionID, input.callID)
-    if (stored) {
+    try {
+      const stored = consumeToolMetadata(input.sessionID, input.callID)
+      if (stored) {
       if (stored.title) {
         output.title = stored.title
       }
@@ -74,6 +76,9 @@ export function createToolExecuteAfterHandler(args: {
     await hooks.hashlineReadEnhancer?.["tool.execute.after"]?.(input, output)
     await hooks.jsonErrorRecovery?.["tool.execute.after"]?.(input, output)
 
-    await hooks.languageIntelligence?.["tool.execute.after"]?.(input, output as any)
+      await hooks.languageIntelligence?.["tool.execute.after"]?.(input, output as any)
+    } catch (err: any) {
+      log("[tool-execute-after.ts] Unhandled hook error caught:", { error: err?.message || String(err) })
+    }
   }
 }

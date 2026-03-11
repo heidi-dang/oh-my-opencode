@@ -148,7 +148,7 @@ export function createRuntimeEnforcementHook(_ctx: PluginInput) {
                         for (const part of lastAssistant.parts) {
                             if (part.type === "text" && typeof part.text === "string") {
                                 if (part.text.toLowerCase().includes(check.phrase)) {
-                                    part.text = `[REDACTED: False completion claim (${check.phrase})]\n\nI described changes as completed, but the corresponding tool (${check.tool}) was not fully executed in this scope. My claim has been intercepted.`
+                                    part.text = `[REDACTED: False completion claim (${check.phrase})]\n\nI described changes as completed, but the corresponding tool (${check.tool}) was not executed in the current completion flow. My claim has been intercepted.`
                                 }
                             }
                         }

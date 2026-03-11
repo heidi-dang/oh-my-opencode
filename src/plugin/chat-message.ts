@@ -1,7 +1,7 @@
 import type { OhMyOpenCodeConfig } from "../config"
 import type { PluginContext } from "./types"
 
-import { hasConnectedProvidersCache } from "../shared"
+import { hasConnectedProvidersCache, log } from "../shared"
 import { setSessionModel } from "../shared/session-model-state"
 import { setSessionAgent } from "../features/claude-code-session-state"
 import { applyUltraworkModelOverrideOnMessage } from "./ultrawork-model-override"
@@ -70,9 +70,10 @@ export function createChatMessageHandler(args: {
     input: ChatMessageInput,
     output: ChatMessageHandlerOutput
   ): Promise<void> => {
-    if (input.agent) {
-      setSessionAgent(input.sessionID, input.agent)
-    }
+    try {
+      if (input.agent) {
+        setSessionAgent(input.sessionID, input.agent)
+      }
 
     if (firstMessageVariantGate.shouldOverride(input.sessionID)) {
       firstMessageVariantGate.markApplied(input.sessionID)
@@ -156,6 +157,9 @@ export function createChatMessageHandler(args: {
       }
     }
 
-    applyUltraworkModelOverrideOnMessage(pluginConfig, input.agent, output, pluginContext.client.tui, input.sessionID)
+      applyUltraworkModelOverrideOnMessage(pluginConfig, input.agent, output, pluginContext.client.tui, input.sessionID)
+    } catch (err: any) {
+      log("[chat-message.ts] Unhandled hook error caught:", { error: err?.message || String(err) })
+    }
   }
 }
