@@ -78,10 +78,17 @@ export function createRuntimeEnforcementHook(_ctx: PluginInput) {
             const assistantMessages = output.messages.filter(m => m.info.role === "assistant")
             if (assistantMessages.length > 0) {
                 const lastAssistant = assistantMessages[assistantMessages.length - 1]
-                const textParts = lastAssistant.parts.filter((p: any) => p.type === "text")
+                const informativeParts = lastAssistant.parts.filter((p: any) => 
+                    p.type === "text" || 
+                    p.type === "thought" || 
+                    p.type === "reasoning" || 
+                    p.type === "thinking" || 
+                    p.type === "callout" || 
+                    p.type === "internal"
+                )
                 const toolParts = lastAssistant.parts.filter((p: any) => p.type === "tool" || p.type === "toolInvocation")
                 
-                const combinedText = textParts.map((p: any) => p.text || "").join("")
+                const combinedText = informativeParts.map((p: any) => p.text || (p as any).thought || (p as any).thinking || (p as any).reasoning || "").join("")
                 const isSilent = toolParts.length > 0 && combinedText.trim().length < 10
                 const isRedacted = combinedText.includes("[REDACTED: False success claim]")
                 const endsOnTool = lastAssistant.parts.length > 0 && ((lastAssistant.parts[lastAssistant.parts.length - 1] as any).type === "tool" || (lastAssistant.parts[lastAssistant.parts.length - 1] as any).type === "toolInvocation")

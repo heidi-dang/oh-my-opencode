@@ -19,7 +19,21 @@ const ROADBLOCK_PHRASES = [
     "stopping because",
     "missing file",
     "broken install",
-    "directory doesn't exist"
+    "directory doesn't exist",
+    "no output",
+    "no git repo",
+    "remote -v failed"
+]
+
+const INTENT_PHRASES = [
+    "let me search",
+    "i will search",
+    "searching for",
+    "i'll look for",
+    "let me check",
+    "i'll check",
+    "let me try",
+    "i'll try"
 ]
 
 const PROACTIVE_STRATEGY = `
@@ -34,6 +48,12 @@ I detected a technical roadblock. Instead of stopping with a question, I will no
 I will attempt at least ONE broader search action before providing a truncated summary of findings.
 `
 
+const INTENT_NUDGE = `
+[SYSTEM: INTENT DETECTED BUT NO ACTION]
+You mentioned an intent to search/check, but you did not provide a tool call in your response. 
+Please provide the corresponding tool call now to proceed and fulfill your stated intent.
+`
+
 export function createProactiveThinkerHook(_ctx: PluginInput) {
     return {
         "experimental.chat.messages.transform": async (
@@ -44,13 +64,18 @@ export function createProactiveThinkerHook(_ctx: PluginInput) {
             if (assistantMessages.length === 0) return
 
             const lastAssistant = assistantMessages[assistantMessages.length - 1]
-            const textParts = lastAssistant.parts.filter(p => p.type === "text")
-            const combinedText = textParts.map((p: any) => p.text || "").join("\n").toLowerCase()
+            const informativeParts = lastAssistant.parts.filter((p: any) => 
+                p.type === "text" || p.type === "thought" || p.type === "thinking" || p.type === "reasoning"
+            )
+            const toolParts = lastAssistant.parts.filter((p: any) => p.type === "tool" || p.type === "toolInvocation")
+            const combinedText = informativeParts.map((p: any) => p.text || (p as any).thought || (p as any).thinking || (p as any).reasoning || "").join("\n").toLowerCase()
 
             const hasRoadblock = ROADBLOCK_PHRASES.some(phrase => combinedText.includes(phrase))
-            const hasAlreadyInjected = combinedText.includes("[system: proactive search mode]")
+            const hasAlreadyProactive = combinedText.includes("[system: proactive search mode]")
+            const hasIntent = INTENT_PHRASES.some(phrase => combinedText.includes(phrase))
+            const hasAlreadyNudged = combinedText.includes("[system: intent detected but no action]")
 
-            if (hasRoadblock && !hasAlreadyInjected) {
+            if (hasRoadblock && !hasAlreadyProactive) {
                 log("[ProactiveThinker] Roadblock detected. Injecting strategy...", {
                     phrase: ROADBLOCK_PHRASES.find(p => combinedText.includes(p))
                 })
@@ -61,6 +86,18 @@ export function createProactiveThinkerHook(_ctx: PluginInput) {
                     messageID: lastAssistant.info.id,
                     type: "text",
                     text: `\n\n${PROACTIVE_STRATEGY}`
+                } as any)
+            } else if (hasIntent && toolParts.length === 0 && !hasAlreadyNudged) {
+                 log("[ProactiveThinker] Intent without tool detected. Injecting nudge...", {
+                    phrase: INTENT_PHRASES.find(p => combinedText.includes(p))
+                })
+
+                lastAssistant.parts.push({
+                    id: `prt_intent_nudge_${Date.now()}`,
+                    sessionID: lastAssistant.info.sessionID,
+                    messageID: lastAssistant.info.id,
+                    type: "text",
+                    text: `\n\n${INTENT_NUDGE}`
                 } as any)
             }
         }

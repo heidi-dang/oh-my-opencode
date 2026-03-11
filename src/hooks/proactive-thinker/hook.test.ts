@@ -20,19 +20,38 @@ describe("ProactiveThinkerHook", () => {
         expect(output.messages[0].parts[1].text).toContain("[SYSTEM: PROACTIVE SEARCH MODE]")
     })
 
-    it("#should not inject if no roadblock is found", async () => {
+    it("#should inject nudge when intent is detected without tool", async () => {
         const output = {
             messages: [
                 {
                     info: { role: "assistant", sessionID: "s1", id: "m1" },
-                    parts: [{ type: "text", text: "I have successfully installed the package." }]
+                    parts: [{ type: "reasoning", reasoning: "Let me search for the file." }]
                 }
             ]
         }
 
         await hook["experimental.chat.messages.transform"]({}, output as any)
 
-        expect(output.messages[0].parts.length).toBe(1)
+        expect(output.messages[0].parts.length).toBe(2)
+        expect(output.messages[0].parts[1].text).toContain("[SYSTEM: INTENT DETECTED BUT NO ACTION]")
+    })
+
+    it("#should not inject if tool is present", async () => {
+        const output = {
+            messages: [
+                {
+                    info: { role: "assistant", sessionID: "s1", id: "m1" },
+                    parts: [
+                        { type: "text", text: "Let me search for the file." },
+                        { type: "toolInvocation", toolName: "ls" }
+                    ]
+                }
+            ]
+        }
+
+        await hook["experimental.chat.messages.transform"]({}, output as any)
+
+        expect(output.messages[0].parts.length).toBe(2) // No injection
     })
 
     it("#should not inject twice", async () => {
