@@ -31,6 +31,7 @@ import {
   createCritiqueGateHook,
   createLanguageIntelligenceHook,
   createXaiUsagePatchHook,
+  createProactiveThinkerHook,
 } from "../../hooks"
 import { createAnthropicEffortHook } from "../../hooks/anthropic-effort"
 import {
@@ -74,6 +75,7 @@ export type SessionHooks = {
   critiqueGate: ReturnType<typeof createCritiqueGateHook> | null
   languageIntelligence: ReturnType<typeof createLanguageIntelligenceHook> | null
   xaiUsagePatch: ReturnType<typeof createXaiUsagePatchHook> | null
+  proactiveThinker: ReturnType<typeof createProactiveThinkerHook> | null
 }
 
 export function createSessionHooks(args: {
@@ -302,6 +304,10 @@ export function createSessionHooks(args: {
 
   const xaiUsagePatch = safeHook("xai-usage-patch" as any, () => createXaiUsagePatchHook())
 
+  const proactiveThinker = isHookEnabled("proactive-thinker")
+    ? safeHook("proactive-thinker", () => createProactiveThinkerHook(ctx))
+    : null
+
   return {
     contextWindowMonitor,
     preemptiveCompaction,
@@ -332,5 +338,6 @@ export function createSessionHooks(args: {
     critiqueGate,
     languageIntelligence,
     xaiUsagePatch,
+    proactiveThinker,
   }
 }

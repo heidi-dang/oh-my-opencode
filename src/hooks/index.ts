@@ -61,6 +61,7 @@ export { createEditSafeguardHook } from "./edit-safeguard/hook"
 export { createUsagePatchHook } from "./usage-patch/hook"
 export { createXaiUsagePatchHook } from "./xai-usage-patch/hook"
 export { createSandboxControlHook } from "./sandbox-control/hook"
+export { createProactiveThinkerHook } from "./proactive-thinker"
 
 
 export { createWorkspaceGuardHook } from "./workspace-guard"

@@ -29,6 +29,10 @@ export function createMessagesTransformHandler(args: {
       await args.hooks.anthropicPromptCaching?.[
         "experimental.chat.messages.transform"
       ]?.(input, output)
+
+      await args.hooks.proactiveThinker?.[
+        "experimental.chat.messages.transform"
+      ]?.(input, output)
     } catch (error) {
       console.error("[Transform Boundary Error] Caught unhandled exception in message transform:", error)
       // We log but DO NOT throw, to ensure the session rendering loop remains intact.
