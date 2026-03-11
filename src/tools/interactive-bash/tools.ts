@@ -56,7 +56,7 @@ export const interactive_bash: ToolDefinition = tool({
   args: {
     tmux_command: tool.schema.string().describe("The tmux command to execute (without 'tmux' prefix)"),
   },
-  execute: async (args) => {
+  execute: async (args, context) => {
     try {
       const tmuxPath = getCachedTmuxPath() ?? "tmux"
 
@@ -133,7 +133,14 @@ The Bash tool can execute these commands directly. Do NOT retry with interactive
 
       return stdout || "(no output)"
     } catch (e) {
-      return `Error: ${e instanceof Error ? e.message : String(e)}`
+      let message = e instanceof Error ? e.message : String(e)
+
+      // Support propagating structured reasons behind AbortError
+      if (e instanceof Error && e.name === "AbortError" && (context as any).abort?.reason) {
+         message = `${message}: ${(context as any).abort.reason}`
+      }
+
+      return `Error: ${message}`
     }
   },
 })

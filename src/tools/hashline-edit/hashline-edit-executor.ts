@@ -158,7 +158,13 @@ export async function executeHashlineEditTool(args: HashlineEditArgs, context: T
 
     return `Updated ${effectivePath}`
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
+    let message = error instanceof Error ? error.message : String(error)
+    
+    // Support propagating structured reasons behind AbortError
+    if (error instanceof Error && error.name === "AbortError" && (context as any).abort?.reason) {
+      message = `${message}: ${(context as any).abort.reason}`
+    }
+
     if (error instanceof HashlineMismatchError) {
       return `Error: hash mismatch - ${message}\nTip: reuse LINE#ID entries from the latest read/edit output, or batch related edits in one call.`
     }

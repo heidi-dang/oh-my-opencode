@@ -161,12 +161,16 @@ export class RunStateWatchdogManager {
           try {
             const session = this.client?.session
             if (session && typeof session.abort === "function") {
-              log(`[RunStateWatchdog] TERMINATING stalled session ${sessionID}.`)
-              session.abort({
+              const reason = `Session terminated due to auto-stall detection (${Math.round(timeSinceLastActivity / 1000)}s inactivity)`;
+              log(`[RunStateWatchdog] TERMINATING stalled session ${sessionID}: ${reason}`);
+              
+              // Use any cast to allow passing reason to abort body for UI propagation enrichment
+              (session as any).abort({
                 path: { id: sessionID },
+                body: { reason }
               }).catch((err: unknown) => {
                 log(`[RunStateWatchdog] Failed to abort stalled session ${sessionID}`, { error: String(err) })
-              })
+              });
             } else {
               log(`[RunStateWatchdog] Cannot abort session ${sessionID}: client.session.abort not available`)
             }
