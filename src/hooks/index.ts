@@ -62,6 +62,7 @@ export { createUsagePatchHook } from "./usage-patch/hook"
 export { createXaiUsagePatchHook } from "./xai-usage-patch/hook"
 export { createSandboxControlHook } from "./sandbox-control/hook"
 export { createProactiveThinkerHook } from "./proactive-thinker"
+export { createGuardianDetectorHook } from "./guardian-detector"
 
 
 export { createWorkspaceGuardHook } from "./workspace-guard"

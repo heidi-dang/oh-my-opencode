@@ -32,8 +32,9 @@ describe("ProactiveThinkerHook", () => {
 
         await hook["experimental.chat.messages.transform"]({}, output as any)
 
-        expect(output.messages[0].parts.length).toBe(2)
-        expect(output.messages[0].parts[1].text).toContain("[SYSTEM: INTENT DETECTED BUT NO ACTION]")
+        const lastParts = output.messages[0].parts
+        expect(lastParts.length).toBe(2)
+        expect((lastParts[1] as any).text).toContain("[SYSTEM: INTENT DETECTED BUT NO ACTION]")
     })
 
     it("#should not inject if tool is present", async () => {

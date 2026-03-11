@@ -6,11 +6,13 @@ export { isPlannerAgent, getUltraworkMessage } from "./ultrawork"
 export { SEARCH_PATTERN, SEARCH_MESSAGE } from "./search"
 export { ANALYZE_PATTERN, ANALYZE_MESSAGE } from "./analyze"
 export { ISSUE_PATTERN, ISSUE_MESSAGE } from "./issue"
+export { DEBUG_PATTERN, DEBUG_MESSAGE } from "./debug"
 
 import { getUltraworkMessage } from "./ultrawork"
 import { SEARCH_PATTERN, SEARCH_MESSAGE } from "./search"
 import { ANALYZE_PATTERN, ANALYZE_MESSAGE } from "./analyze"
 import { ISSUE_PATTERN, ISSUE_MESSAGE } from "./issue"
+import { DEBUG_PATTERN, DEBUG_MESSAGE } from "./debug"
 
 export type KeywordDetector = {
   pattern: RegExp
@@ -33,5 +35,9 @@ export const KEYWORD_DETECTORS: KeywordDetector[] = [
   {
     pattern: ISSUE_PATTERN,
     message: ISSUE_MESSAGE,
+  },
+  {
+    pattern: DEBUG_PATTERN,
+    message: DEBUG_MESSAGE,
   },
 ]

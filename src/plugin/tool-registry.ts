@@ -31,7 +31,7 @@ import {
   createBatchGrepTool,
   createRecallMemoryTool,
   createSaveLanguageFixTool,
-
+  createAutonomousDiagnoseTool,
 } from "../tools"
 import { getMainSessionID } from "../features/claude-code-session-state"
 import { filterDisabledTools } from "../shared/disabled-tools"
@@ -166,6 +166,7 @@ export function createToolRegistry(args: {
     gh_safe: wrap("gh_safe", DETERMINISTIC_TOOLS["gh_safe"]()),
     ...(builtinTools.read_file ? { read_file: wrap("read_file", builtinTools.read_file) } : {}),
     ...(builtinTools.write_file ? { write_file: wrap("write_file", builtinTools.write_file) } : {}),
+    autonomous_diagnose: createAutonomousDiagnoseTool(),
   }
 
   const filteredTools = filterDisabledTools(allTools, pluginConfig.disabled_tools)

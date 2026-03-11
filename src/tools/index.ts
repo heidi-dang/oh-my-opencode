@@ -53,6 +53,7 @@ export { createMultiReplaceTool } from "./multi-replace"
 export { createBatchReadTool, createBatchGrepTool } from "./batch"
 export { createRecallMemoryTool } from "./recall-memory"
 export { createSaveLanguageFixTool } from "./save-language-fix"
+export { createAutonomousDiagnoseTool } from "./smart-debug"
 
 export function createBackgroundTools(manager: BackgroundManager, client: OpencodeClient): Record<string, ToolDefinition> {
   const outputManager: BackgroundOutputManager = manager

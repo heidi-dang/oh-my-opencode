@@ -66,6 +66,7 @@ export const HookNameSchema = z.enum([
   "web-safety",
   "xai-usage-patch",
   "proactive-thinker",
+  "guardian-detector",
   "language-intelligence",
 ])
 
