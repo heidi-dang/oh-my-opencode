@@ -150,7 +150,7 @@ export async function applyAgentConfig(params: {
         getAgentDisplayName(configuredDefaultAgent);
     } else {
       (params.config as { default_agent?: string }).default_agent =
-        getAgentDisplayName("sisyphus");
+        getAgentDisplayName("heidi");
     }
 
     const agentConfig: Record<string, unknown> = {

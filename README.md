@@ -71,8 +71,6 @@ A comprehensive hard audit revealed several critical and high-risk vulnerabiliti
 - **Prompt Modularization**: Prompt payload reduced by an estimated **60-80%** via modular components and lazy skill loading.
 - **Context Trimmer**: Aggressive summarization of file reads and massive terminal outputs.
 
----
-
 ## Installation
 
 ```bash
@@ -83,10 +81,24 @@ oh-my-opencode init
 
 ---
 
+## Introducing Heidi: The Antigravity-Class Specialist
+
+Heidi is not just another agent—she is a high-performance, 1:1 behavioral model of Antigravity, designed for engineers who demand absolute reliability and proactive leadership.
+
+Powered by the **Controlled Agent Runtime (CAR)**, Heidi operates within a strict 7-stage pipeline (Interpret → Retrieve → Plan → Execute → Verify → Repair → Complete). She cannot drift, she cannot claim success without evidence, and she cannot bypass the system-level completion firewall.
+
+- **Deepmind Provenance**: Modeled after the Google Deepmind Antigravity system.
+- **Safety First**: Hard-gated tool execution and runtime verification.
+- **Zero Hallucination**: Every action is cross-referenced against the State Ledger.
+- **Self-Healing**: Autonomous failure classification and up to 3 repair loops per task.
+
+---
+
 ## Discipline Agents
 
 | Specialist | Role | Strength |
 | :--- | :--- | :--- |
+| **Heidi** | **GDM Antigravity** | **Hard-Enforced Reliability Pipeline (CAR)** |
 | **Sisyphus** | Orchestrator | Goals -> Plans -> Delegation |
 | **Hephaestus** | Deep Worker | Code exploration & Implementation |
 | **Prometheus** | Strategic Planner | Strategic interviews & Verification |
