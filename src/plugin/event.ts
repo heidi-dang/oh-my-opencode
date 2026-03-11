@@ -17,6 +17,8 @@ import {
 } from "../hooks/model-fallback/hook";
 import { resetMessageCursor } from "../shared";
 import { log } from "../shared/logger";
+import { SafeToastWrapper } from "../shared/safe-toast-wrapper"
+import { getAgentConfigKey } from "../shared/agent-display-names"
 import { memoSummarizer } from "../features/memo-summarizer";
 import { knowledgeGraph } from "../shared/knowledge-graph";
 import { shouldRetryError, isUnsupportedModelError } from "../shared/model-error-classifier";
@@ -25,6 +27,11 @@ import { deleteSessionTools } from "../shared/session-tools-store";
 import { compiler } from "../runtime/plan-compiler";
 import { lspManager } from "../tools";
 import { sandboxManager } from "../features/sandbox/sandbox-manager";
+import { recentSyntheticIdles } from "./recent-synthetic-idles"
+import { unstableAgentBabysitter } from "./unstable-agent-babysitter"
+import { sessionAgentResolver } from "./session-agent-resolver"
+import { ultraworkModelOverride } from "./ultrawork-model-override"
+import { ultraworkDbModelOverride } from "./ultrawork-db-model-override"
 
 import type { CreatedHooks } from "../create-hooks";
 import type { Managers } from "../create-managers";
@@ -516,14 +523,12 @@ export function createEventHandler(args: {
 
           // 2. If no fallback or fallback exhausted, surface a terminal "blocked" state
           log("[event] Unsupported model with no fallback, session blocked:", { sessionID, modelLabel })
-          await (pluginContext.client as any).tui?.showToast?.({
-            path: { id: sessionID },
-            body: {
-              title: "Model not supported",
-              description: `${modelLabel} is not supported by this provider. Please select a different model.`,
-              variant: "error",
-            },
-          }).catch(() => {})
+          SafeToastWrapper.showError(
+            pluginContext as any,
+            "Model not supported",
+            `${modelLabel} is not supported by this provider. Please select a different model.`,
+            `event:unsupported-model:${sessionID}`
+          )
 
           // Abort the stuck session so OpenCode shows a terminal error state
           await pluginContext.client.session.abort({ path: { id: sessionID } }).catch(() => {})
