@@ -1,8 +1,7 @@
-
-import { describe, it, expect, beforeEach, vi } from "vitest"
+import { describe, it, expect, beforeEach, vi } from "bun:test"
 import { createLanguageIntelligenceHook } from "./language-intelligence-hook"
 import { detectLanguage } from "./language-detector"
-import { routeLanguage } from "./language-router"
+import { routeLanguage, formatLanguageContext, formatFailureContext } from "./language-router"
 
 // Mock the dependencies
 vi.mock("./language-detector", () => ({
@@ -12,7 +11,7 @@ vi.mock("./language-detector", () => ({
 vi.mock("./language-router", () => ({
   routeLanguage: vi.fn(),
   formatLanguageContext: vi.fn(() => "mocked-context"),
-  formatFailureContext: vi.fn(),
+  formatFailureContext: vi.fn(() => "mocked-failure"),
 }))
 
 vi.mock("../../shared/logger", () => ({

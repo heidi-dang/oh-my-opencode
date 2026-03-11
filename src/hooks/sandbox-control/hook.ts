@@ -24,7 +24,7 @@ export function createSandboxControlHook() {
               }
             }).catch(() => {});
           }
-        }).catch(err => {
+        }).catch((err: Error) => {
           log(`[SandboxControl] Failed to enable sandbox:`, err);
         });
       } else if (text.includes("/sandbox off") || text.includes("@local")) {
@@ -40,7 +40,7 @@ export function createSandboxControlHook() {
               }
             }).catch(() => {});
           }
-        }).catch(err => {
+        }).catch((err: Error) => {
           log(`[SandboxControl] Failed to disable sandbox:`, err);
         });
       }
