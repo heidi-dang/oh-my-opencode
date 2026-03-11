@@ -34,8 +34,8 @@ function detectTaskType(prompt: string): TaskType {
   const lower = prompt.toLowerCase()
 
   if (BUGFIX_SIGNALS.some(s => lower.includes(s))) return "bugfix"
-  if (FEATURE_SIGNALS.some(s => lower.includes(s))) return "feature"
   if (REFACTOR_SIGNALS.some(s => lower.includes(s))) return "refactor"
+  if (FEATURE_SIGNALS.some(s => lower.includes(s))) return "feature"
   if (CONFIG_SIGNALS.some(s => lower.includes(s))) return "config"
   if (RESEARCH_SIGNALS.some(s => lower.includes(s))) return "research"
   return "unknown"
