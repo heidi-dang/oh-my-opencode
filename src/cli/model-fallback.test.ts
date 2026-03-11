@@ -428,8 +428,9 @@ describe("generateModelConfig", () => {
       // #when
       const result = generateModelConfig(config)
 
-      // #then - hephaestus is omitted because o3-mini is not available on github-copilot
-      expect(result.agents?.hephaestus).toBeUndefined()
+      // #then - hephaestus now uses claude-opus-4-6 via Copilot fallback
+      expect(result.agents?.hephaestus?.model).toBe("github-copilot/claude-opus-4.6")
+      expect(result.agents?.hephaestus?.variant).toBe("max")
     })
 
     test("Hephaestus is created when OpenCode Zen is available (opencode provider connected)", () => {
