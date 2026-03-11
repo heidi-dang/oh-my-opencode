@@ -233,27 +233,32 @@ export class TaskToastManager {
    * Show task completion toast
    */
   showCompletionToast(task: { id: string; description: string; duration: string }): void {
-    const tuiClient = this.client as ClientWithTui
-    if (!tuiClient.tui?.showToast) return
+    try {
+      const tuiClient = this.client as ClientWithTui
+      if (!tuiClient.tui?.showToast) return
 
-    this.removeTask(task.id)
+      this.removeTask(task.id)
 
-    const remaining = this.getRunningTasks()
-    const queued = this.getQueuedTasks()
+      const remaining = this.getRunningTasks()
+      const queued = this.getQueuedTasks()
 
-    let message = `"${task.description}" finished in ${task.duration}`
-    if (remaining.length > 0 || queued.length > 0) {
-      message += `\n\nStill running: ${remaining.length} | Queued: ${queued.length}`
+      let message = `"${task.description}" finished in ${task.duration}`
+      if (remaining.length > 0 || queued.length > 0) {
+        message += `\n\nStill running: ${remaining.length} | Queued: ${queued.length}`
+      }
+
+      tuiClient.tui.showToast({
+        body: {
+          title: "Task Completed",
+          message,
+          variant: "success",
+          duration: 5000,
+        },
+      }).catch(() => {})
+    } catch (err) {
+      // Fail silently - toast failures should never crash the runtime
+      console.error("[TaskToastManager] Error showing completion toast:", err)
     }
-
-    tuiClient.tui.showToast({
-      body: {
-        title: "Task Completed",
-        message,
-        variant: "success",
-        duration: 5000,
-      },
-    }).catch(() => {})
   }
 }
 
