@@ -1,6 +1,7 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import type { TrackedTask, TaskStatus, ModelFallbackInfo } from "./types"
 import type { ConcurrencyManager } from "../background-agent/concurrency"
+import { formatStateTransition, formatCompletion } from "../user-facing-status"
 
 type OpencodeClient = PluginInput["client"]
 
@@ -180,9 +181,17 @@ export class TaskToastManager {
         if (task.progress) {
           const { phase, percent, message: msg } = task.progress
           const bar = this.renderProgressBar(percent)
-          const phaseInfo = phase ? ` - ${phase}` : ""
-          const msgInfo = msg ? ` (${msg})` : ""
-          progressInfo = `\n    ${bar}${phaseInfo}${msgInfo}`
+          
+          let statusText = msg ?? ""
+          if (phase && !msg) {
+            // Attempt to format the phase as a state transition
+            statusText = formatStateTransition(phase, "friendly").headline
+          } else if (phase) {
+            statusText = `${phase}: ${msg}`
+          }
+
+          const statusInfo = statusText ? ` (${statusText})` : ""
+          progressInfo = `\n    ${bar}${statusInfo}`
         }
 
         lines.push(`${bgIcon} ${task.description} (${task.agent}${categoryInfo})${skillsInfo} - ${duration}${isNew}${progressInfo}`)
@@ -242,7 +251,12 @@ export class TaskToastManager {
       const remaining = this.getRunningTasks()
       const queued = this.getQueuedTasks()
 
-      let message = `"${task.description}" finished in ${task.duration}`
+      const formatted = formatCompletion("verified_complete", "friendly", { duration: task.duration })
+      let message = `"${task.description}"\n\n${formatted.headline}`
+      if (formatted.detail) {
+        message += `\n${formatted.detail}`
+      }
+
       if (remaining.length > 0 || queued.length > 0) {
         message += `\n\nStill running: ${remaining.length} | Queued: ${queued.length}`
       }
@@ -251,7 +265,7 @@ export class TaskToastManager {
         body: {
           title: "Task Completed",
           message,
-          variant: "success",
+          variant: formatted.severity,
           duration: 5000,
         },
       }).catch(() => {})
