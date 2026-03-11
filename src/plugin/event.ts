@@ -27,11 +27,8 @@ import { deleteSessionTools } from "../shared/session-tools-store";
 import { compiler } from "../runtime/plan-compiler";
 import { lspManager } from "../tools";
 import { sandboxManager } from "../features/sandbox/sandbox-manager";
-import { recentSyntheticIdles } from "./recent-synthetic-idles"
-import { unstableAgentBabysitter } from "./unstable-agent-babysitter"
-import { sessionAgentResolver } from "./session-agent-resolver"
-import { ultraworkModelOverride } from "./ultrawork-model-override"
-import { ultraworkDbModelOverride } from "./ultrawork-db-model-override"
+import { createUnstableAgentBabysitter } from "./unstable-agent-babysitter"
+import { resolveSessionAgent } from "./session-agent-resolver"
 
 import type { CreatedHooks } from "../create-hooks";
 import type { Managers } from "../create-managers";
