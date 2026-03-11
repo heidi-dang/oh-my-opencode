@@ -2,6 +2,7 @@ import crypto from "crypto"
 import type { PluginInput } from "@opencode-ai/plugin"
 import { ledger } from "../../runtime/state-ledger"
 import { compiler } from "../../runtime/plan-compiler"
+import { SafeToastWrapper } from "../../shared/safe-toast-wrapper"
 
 /**
  * Semantic Loop Guard
@@ -47,15 +48,13 @@ export function createSemanticLoopGuardHook(_ctx: PluginInput) {
             if (hashes[fingerprint] > 3) {
                 const message = `[Semantic Loop Guard] Repeated action (${input.tool}) blocked for safety. Switching strategy...`;
 
-                // 1. Show a green "protection" toast in the UI
-                await _ctx.client.tui.showToast({
-                    body: {
-                        title: "Safety Guard Active",
-                        message: message,
-                        variant: "success",
-                        duration: 5000
-                    }
-                }).catch(() => { });
+                // 1. Show a green "protection" toast in the UI (non-blocking)
+                SafeToastWrapper.showSuccess(
+                    _ctx,
+                    "Safety Guard Active",
+                    message,
+                    `semantic-loop-guard:${input.sessionID}`
+                )
 
                 // 2. Force a replan in the Plan Compiler
                 compiler.injectForcedReplan(input.sessionID, message);

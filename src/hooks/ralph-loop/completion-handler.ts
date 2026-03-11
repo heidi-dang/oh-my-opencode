@@ -1,5 +1,6 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import { log } from "../../shared/logger"
+import { SafeToastWrapper } from "../../shared/safe-toast-wrapper"
 import { buildContinuationPrompt } from "./continuation-prompt-builder"
 import { HOOK_NAME } from "./constants"
 import { injectContinuationPrompt } from "./continuation-prompt-injector"
@@ -38,14 +39,12 @@ export async function handleDetectedCompletion(
 			apiTimeoutMs,
 		})
 
-		await ctx.client.tui?.showToast?.({
-			body: {
-				title: "ULTRAWORK LOOP",
-				message: "DONE detected. Oracle verification is now required.",
-				variant: "info",
-				duration: 5000,
-			},
-		}).catch(() => {})
+		SafeToastWrapper.showInfo(
+			ctx,
+			"ULTRAWORK LOOP",
+			"DONE detected. Oracle verification is now required.",
+			`ralph-loop:ultrawork-verification:${sessionID}`
+		)
 		return
 	}
 
@@ -55,7 +54,10 @@ export async function handleDetectedCompletion(
 	const message = state.ultrawork
 		? `JUST ULW ULW! Task completed after ${state.iteration} iteration(s)`
 		: `Task completed after ${state.iteration} iteration(s)`
-	await ctx.client.tui?.showToast?.({
-		body: { title, message, variant: "success", duration: 5000 },
-	}).catch(() => {})
+	SafeToastWrapper.showSuccess(
+		ctx,
+		title,
+		message,
+		`ralph-loop:complete:${sessionID}`
+	)
 }

@@ -1,5 +1,6 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import { log } from "../../shared/logger"
+import { SafeToastWrapper } from "../../shared/safe-toast-wrapper"
 import { getCachedVersion, getLocalDevVersion } from "./checker"
 import type { AutoUpdateCheckerOptions } from "./types"
 import { runBackgroundUpdateCheck } from "./hook/background-update-check"
@@ -41,20 +42,21 @@ export function createAutoUpdateCheckerHook(ctx: PluginInput, options: AutoUpdat
         const localDevVersion = getLocalDevVersion(ctx.directory)
         const displayVersion = localDevVersion ?? cachedVersion
 
-        await showConfigErrorsIfAny(ctx)
-        await updateAndShowConnectedProvidersCacheStatus(ctx)
-        await showModelCacheWarningIfNeeded(ctx)
+        // Fire-and-forget all toasts - never block session creation
+        showConfigErrorsIfAny(ctx)
+        updateAndShowConnectedProvidersCacheStatus(ctx)
+        showModelCacheWarningIfNeeded(ctx)
 
         if (localDevVersion) {
           if (showStartupToast) {
-            showLocalDevToast(ctx, displayVersion, isSisyphusEnabled).catch(() => {})
+            showLocalDevToast(ctx, displayVersion, isSisyphusEnabled)
           }
           log("[auto-update-checker] Local development mode")
           return
         }
 
         if (showStartupToast) {
-          showVersionToast(ctx, displayVersion, getToastMessage(false)).catch(() => {})
+          showVersionToast(ctx, displayVersion, getToastMessage(false))
         }
 
         runBackgroundUpdateCheck(ctx, autoUpdate, getToastMessage).catch((err) => {

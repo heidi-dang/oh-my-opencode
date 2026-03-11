@@ -1,7 +1,7 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import { isGptModel } from "../../agents/types"
 import { getSessionAgent, updateSessionAgent } from "../../features/claude-code-session-state"
-import { log } from "../../shared"
+import { SafeToastWrapper } from "../../shared/safe-toast-wrapper"
 import { getAgentConfigKey, getAgentDisplayName } from "../../shared/agent-display-names"
 
 const TOAST_TITLE = "NEVER Use Sisyphus with GPT"
@@ -13,19 +13,12 @@ const TOAST_MESSAGE = [
 const HEPHAESTUS_DISPLAY = getAgentDisplayName("hephaestus")
 
 function showToast(ctx: PluginInput, sessionID: string): void {
-  ctx.client.tui.showToast({
-    body: {
-      title: TOAST_TITLE,
-      message: TOAST_MESSAGE,
-      variant: "error",
-      duration: 10000,
-    },
-  }).catch((error) => {
-    log("[no-sisyphus-gpt] Failed to show toast", {
-      sessionID,
-      error,
-    })
-  })
+  SafeToastWrapper.showError(
+    ctx,
+    TOAST_TITLE,
+    TOAST_MESSAGE,
+    `no-sisyphus-gpt:${sessionID}`
+  )
 }
 
 export function createNoSisyphusGptHook(ctx: PluginInput) {
