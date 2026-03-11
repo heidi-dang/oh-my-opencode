@@ -274,18 +274,28 @@ export function createSessionHooks(args: {
       }))
     : null
 
-  const usagePatch = safeHook("usage-patch" as any, () => createUsagePatchHook())
+  const usagePatch = isHookEnabled("usage-patch")
+  ? safeHook("usage-patch", () => createUsagePatchHook())
+  : null
 
-  const runStateWatchdog = safeHook("run-state-watchdog" as any, () => createRunStateWatchdogHook(runStateWatchdogManager))
+  const runStateWatchdog = isHookEnabled("run-state-watchdog")
+  ? safeHook("run-state-watchdog", () => createRunStateWatchdogHook(runStateWatchdogManager))
+  : null
 
-  const sandboxControl = safeHook("sandbox-control" as any, () => createSandboxControlHook())
+  const sandboxControl = isHookEnabled("sandbox-control")
+  ? safeHook("sandbox-control", () => createSandboxControlHook())
+  : null
 
-  const critiqueGate = safeHook("critique-gate" as any, () => createCritiqueGateHook())
+  const critiqueGate = isHookEnabled("critique-gate")
+  ? safeHook("critique-gate", () => createCritiqueGateHook())
+  : null
 
-  const languageIntelligence = safeHook("language-intelligence" as any, () => createLanguageIntelligenceHook({
+  const languageIntelligence = isHookEnabled("language-intelligence")
+  ? safeHook("language-intelligence", () => createLanguageIntelligenceHook({
     collector: contextCollector,
     directory: ctx.directory
   }))
+  : null
 
   return {
     contextWindowMonitor,
