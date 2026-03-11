@@ -70,3 +70,6 @@ export { verifyDiff } from "./diff-verifier"
 // Unfinished Detector (pre-completion integrity scan)
 export { detectUnfinished } from "./unfinished-detector"
 export type { UnfinishedDetectionResult, UnfinishedCheck } from "./unfinished-detector"
+
+// Repair Manager (failure-classified retry)
+export { attemptRepair } from "./repair-manager"
