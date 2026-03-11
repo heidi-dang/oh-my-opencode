@@ -1,11 +1,44 @@
-import { afterEach, describe, expect, test } from "bun:test"
+import { afterEach, afterAll, beforeEach, describe, expect, spyOn, test } from "bun:test"
 
 import { createEventHandler } from "./event"
 import { createChatMessageHandler } from "./chat-message"
 import { _resetForTesting, setMainSession } from "../features/claude-code-session-state"
 import { createModelFallbackHook, clearPendingModelFallback } from "../hooks/model-fallback/hook"
+import * as connectedProvidersCache from "../shared/connected-providers-cache"
+import * as providerModelTransform from "../shared/provider-model-id-transform"
 
 describe("createEventHandler - model fallback", () => {
+  let readConnectedProvidersCacheSpy: any
+  let readProviderModelsCacheSpy: any
+  let transformModelForProviderSpy: any
+
+  beforeEach(() => {
+    readConnectedProvidersCacheSpy = spyOn(connectedProvidersCache, "readConnectedProvidersCache").mockReturnValue(["anthropic", "github-copilot", "opencode"])
+    readProviderModelsCacheSpy = spyOn(connectedProvidersCache, "readProviderModelsCache").mockReturnValue({
+      connected: ["anthropic", "github-copilot", "opencode"],
+      models: {},
+      updatedAt: new Date().toISOString()
+    })
+    transformModelForProviderSpy = spyOn(providerModelTransform, "transformModelForProvider").mockImplementation((provider: string, model: string) => {
+      if (provider === "github-copilot") {
+        return model
+          .replace("claude-opus-4-6", "claude-opus-4.6")
+          .replace("claude-sonnet-4-6", "claude-sonnet-4.6")
+          .replace("claude-sonnet-4-5", "claude-sonnet-4.5")
+          .replace("claude-haiku-4-5", "claude-haiku-4.5")
+          .replace("claude-sonnet-4", "claude-sonnet-4")
+          .replace(/gemini-3\.1-pro(?!-)/g, "gemini-3.1-pro-preview")
+          .replace(/gemini-3-flash(?!-)/g, "gemini-3-flash-preview")
+      }
+      if (provider === "google") {
+        return model
+          .replace(/gemini-3\.1-pro(?!-)/g, "gemini-3.1-pro-preview")
+          .replace(/gemini-3-flash(?!-)/g, "gemini-3-flash-preview")
+      }
+      return model
+    })
+  })
+
   const createHandler = (args?: { hooks?: any }) => {
     const abortCalls: string[] = []
     const promptCalls: string[] = []
@@ -48,6 +81,15 @@ describe("createEventHandler - model fallback", () => {
 
   afterEach(() => {
     _resetForTesting()
+    readConnectedProvidersCacheSpy?.mockClear()
+    readProviderModelsCacheSpy?.mockClear()
+    transformModelForProviderSpy?.mockClear()
+  })
+
+  afterAll(() => {
+    readConnectedProvidersCacheSpy?.mockRestore()
+    readProviderModelsCacheSpy?.mockRestore()
+    transformModelForProviderSpy?.mockRestore()
   })
 
   test("triggers retry prompt for assistant message.updated APIError payloads (headless resume)", async () => {
@@ -334,8 +376,8 @@ describe("createEventHandler - model fallback", () => {
 
     //#then - second fallback entry applied (chain advanced)
     expect((second.message as Record<string, unknown>)["model"]).toEqual({
-      providerID: "zai-coding-plan",
-      modelID: "glm-5",
+      providerID: "opencode",
+      modelID: "big-pickle",
     })
     expect((second.message as Record<string, unknown>)["variant"]).toBeUndefined()
     expect(abortCalls).toEqual([sessionID, sessionID])

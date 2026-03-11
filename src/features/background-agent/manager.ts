@@ -1323,13 +1323,14 @@ export class BackgroundManager {
 
     this.markForNotification(task)
 
-    try {
-      await this.enqueueNotificationForParent(task.parentSessionID, () => this.notifyParentSession(task))
-      log(`[background-agent] Task cancelled via ${source}:`, task.id)
-    } catch (err) {
-      log("[background-agent] Error in notifyParentSession for cancelled task:", { taskId: task.id, error: err })
-    }
-
+    // Fire-and-forget notification to avoid deadlock during cancellation
+    // The notification might try to interact with sessions that are being aborted
+    void this.enqueueNotificationForParent(task.parentSessionID, () => this.notifyParentSession(task))
+      .catch(err => {
+        log("[background-agent] Error in notifyParentSession for cancelled task:", { taskId: task.id, error: err })
+      })
+    
+    log(`[background-agent] Task cancelled via ${source}:`, task.id)
     return true
   }
 
@@ -1432,14 +1433,15 @@ export class BackgroundManager {
       SessionCategoryRegistry.remove(task.sessionID)
     }
 
-    try {
-      await this.enqueueNotificationForParent(task.parentSessionID, () => this.notifyParentSession(task))
-      log(`[background-agent] Task completed via ${source}:`, task.id)
-    } catch (err) {
-      log("[background-agent] Error in notifyParentSession:", { taskId: task.id, error: err })
-      // Concurrency already released, notification failed but task is complete
-    }
-
+    // Fire-and-forget notification to avoid potential deadlock
+    // The notification might try to interact with sessions that are being aborted
+    void this.enqueueNotificationForParent(task.parentSessionID, () => this.notifyParentSession(task))
+      .catch(err => {
+        log("[background-agent] Error in notifyParentSession:", { taskId: task.id, error: err })
+        // Concurrency already released, notification failed but task is complete
+      })
+    
+    log(`[background-agent] Task completed via ${source}:`, task.id)
     return true
   }
 

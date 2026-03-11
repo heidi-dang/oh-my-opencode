@@ -1,8 +1,25 @@
-import { describe, expect, test } from "bun:test"
+import { afterEach, beforeEach, describe, expect, spyOn, test } from "bun:test"
 
 import { createChatParamsHandler } from "./chat-params"
+import * as connectedProvidersCache from "../shared/connected-providers-cache"
 
 describe("createChatParamsHandler", () => {
+  let providerModelsSpy: any
+
+  beforeEach(() => {
+    providerModelsSpy = spyOn(connectedProvidersCache, "readProviderModelsCache").mockReturnValue({
+      connected: ["opencode"],
+      models: {
+        "opencode": ["claude-sonnet-4-6"]
+      },
+      updatedAt: new Date().toISOString()
+    })
+  })
+
+  afterEach(() => {
+    providerModelsSpy?.mockRestore()
+  })
+
   test("normalizes object-style agent payload and runs chat.params hooks", async () => {
     //#given
     let called = false

@@ -1421,6 +1421,9 @@ describe("BackgroundManager.tryCompleteTask", () => {
     releaseFirstPrompt?.()
     await Promise.all([completionA, completionB])
 
+    // Wait a bit for fire-and-forget notifications to be sent
+    await new Promise(resolve => setTimeout(resolve, 50))
+
     // then
     expect(rejectedCount).toBe(0)
     expect(promptBodies.length).toBe(2)
