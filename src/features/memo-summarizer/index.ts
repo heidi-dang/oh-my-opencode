@@ -28,7 +28,7 @@ export class MemoSummarizer {
       .join("\n\n---\n\n");
 
     const memoryID = memoryDB.save({
-      category: "research",
+      category: "agent_hint",
       content: `### Episodic Summary: Session ${sessionID}\n\n${summaryContent}`,
       tags: "episodic, auto-summary",
       metadata: JSON.stringify({

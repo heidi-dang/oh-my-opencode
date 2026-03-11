@@ -14,7 +14,7 @@ export class LanguageMemory {
 
   public saveFix(language: string, signature: string, fix: string): number {
     return this.db.save({
-      category: "language_fix",
+      category: "fix_pattern",
       content: fix,
       tags: language.toLowerCase(),
       metadata: JSON.stringify({ language: language.toLowerCase(), signature })
@@ -23,7 +23,7 @@ export class LanguageMemory {
 
   public getFixes(language: string): LanguageMemoryItem[] {
     const langLower = language.toLowerCase()
-    const records = this.db.query({ category: "language_fix" })
+    const records = this.db.query({ category: "fix_pattern" })
     
     return records
       .filter(r => {

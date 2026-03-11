@@ -1,140 +1,110 @@
 /**
  * Signature Memory — Cross-session storage for repair signatures.
  *
- * Stores validated repair patterns so Heidi can recognize and reuse
- * them across sessions. Tracks success/failure counts for each
- * diagnostic class to improve strategy selection over time.
+ * Uses the shared MemoryDB with structured MemoryContextItem categories
+ * instead of a separate file-based store. This ensures all memory lives
+ * in one place and follows the CAR memory architecture:
+ *
+ *   Memory Context → owns reusable context patterns ONLY.
+ *   TaskStateMachine → owns lifecycle.
+ *   StateLedger → owns verified evidence.
  */
 
-import { readFile, writeFile, mkdir } from "fs/promises"
-import { join } from "path"
+import { memoryDB } from "../../shared/memory-db"
 import { log } from "../../shared/logger"
 import type { RepairSignature, DiagnosticClass } from "./types"
 
-const SIGNATURE_DIR = "state/diagnostic-signatures"
-const SIGNATURE_FILE = "signatures.json"
-
-let cachedSignatures: Map<DiagnosticClass, RepairSignature> | null = null
-
-function getSignaturePath(baseDir: string): string {
-  return join(baseDir, SIGNATURE_DIR, SIGNATURE_FILE)
-}
-
-async function ensureDir(baseDir: string): Promise<void> {
-  const dir = join(baseDir, SIGNATURE_DIR)
-  await mkdir(dir, { recursive: true })
-}
-
 /**
- * Load all repair signatures from disk.
+ * Record a successful repair for a diagnostic class into MemoryDB.
  */
-export async function loadSignatures(baseDir: string): Promise<Map<DiagnosticClass, RepairSignature>> {
-  if (cachedSignatures) return cachedSignatures
-
-  try {
-    const raw = await readFile(getSignaturePath(baseDir), "utf-8")
-    const parsed = JSON.parse(raw) as RepairSignature[]
-    const map = new Map<DiagnosticClass, RepairSignature>()
-    for (const sig of parsed) {
-      map.set(sig.signature, sig)
-    }
-    cachedSignatures = map
-    return map
-  } catch {
-    cachedSignatures = new Map()
-    return cachedSignatures
-  }
-}
-
-/**
- * Save all repair signatures to disk.
- */
-export async function saveSignatures(
-  baseDir: string,
-  signatures: Map<DiagnosticClass, RepairSignature>
-): Promise<void> {
-  await ensureDir(baseDir)
-  const arr = [...signatures.values()]
-  await writeFile(getSignaturePath(baseDir), JSON.stringify(arr, null, 2), "utf-8")
-  cachedSignatures = signatures
-  log(`[SignatureMemory] Saved ${arr.length} repair signatures`)
-}
-
-/**
- * Record a successful repair for a diagnostic class.
- */
-export async function recordRepairSuccess(
-  baseDir: string,
+export function recordRepairSuccess(
   diagnosticClass: DiagnosticClass,
-  exampleMessage: string
-): Promise<void> {
-  const signatures = await loadSignatures(baseDir)
-  const existing = signatures.get(diagnosticClass)
+  exampleMessage: string,
+  repo?: string
+): void {
+  memoryDB.save({
+    category: "failure_signature",
+    signature: diagnosticClass,
+    content: `Successful repair for ${diagnosticClass}: ${exampleMessage}`,
+    tags: `diagnostic,repair,success,${diagnosticClass}`,
+    repo: repo,
+    evidence: [exampleMessage],
+    confidence: 0.9,
+    last_used_at: Date.now(),
+  })
 
-  if (existing) {
-    existing.success_count += 1
-    existing.last_seen = Date.now()
-    if (!existing.diagnostic_examples.includes(exampleMessage)) {
-      existing.diagnostic_examples.push(exampleMessage)
-    }
-  } else {
-    signatures.set(diagnosticClass, {
-      signature: diagnosticClass,
-      diagnostic_examples: [exampleMessage],
-      repair_order: [],
-      anti_patterns: [],
-      last_seen: Date.now(),
-      success_count: 1,
-      failure_count: 0,
-    })
-  }
-
-  await saveSignatures(baseDir, signatures)
+  log(`[SignatureMemory] Recorded successful repair for ${diagnosticClass}`)
 }
 
 /**
- * Record a failed repair for a diagnostic class.
+ * Record a failed repair for a diagnostic class into MemoryDB.
  */
-export async function recordRepairFailure(
-  baseDir: string,
+export function recordRepairFailure(
   diagnosticClass: DiagnosticClass,
-  exampleMessage: string
-): Promise<void> {
-  const signatures = await loadSignatures(baseDir)
-  const existing = signatures.get(diagnosticClass)
+  exampleMessage: string,
+  repo?: string
+): void {
+  memoryDB.save({
+    category: "failure_signature",
+    signature: diagnosticClass,
+    content: `Failed repair for ${diagnosticClass}: ${exampleMessage}`,
+    tags: `diagnostic,repair,failure,${diagnosticClass}`,
+    repo: repo,
+    evidence: [exampleMessage],
+    confidence: 0.3,
+    last_used_at: Date.now(),
+  })
 
-  if (existing) {
-    existing.failure_count += 1
-    existing.last_seen = Date.now()
-  } else {
-    signatures.set(diagnosticClass, {
-      signature: diagnosticClass,
-      diagnostic_examples: [exampleMessage],
-      repair_order: [],
-      anti_patterns: [],
-      last_seen: Date.now(),
-      success_count: 0,
-      failure_count: 1,
-    })
-  }
-
-  await saveSignatures(baseDir, signatures)
+  log(`[SignatureMemory] Recorded failed repair for ${diagnosticClass}`)
 }
 
 /**
- * Get a signature for a diagnostic class if one exists.
+ * Query MemoryDB for past repair signatures for a diagnostic class.
  */
-export async function getSignature(
-  baseDir: string,
-  diagnosticClass: DiagnosticClass
-): Promise<RepairSignature | undefined> {
-  const signatures = await loadSignatures(baseDir)
-  return signatures.get(diagnosticClass)
+export function getSignatures(diagnosticClass: DiagnosticClass, repo?: string) {
+  return memoryDB.query({
+    category: "failure_signature",
+    signature: diagnosticClass,
+    repo: repo,
+  })
 }
 
 /**
- * Clear the in-memory cache. Useful for testing.
+ * Store a verification pattern that proved a fix worked.
  */
-export function clearSignatureCache(): void {
-  cachedSignatures = null
+export function recordVerificationPattern(
+  diagnosticClass: DiagnosticClass,
+  verificationCommand: string,
+  repo?: string
+): void {
+  memoryDB.save({
+    category: "verification_pattern",
+    signature: diagnosticClass,
+    content: `Verification for ${diagnosticClass}: ${verificationCommand}`,
+    tags: `verification,${diagnosticClass}`,
+    repo: repo,
+    confidence: 0.85,
+    last_used_at: Date.now(),
+  })
+}
+
+/**
+ * Store a fix pattern that worked for a diagnostic class.
+ */
+export function recordFixPattern(
+  diagnosticClass: DiagnosticClass,
+  fixDescription: string,
+  pathScope?: string[],
+  repo?: string
+): void {
+  memoryDB.save({
+    category: "fix_pattern",
+    signature: diagnosticClass,
+    content: fixDescription,
+    tags: `fix,${diagnosticClass}`,
+    repo: repo,
+    path_scope: pathScope,
+    confidence: 0.8,
+    last_used_at: Date.now(),
+  })
 }

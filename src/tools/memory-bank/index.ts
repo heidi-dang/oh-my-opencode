@@ -6,14 +6,14 @@ export function createMemoryBankTools(): Record<string, ToolDefinition> {
   const memo_save: ToolDefinition = tool({
     description: "Save a new knowledge item or project memory to the persistent memory bank. Use this for architectural patterns, project-specific gotchas, or complex research results.",
     args: {
-      category: tool.schema.enum(["architecture", "research", "config", "gotcha", "other"]).describe("Category of the memory"),
+      category: tool.schema.enum(["repo_convention", "task_pattern", "agent_hint", "fix_pattern", "failure_signature", "verification_pattern"]).describe("Category of the memory"),
       content: tool.schema.string().describe("The actual memory content or insight to stash"),
       tags: tool.schema.string().describe("Comma-separated tags for indexing (e.g. 'auth, redis, performance')"),
       metadata: tool.schema.string().optional().describe("Optional JSON string or additional context for this memory")
     },
     execute: withToolContract("memo_save", async (args: { category: string; content: string; tags: string; metadata?: string }, context) => {
       const id = memoryDB.save({ 
-        category: args.category, 
+        category: args.category as any, 
         content: args.content, 
         tags: args.tags, 
         metadata: args.metadata 
@@ -33,13 +33,13 @@ export function createMemoryBankTools(): Record<string, ToolDefinition> {
     description: "Search for existing memories in the bank by keyword, category, or tags.",
     args: {
       keyword: tool.schema.string().optional().describe("Search keyword to match against content"),
-      category: tool.schema.enum(["architecture", "research", "config", "gotcha", "other"]).optional().describe("Filter by category"),
+      category: tool.schema.enum(["repo_convention", "task_pattern", "agent_hint", "fix_pattern", "failure_signature", "verification_pattern"]).optional().describe("Filter by category"),
       tags: tool.schema.string().optional().describe("Filter by specific tags")
     },
     execute: withToolContract("memo_query", async (args: { keyword?: string; category?: string; tags?: string }, context) => {
       const results = memoryDB.query({ 
         keyword: args.keyword, 
-        category: args.category, 
+        category: args.category as any, 
         tags: args.tags 
       })
       

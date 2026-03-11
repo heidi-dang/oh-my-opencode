@@ -36,10 +36,9 @@ export {
 } from "./repair-instructions-builder"
 
 export {
-  loadSignatures,
-  saveSignatures,
   recordRepairSuccess,
   recordRepairFailure,
-  getSignature,
-  clearSignatureCache,
+  getSignatures,
+  recordVerificationPattern,
+  recordFixPattern,
 } from "./signature-memory"

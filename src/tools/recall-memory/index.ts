@@ -1,7 +1,6 @@
 import { tool, type ToolDefinition, type ToolContext } from "@opencode-ai/plugin/tool";
 import { contextCollector } from "../../features/context-injector";
 import { memoryDB } from "../../shared/memory-db";
-import { vectorize, buildVocabulary } from "../../shared/vector-utils";
 import { createSuccessResult, createFailureResult } from "../../utils/safety-tool-result";
 
 interface RecallArgs {
@@ -11,9 +10,9 @@ interface RecallArgs {
 
 export function createRecallMemoryTool(): ToolDefinition {
   return tool({
-    description: "Recalls pending context and recorded memories for the current session. Can perform semantic search if a query is provided.",
+    description: "Recalls pending context and recorded memories for the current session. Can search by keyword if a query is provided.",
     args: {
-      query: tool.schema.string().optional().describe("Optional semantic query to find related memories."),
+      query: tool.schema.string().optional().describe("Optional keyword query to find related memories."),
       limit: tool.schema.number().optional().describe("Number of relevant memories to return (default: 5).")
     },
     execute: async (args: RecallArgs, context: ToolContext) => {
@@ -27,12 +26,13 @@ export function createRecallMemoryTool(): ToolDefinition {
         let memories: any[] = [];
 
         if (args.query) {
-          // Phase 1: Semantic Search
-          const vocab = buildVocabulary([args.query]);
-          const vector = vectorize(args.query, vocab);
-          memories = memoryDB.semanticQuery(vector, args.limit || 5);
+          // Structured ranked retrieval (replaces broken semantic search)
+          memories = memoryDB.rankedQuery({ keyword: args.query }).slice(0, args.limit || 5);
+          // Mark used for ranking decay
+          for (const m of memories) {
+            if (m.id) memoryDB.markUsed(m.id);
+          }
         } else {
-          // Sequential fallback - return latest memories across all categories
           memories = memoryDB.query({});
         }
 
