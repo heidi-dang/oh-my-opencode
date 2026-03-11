@@ -1,5 +1,6 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import { log } from "../../shared/logger"
+import { SafeToastWrapper } from "../../shared/safe-toast-wrapper"
 import type { RalphLoopOptions, RalphLoopState } from "./types"
 import { HOOK_NAME } from "./constants"
 import { handleDetectedCompletion } from "./completion-handler"
@@ -141,9 +142,12 @@ export function createRalphLoopEventHandler(
 					})
 					options.loopState.clear()
 
-					await ctx.client.tui?.showToast?.({
-						body: { title: "Ralph Loop Stopped", message: `Max iterations (${state.max_iterations}) reached without completion`, variant: "warning", duration: 5000 },
-						}).catch(() => {})
+					SafeToastWrapper.showWarning(
+						ctx,
+						"Ralph Loop Stopped",
+						`Max iterations (${state.max_iterations}) reached without completion`,
+						`ralph-loop:max-iterations:${sessionID}`
+					)
 					return
 				}
 
@@ -159,14 +163,12 @@ export function createRalphLoopEventHandler(
 					max: newState.max_iterations,
 				})
 
-				await ctx.client.tui?.showToast?.({
-					body: {
-						title: "Ralph Loop",
-						message: `Iteration ${newState.iteration}/${typeof newState.max_iterations === "number" ? newState.max_iterations : "unbounded"}`,
-						variant: "info",
-						duration: 2000,
-					},
-					}).catch(() => {})
+				SafeToastWrapper.showInfo(
+					ctx,
+					"Ralph Loop",
+					`Iteration ${newState.iteration}/${typeof newState.max_iterations === "number" ? newState.max_iterations : "unbounded"}`,
+					`ralph-loop:iteration:${sessionID}`
+				)
 
 				try {
 					await continueIteration(ctx, newState, {

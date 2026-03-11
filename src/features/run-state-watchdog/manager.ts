@@ -1,5 +1,6 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import { log } from "../../shared/logger"
+import { SafeToastWrapper } from "../../shared/safe-toast-wrapper"
 
 type OpencodeClient = PluginInput["client"]
 
@@ -220,16 +221,26 @@ export class RunStateWatchdogManager {
         variant = "error"
       }
 
-      if (tui && typeof tui.showToast === "function") {
-        await tui.showToast({
-          body: {
-            title: stallTitle,
-            message: stallMessage,
-            variant,
-            duration: stage === "warn" ? 5000 : 8000
-          }
-        }).catch(() => {})
-      }
+      // Create a minimal ctx-like object for SafeToastWrapper
+      const minimalCtx = {
+        client: this.client,
+        directory: "",
+        project: { id: "" },
+        worktree: { id: "" },
+        serverUrl: "",
+        $: async () => ({ data: {} })
+      } as unknown as PluginInput
+
+      SafeToastWrapper.showToast(
+        minimalCtx,
+        {
+          title: stallTitle,
+          message: stallMessage,
+          variant: variant as any,
+          duration: stage === "warn" ? 5000 : 8000
+        },
+        `run-state-watchdog:${sessionID}:${stage}`
+      )
     } catch {
       // Swallow toast errors
     }
