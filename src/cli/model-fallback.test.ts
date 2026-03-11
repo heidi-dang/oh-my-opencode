@@ -452,8 +452,9 @@ describe("generateModelConfig", () => {
       // #when
       const result = generateModelConfig(config)
 
-      // #then
-      expect(result.agents?.hephaestus).toBeUndefined()
+      // #then - hephaestus now uses claude-opus-4-6 via Claude fallback
+      expect(result.agents?.hephaestus?.model).toBe("anthropic/claude-opus-4-6")
+      expect(result.agents?.hephaestus?.variant).toBe("max")
     })
 
     test("Hephaestus is omitted when only Gemini is available (no required provider connected)", () => {
