@@ -137,6 +137,11 @@ def run_plan_compiler_guard_doctor():
     result = subprocess.run(["python3", "tools/checks/check_plan_compiler_guard.py"])
     return result.returncode == 0
 
+def run_runtime_enforcement_doctor():
+    print("Running Runtime Enforcement Guard Doctor...")
+    result = subprocess.run(["python3", "tools/checks/check_runtime_enforcement_guard.py"])
+    return result.returncode == 0
+
 def main():
     parser = argparse.ArgumentParser(description="Oh My OpenCode Doctor")
     parser.add_argument("--full", action="store_true", help="Run full diagnostic suite including pre-PR checks")
@@ -166,7 +171,9 @@ def main():
     # Run plan compiler guard checks
     guard_pass = run_plan_compiler_guard_doctor()
     
-    if not reliability_pass or not git_pass or not contract_pass or not lsp_pass or not upstream_pass or not guard_pass:
+    runtime_guard_pass = run_runtime_enforcement_doctor()
+    
+    if not reliability_pass or not git_pass or not contract_pass or not lsp_pass or not upstream_pass or not guard_pass or not runtime_guard_pass:
         print("\nERROR: Doctor checks failed. System integrity compromised.")
         sys.exit(1)
         

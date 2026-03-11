@@ -1,4 +1,4 @@
-import { describe, expect, test, mock } from "bun:test"
+import { describe, expect, test } from "bun:test"
 import { createRuntimeEnforcementHook } from "./hook"
 
 describe("Runtime Enforcement Hook - Synthetic Terminal Injection", () => {
@@ -22,10 +22,10 @@ describe("Runtime Enforcement Hook - Synthetic Terminal Injection", () => {
         const lastMsg = output.messages[0]
         expect(lastMsg.parts.length).toBe(2)
         expect(lastMsg.parts[1].type).toBe("text")
-        expect((lastMsg.parts[1] as any).text).toContain("[System: Synthetic Terminal Summary]")
+        expect((lastMsg.parts[1] as any).text).toContain("[SYSTEM: TERMINAL STATE]")
     })
 
-    test("Does not inject synthetic text block if text was already provided", async () => {
+    test("Still injects TERMINAL STATE when substantial text accompanies a terminal tool", async () => {
         const hook = createRuntimeEnforcementHook({} as any)
         
         const output = {
@@ -33,7 +33,7 @@ describe("Runtime Enforcement Hook - Synthetic Terminal Injection", () => {
                 {
                     info: { role: "assistant", id: "msg1", sessionID: "sess1" },
                     parts: [
-                        { type: "text", text: "I am finishing." },
+                        { type: "text", text: "I am finishing. I have addressed all the required steps and the session can conclude now." },
                         { type: "tool", toolName: "complete_task" }
                     ]
                 }
@@ -43,12 +43,12 @@ describe("Runtime Enforcement Hook - Synthetic Terminal Injection", () => {
         await hook["experimental.chat.messages.transform"]({}, output as any)
         
         const lastMsg = output.messages[0]
-        expect(lastMsg.parts.length).toBe(2)
-        expect(lastMsg.parts[0].type).toBe("text")
-        expect(lastMsg.parts[1].type).toBe("tool")
+        // endsOnTool always appends TERMINAL STATE note; isSilent=false (long text) but endsOnTool=true
+        expect(lastMsg.parts.length).toBe(3)
+        expect((lastMsg.parts[2] as any).text).toContain("[SYSTEM: TERMINAL STATE]")
     })
     
-    test("Does not inject if the tool was not a terminal one", async () => {
+    test("Injects stall notice if the tool was not a terminal one and no summary text", async () => {
         const hook = createRuntimeEnforcementHook({} as any)
         
         const output = {
@@ -65,8 +65,10 @@ describe("Runtime Enforcement Hook - Synthetic Terminal Injection", () => {
         await hook["experimental.chat.messages.transform"]({}, output as any)
         
         const lastMsg = output.messages[0]
-        expect(lastMsg.parts.length).toBe(1)
-        expect(lastMsg.parts[0].type).toBe("tool")
+        // Non-terminal silent tools get a stall notice
+        expect(lastMsg.parts.length).toBe(2)
+        expect(lastMsg.parts[1].type).toBe("text")
+        expect((lastMsg.parts[1] as any).text).toContain("[SYSTEM: STALLED OR SILENT TURN]")
     })
     
     test("Injects synthetic text block if terminal due to a runtime error", async () => {
@@ -94,6 +96,6 @@ describe("Runtime Enforcement Hook - Synthetic Terminal Injection", () => {
         const lastAssistant = output.messages[0]
         expect(lastAssistant.parts.length).toBe(2)
         expect(lastAssistant.parts[1].type).toBe("text")
-        expect((lastAssistant.parts[1] as any).text).toContain("[System: Synthetic Terminal Summary] Task Stopped.")
+        expect((lastAssistant.parts[1] as any).text).toContain("[SYSTEM: STALLED OR SILENT TURN]")
     })
 })
