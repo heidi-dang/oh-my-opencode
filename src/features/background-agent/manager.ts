@@ -1315,7 +1315,12 @@ export class BackgroundManager {
     if (options?.skipNotification) {
       const toastManager = getTaskToastManager()
       if (toastManager) {
-        toastManager.removeTask(task.id)
+        try {
+          toastManager.removeTask(task.id)
+        } catch (err) {
+          log("[background-agent] Error removing task from toast manager during cancellation:", { taskId: task.id, error: err })
+          // Don't let toast failures prevent cancellation
+        }
       }
       log(`[background-agent] Task cancelled via ${source} (notification skipped):`, task.id)
       return true
@@ -1472,11 +1477,16 @@ export class BackgroundManager {
     // Show toast notification
     const toastManager = getTaskToastManager()
     if (toastManager) {
-      toastManager.showCompletionToast({
-        id: task.id,
-        description: task.description,
-        duration,
-      })
+      try {
+        toastManager.showCompletionToast({
+          id: task.id,
+          description: task.description,
+          duration,
+        })
+      } catch (err) {
+        log("[background-agent] Error showing completion toast:", { taskId: task.id, error: err })
+        // Don't let toast failures prevent task completion
+      }
     }
 
     // Update pending tracking and check if all tasks complete
