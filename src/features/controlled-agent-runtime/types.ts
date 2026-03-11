@@ -7,7 +7,10 @@
  *   - ExecutionJournal owns chronological action history
  *   - VerificationEngine owns verification results + acceptance status
  *   - CompletionFirewall reads from all above, owns nothing
+ *   - DiagnosticIntelligence owns error classification + repair playbooks
  */
+
+import type { ClassifiedDiagnostic } from "../diagnostic-intelligence/types"
 
 // ────────────────────────────────────────────
 // Task Lifecycle
@@ -74,6 +77,7 @@ export interface RepairRecord {
   failure_evidence: string
   action_taken: string
   timestamp: number
+  diagnostic_class?: string
 }
 
 // ────────────────────────────────────────────
@@ -108,6 +112,7 @@ export interface CheckResult {
   details?: string
   command?: string
   exit_code?: number
+  classified_diagnostics?: ClassifiedDiagnostic[]
 }
 
 export interface VerificationResult {

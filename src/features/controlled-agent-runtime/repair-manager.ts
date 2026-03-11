@@ -13,6 +13,8 @@ import { log } from "../../shared/logger"
 import { taskStateMachine } from "../controlled-agent-runtime/task-state-machine"
 import { requestTransition } from "../controlled-agent-runtime/runtime-gates"
 import type { VerificationResult, RepairRecord } from "../controlled-agent-runtime/types"
+import { classifyDiagnostics } from "../diagnostic-intelligence/classifier"
+import { buildBatchRepairInstructions } from "../diagnostic-intelligence/repair-instructions-builder"
 
 export type RepairFailureType = "build" | "test" | "retrieval" | "drift" | "incomplete"
 
@@ -28,17 +30,75 @@ function classifyFailure(verification: VerificationResult): RepairFailureType {
   return "incomplete"
 }
 
+/**
+ * Parse build failure output through the diagnostic classifier.
+ * If known patterns are found, produce diagnostic-specific repair instructions.
+ * Otherwise, fall back to generic build failure instructions.
+ */
+function buildDiagnosticAwareInstructions(
+  _failureType: RepairFailureType,
+  failures: string[],
+  verification: VerificationResult
+): string {
+  const allDetails = verification.levels.static
+    .filter(r => !r.passed && r.details)
+    .map(r => r.details!)
+
+  const diagnosticInputs = parseBuildOutputIntoDiagnostics(allDetails)
+  const classified = classifyDiagnostics(diagnosticInputs)
+
+  if (classified.length > 0) {
+    const instructions = buildBatchRepairInstructions(classified)
+    return [
+      "[CAR REPAIR: BUILD FAILURE — DIAGNOSTIC INTELLIGENCE ACTIVE]",
+      `Found ${classified.length} classified diagnostic(s). Follow the repair playbooks below.`,
+      "",
+      instructions,
+    ].join("\n")
+  }
+
+  return [
+    "[CAR REPAIR: BUILD FAILURE]",
+    "The build or typecheck failed. Re-read the error output below and fix the syntax/type issue.",
+    `Failures: ${failures.join("; ")}`,
+    "Do NOT restart the task. Fix only the build error, then re-verify.",
+  ].join("\n")
+}
+
+/**
+ * Extract individual diagnostic-like entries from build/typecheck output.
+ * Looks for lines matching common error formats: file:line:col: message
+ */
+function parseBuildOutputIntoDiagnostics(
+  outputs: string[]
+): Array<{ message: string; file: string; line: number; column?: number }> {
+  const results: Array<{ message: string; file: string; line: number; column?: number }> = []
+  const linePattern = /^(.+?):(\d+):(\d+)[\s:-]+(.+)$/
+
+  for (const output of outputs) {
+    for (const line of output.split("\n")) {
+      const trimmed = line.trim()
+      const match = trimmed.match(linePattern)
+      if (match) {
+        results.push({
+          file: match[1]!,
+          line: parseInt(match[2]!, 10),
+          column: parseInt(match[3]!, 10),
+          message: match[4]!.trim(),
+        })
+      }
+    }
+  }
+
+  return results
+}
+
 function buildRepairInstructions(failureType: RepairFailureType, verification: VerificationResult): string {
   const failures = verification.remaining_failures
 
   switch (failureType) {
     case "build":
-      return [
-        "[CAR REPAIR: BUILD FAILURE]",
-        "The build or typecheck failed. Re-read the error output below and fix the syntax/type issue.",
-        `Failures: ${failures.join("; ")}`,
-        "Do NOT restart the task. Fix only the build error, then re-verify.",
-      ].join("\n")
+      return buildDiagnosticAwareInstructions(failureType, failures, verification)
 
     case "test":
       return [

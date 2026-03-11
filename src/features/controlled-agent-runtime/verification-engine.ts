@@ -21,6 +21,8 @@ import type {
   AcceptanceCriterion,
   AcceptanceStatus,
 } from "./types"
+import { withLspClient } from "../../tools/lsp/lsp-client-wrapper"
+import type { Diagnostic } from "../../tools/lsp/types"
 
 const execAsync = promisify(exec)
 const COMMAND_TIMEOUT = 60_000
@@ -38,7 +40,7 @@ async function runCommand(cmd: string, cwd: string): Promise<{ ok: boolean; stdo
   }
 }
 
-async function runStaticChecks(cwd: string): Promise<CheckResult[]> {
+async function runStaticChecks(changedFiles: string[], cwd: string): Promise<CheckResult[]> {
   const results: CheckResult[] = []
 
   const typecheck = await runCommand("bun run typecheck", cwd)
@@ -60,6 +62,50 @@ async function runStaticChecks(cwd: string): Promise<CheckResult[]> {
     command: "bun run build",
     exit_code: build.exitCode,
   })
+
+  // Run LSP diagnostics on changed files
+  for (const file of changedFiles) {
+    // Only check supported files
+    if (!file.match(/\.(py|ts|tsx)$/)) continue
+
+    try {
+      const lspResult = await withLspClient(file, async (client) => {
+        return (await client.diagnostics(file)) as { items?: Diagnostic[] } | Diagnostic[] | null
+      })
+
+      let diagnostics: Diagnostic[] = []
+      if (lspResult) {
+        if (Array.isArray(lspResult)) {
+          diagnostics = lspResult
+        } else if (lspResult.items) {
+          diagnostics = lspResult.items
+        }
+      }
+
+      // Filter only errors and warnings
+      const issues = diagnostics.filter(d => d.severity === 1 || d.severity === 2)
+      
+      if (issues.length > 0) {
+        const details = issues.map(d => `${file}:${d.range.start.line + 1}:${d.range.start.character + 1}: ${d.message}`).join("\n")
+        results.push({
+          name: `lsp:${file}`,
+          passed: false,
+          message: `LSP found ${issues.length} issues in ${file}`,
+          details,
+          command: "lsp diagnostics",
+        })
+      } else {
+        results.push({
+          name: `lsp:${file}`,
+          passed: true,
+          message: `LSP found no issues in ${file}`,
+          command: "lsp diagnostics",
+        })
+      }
+    } catch (e) {
+      log(`[VerificationEngine] Skipping LSP check for ${file}: empty or unconfigured`)
+    }
+  }
 
   return results
 }
@@ -112,7 +158,7 @@ export async function runVerification(
 ): Promise<VerificationResult> {
   log(`[VerificationEngine] Running verification for ${changedFiles.length} changed files`)
 
-  const staticResults = await runStaticChecks(cwd)
+  const staticResults = await runStaticChecks(changedFiles, cwd)
   const targetedResults = await runTargetedChecks(changedFiles, cwd)
   const e2eResults: CheckResult[] = [] // E2E requires custom setup per task
   const regressionResults = options?.skipRegression ? [] : await runRegressionChecks(cwd)
