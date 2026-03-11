@@ -26,6 +26,9 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 					onSessionCreated: async () => {},
 					onSessionDeleted: async () => {},
 				},
+				backgroundManager: {
+					hasActiveDescendants: () => false,
+				},
 			} as any,
 			hooks: {
 				autoUpdateChecker: { event: mockDispatchToHooks as any },
@@ -103,6 +106,9 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 					onSessionCreated: async () => {},
 					onSessionDeleted: async () => {},
 				},
+				backgroundManager: {
+					hasActiveDescendants: () => false,
+				},
 			} as any,
 			hooks: {
 				autoUpdateChecker: { event: mockDispatchToHooks as any },
@@ -172,6 +178,9 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 				tmuxSessionManager: {
 					onSessionCreated: async () => {},
 					onSessionDeleted: async () => {},
+				},
+				backgroundManager: {
+					hasActiveDescendants: () => false,
 				},
 			} as any,
 			hooks: {
@@ -262,6 +271,9 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 					onSessionCreated: async () => {},
 					onSessionDeleted: async () => {},
 				},
+				backgroundManager: {
+					hasActiveDescendants: () => false,
+				},
 			} as any,
 			hooks: {
 				autoUpdateChecker: {
@@ -317,6 +329,9 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 				tmuxSessionManager: {
 					onSessionCreated: async () => {},
 					onSessionDeleted: async () => {},
+				},
+				backgroundManager: {
+					hasActiveDescendants: () => false,
 				},
 			} as any,
 			hooks: {

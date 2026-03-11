@@ -59,8 +59,7 @@ export { createPlanEnforcementHook } from "./plan-enforcement"
 export { createToolContractHook } from "./tool-contract"
 export { createEditSafeguardHook } from "./edit-safeguard/hook"
 export { createUsagePatchHook } from "./usage-patch/hook"
-
-export { createXaiUsagePatchHook } from "./xai-usage-patch/hook"
+export { createSandboxControlHook } from "./sandbox-control/hook"
 
 
 export { createWorkspaceGuardHook } from "./workspace-guard"

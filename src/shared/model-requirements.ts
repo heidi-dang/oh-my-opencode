@@ -18,7 +18,7 @@ export type ModelRequirement = {
 const DEFAULT_AGENT_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {
   sisyphus: {
     fallbackChain: [
-      { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-3-5-sonnet", variant: "max" },
+      { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-sonnet-4-6", variant: "max" },
       { providers: ["opencode"], model: "big-pickle" },
     ],
     requiresAnyModel: true,

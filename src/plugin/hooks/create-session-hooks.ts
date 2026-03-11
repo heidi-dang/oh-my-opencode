@@ -27,7 +27,7 @@ import {
   createRuntimeFallbackHook,
   createUsagePatchHook,
   createRunStateWatchdogHook,
-
+  createSandboxControlHook,
   createCritiqueGateHook,
   createLanguageIntelligenceHook,
   createXaiUsagePatchHook,
@@ -70,7 +70,7 @@ export type SessionHooks = {
 
   usagePatch: ReturnType<typeof createUsagePatchHook> | null
   runStateWatchdog: ReturnType<typeof createRunStateWatchdogHook> | null
-
+  sandboxControl: ReturnType<typeof createSandboxControlHook> | null
   critiqueGate: ReturnType<typeof createCritiqueGateHook> | null
   languageIntelligence: ReturnType<typeof createLanguageIntelligenceHook> | null
   xaiUsagePatch: ReturnType<typeof createXaiUsagePatchHook> | null
@@ -277,16 +277,28 @@ export function createSessionHooks(args: {
       }))
     : null
 
-  const usagePatch = safeHook("usage-patch" as any, () => createUsagePatchHook())
+  const usagePatch = isHookEnabled("usage-patch")
+  ? safeHook("usage-patch", () => createUsagePatchHook())
+  : null
 
-  const runStateWatchdog = safeHook("run-state-watchdog" as any, () => createRunStateWatchdogHook(runStateWatchdogManager))
+  const runStateWatchdog = isHookEnabled("run-state-watchdog")
+  ? safeHook("run-state-watchdog", () => createRunStateWatchdogHook(runStateWatchdogManager))
+  : null
 
-    const critiqueGate = safeHook("critique-gate" as any, () => createCritiqueGateHook())
+  const sandboxControl = isHookEnabled("sandbox-control")
+  ? safeHook("sandbox-control", () => createSandboxControlHook())
+  : null
 
-  const languageIntelligence = safeHook("language-intelligence" as any, () => createLanguageIntelligenceHook({
+  const critiqueGate = isHookEnabled("critique-gate")
+  ? safeHook("critique-gate", () => createCritiqueGateHook())
+  : null
+
+  const languageIntelligence = isHookEnabled("language-intelligence")
+  ? safeHook("language-intelligence", () => createLanguageIntelligenceHook({
     collector: contextCollector,
     directory: ctx.directory
   }))
+  : null
 
   const xaiUsagePatch = safeHook("xai-usage-patch" as any, () => createXaiUsagePatchHook())
 
@@ -316,6 +328,7 @@ export function createSessionHooks(args: {
     runtimeFallback,
     usagePatch,
     runStateWatchdog,
+    sandboxControl,
     critiqueGate,
     languageIntelligence,
     xaiUsagePatch,
