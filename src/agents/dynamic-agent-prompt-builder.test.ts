@@ -6,7 +6,7 @@ import {
   buildUltraworkSection,
   buildDeepParallelSection,
   buildNonClaudePlannerSection,
-  } from "./prompts";
+} from "./prompts";
 import type { AvailableSkill, AvailableCategory, AvailableAgent } from "./types";
 
 describe("buildCategorySkillsDelegationGuide", () => {

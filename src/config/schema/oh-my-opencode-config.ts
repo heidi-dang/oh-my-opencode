@@ -22,12 +22,23 @@ import { StartWorkConfigSchema } from "./start-work"
 import { WebsearchConfigSchema } from "./websearch"
 import { SandboxConfigSchema } from "./sandbox"
 
+
+export const ProviderConfigSchema = z.object({
+  /** Human-readable name for the provider */
+  name: z.string(),
+  /** The base URL of the API (e.g., "http://localhost:11434/v1") */
+  baseUrl: z.string().url(),
+  /** API key for authentication */
+  apiKey: z.string(),
+})
+
 export const OhMyOpenCodeConfigSchema = z.object({
   $schema: z.string().optional(),
   /** Enable new task system (default: false) */
   new_task_system_enabled: z.boolean().optional(),
   /** Default agent name for `oh-my-opencode run` (env: OPENCODE_DEFAULT_AGENT) */
   default_run_agent: z.string().optional(),
+  providers: z.array(ProviderConfigSchema).optional(),
   disabled_mcps: z.array(AnyMcpNameSchema).optional(),
   disabled_agents: z.array(z.string()).optional(),
   disabled_skills: z.array(BuiltinSkillNameSchema).optional(),

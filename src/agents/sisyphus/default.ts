@@ -356,7 +356,6 @@ STOP searching when:
 ${categorySkillsGuide}
 
 ${architecturalCritiqueSection}
-
 ${nonClaudePlannerSection}
 
 ${deepParallelSection}

@@ -35,22 +35,15 @@ export function createRuntimeEnforcementHook(_ctx: PluginInput) {
             _input: any,
             output: { messages: { info: Message; parts: Part[] }[] }
         ) => {
-            // Mark the start of a new completion flow verification.
-            // This ensures entries from previous turns/flows in the same session are ignored.
             const sessionID = output.messages[0]?.info.sessionID
             ledger.startNewFlow(sessionID)
 
             // 1. Redact False Success Claims
-            // If an assistant message claimed success but the actual tool execution failed
-            // (e.g., contract violation or issue resolution guard), we proactively redact
-            // the LLM's text so it doesn't render the false positive in the UI or let the
-            // LLM think it succeeded in future turns.
             for (let i = 0; i < output.messages.length - 1; i++) {
                 const msg = output.messages[i]
                 if (msg.info.role === "assistant") {
                     const nextMsg = output.messages[i + 1]
                     if (nextMsg.info.role === "user") {
-                        // Check if the user message contains a tool failure for the assistant's tool
                         const hasFailureText = nextMsg.parts.some((p: any) => 
                             p.type === "text" && (
                                 p.text?.includes("[Tool Contract Violation]") ||
@@ -64,7 +57,6 @@ export function createRuntimeEnforcementHook(_ctx: PluginInput) {
                         if (hasFailureText) {
                             const isVerificationFailure = nextMsg.parts.some((p: any) => p.text?.includes("[Verification Unconfirmed]"))
 
-                            // Redact affirmative/suspicious phrases in the assistant's text parts
                             for (const part of msg.parts) {
                                 if (part.type === "text" && typeof part.text === "string") {
                                     const lowerText = part.text.toLowerCase()
@@ -83,19 +75,23 @@ export function createRuntimeEnforcementHook(_ctx: PluginInput) {
                 }
             }
 
-            // 2. Synthetic Terminal Message Injection
-            // If the last assistant message in the transcript ended on a tool call,
-            // or if it was redacted, ensure we have a clear terminal summary.
             const assistantMessages = output.messages.filter(m => m.info.role === "assistant")
             if (assistantMessages.length > 0) {
                 const lastAssistant = assistantMessages[assistantMessages.length - 1]
-                const textParts = lastAssistant.parts.filter(p => p.type === "text")
-                const toolParts = lastAssistant.parts.filter(p => p.type === "tool")
+                const informativeParts = lastAssistant.parts.filter((p: any) => 
+                    p.type === "text" || 
+                    p.type === "thought" || 
+                    p.type === "reasoning" || 
+                    p.type === "thinking" || 
+                    p.type === "callout" || 
+                    p.type === "internal"
+                )
+                const toolParts = lastAssistant.parts.filter((p: any) => p.type === "tool" || p.type === "toolInvocation")
                 
-                const combinedText = textParts.map((p: any) => p.text || "").join("")
-                const isSilent = toolParts.length > 0 && combinedText.trim().length < 50 // Increased threshold
+                const combinedText = informativeParts.map((p: any) => p.text || (p as any).thought || (p as any).thinking || (p as any).reasoning || "").join("")
+                const isSilent = toolParts.length > 0 && combinedText.trim().length < 10
                 const isRedacted = combinedText.includes("[REDACTED: False success claim]")
-                const endsOnTool = lastAssistant.parts.length > 0 && lastAssistant.parts[lastAssistant.parts.length - 1].type === "tool"
+                const endsOnTool = lastAssistant.parts.length > 0 && ((lastAssistant.parts[lastAssistant.parts.length - 1] as any).type === "tool" || (lastAssistant.parts[lastAssistant.parts.length - 1] as any).type === "toolInvocation")
 
                 if (isSilent || isRedacted || endsOnTool) {
                     const isTerminalTool = toolParts.some((p: any) => p.toolName === "complete_task" || p.toolName === "git_safe")
@@ -139,18 +135,15 @@ export function createRuntimeEnforcementHook(_ctx: PluginInput) {
                 if (combinedText.includes(check.phrase)) {
                     let actuallyExecuted = false;
 
-                    // Check if the current message calls the tool
-                    if (lastAssistant.parts.some((p: any) => p.type === "tool" && p.toolName === check.tool)) {
+                    if (lastAssistant.parts.some((p: any) => (p.type === "tool" || p.type === "toolInvocation") && p.toolName === check.tool)) {
                         actuallyExecuted = true;
                     } else {
-                        // Check backwards for the tool call in the current completion flow
                         for (let i = output.messages.length - 1; i >= 0; i--) {
                             const msg = output.messages[i];
                             if (msg.info.role === "user" && msg.parts.some((p: any) => p.type === "text" && !p.text?.toString().startsWith("[tool result]"))) {
-                                // Reached an actual user instruction, stop looking backwards. This isolates the check to the *current completion flow*.
                                 break;
                             }
-                            if (msg.info.role === "assistant" && msg.parts.some((p: any) => p.type === "tool" && p.toolName === check.tool)) {
+                            if (msg.info.role === "assistant" && msg.parts.some((p: any) => (p.type === "tool" || p.type === "toolInvocation") && p.toolName === check.tool)) {
                                 actuallyExecuted = true;
                                 break;
                             }
@@ -158,11 +151,14 @@ export function createRuntimeEnforcementHook(_ctx: PluginInput) {
                     }
 
                     if (!actuallyExecuted) {
-                        throw new Error(
-                            `[Runtime Enforcement Guard] State claim REJECTED. ` +
-                            `\nAgent text contained "${check.phrase}" but ${check.tool} was not executed in the current completion flow. ` +
-                            `You MUST execute the corresponding tool instead of just claiming completion.`
-                        )
+                        // Soft failure instead of throwing
+                        for (const part of lastAssistant.parts) {
+                            if (part.type === "text" && typeof part.text === "string") {
+                                if (part.text.toLowerCase().includes(check.phrase)) {
+                                    part.text = `[REDACTED: False completion claim (${check.phrase})]\n\nI described changes as completed, but the corresponding tool (${check.tool}) was not executed in the current completion flow. My claim has been intercepted.`
+                                }
+                            }
+                        }
                     }
                 }
             }

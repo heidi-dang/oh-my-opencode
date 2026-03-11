@@ -10,8 +10,8 @@ import { createRuntimeEnforcementHook } from "../hooks/runtime-enforcement/hook"
 
 describe("Authoritative Truth & Flow Isolation Integration", () => {
     beforeEach(() => {
-        ledger.clear()
-        compiler.submit("", { sessionID: "test" } as any)
+        (ledger as any).clear()
+        compiler.submit("test-session", [])
     })
 
     describe("Authoritative Truth (Bash Bypass Prevention)", () => {
@@ -36,7 +36,7 @@ describe("Authoritative Truth & Flow Isolation Integration", () => {
             await handler(input, output)
 
             // Ledger should be empty because we removed heuristics
-            expect(ledger.count).toBe(0)
+            expect((ledger as any).count).toBe(0)
         })
 
         it("should ONLY create verified entry if explicit stateChange metadata is present", async () => {
@@ -59,8 +59,8 @@ describe("Authoritative Truth & Flow Isolation Integration", () => {
             }
 
             await handler(input, output)
-            expect(ledger.count).toBe(1)
-            expect(ledger.has("git.commit", "HEAD")).toBe(true)
+            expect((ledger as any).count).toBe(1)
+            expect((ledger as any).has("git.commit", "HEAD")).toBe(true)
         })
     })
 
@@ -90,7 +90,7 @@ describe("Authoritative Truth & Flow Isolation Integration", () => {
                 }
             }
             await executeHandler(inputA, outputA)
-            expect(ledger.has("git.push", "origin")).toBe(true)
+            expect((ledger as any).has("git.push", "origin")).toBe(true)
 
             // 2. Start Flow B (Message Transform)
             // This will call ledger.startNewFlow()

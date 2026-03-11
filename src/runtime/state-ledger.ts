@@ -42,6 +42,7 @@ export class StateLedger {
     }
 
     /**
+    /**
      * Mark the absolute start of a new completion flow for a specific session.
      * All entries recorded before this timestamp will be ignored by has().
      */

@@ -23,10 +23,10 @@ describe("getHephaestusPromptSource", () => {
     expect(source3).toBe("gpt-5-4");
   });
 
-  test("returns 'gpt-5-3-codex' for o3-mini models", () => {
+  test("returns 'gpt-5-3-codex' for o3-mini and GPT 5.3 models", () => {
     // given
     const model1 = "openai/o3-mini";
-    const model2 = "github-copilot/o3-mini";
+    const model2 = "github-copilot/gpt-5.3-codex";
 
     // when
     const source1 = getHephaestusPromptSource(model1);

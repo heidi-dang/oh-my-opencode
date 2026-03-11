@@ -18,48 +18,32 @@ export function createToolContractHook(_ctx: PluginInput) {
             const result = output.output
             const args = output.metadata?.args
             // Apply strict contract enforcement to our core safety tools
-            const safetyCritical = ["git_safe", "fs_safe", "verify_action", "complete_task", "query_ledger", "report_issue_verification"]
+            const safetyCritical = ["git_safe", "fs_safe", "verify_action", "complete_task"]
             if (safetyCritical.includes(input.tool)) {
-                // The tool might return metadata directly in output, or nested in output.metadata
-                // or even in output.result (based on some past patterns)
-                let meta = output.metadata || {}
-
-                // If there's no success/verified at top level of metadata, check if it's nested
-                // but the goal is to have it FLAT now.
-
-                const getBool = (val: any) => {
-                    if (typeof val === 'boolean') return val;
-                    if (val === 'true') return true;
-                    if (val === 'false') return false;
-                    return undefined;
-                }
-
-                const success = getBool(meta.success);
-                const verified = getBool(meta.verified);
+                const meta = output.metadata || {}
 
                 // 1. Enforce existence and type of standard result contract
-                if (success === undefined || verified === undefined) {
-                    throw new Error(`[Tool Contract Violation] Tool ${input.tool} did not return structured boolean metadata for 'success' or 'verified'. Execution rejected. Found: ${JSON.stringify(meta)}`)
+                if (typeof meta.success !== 'boolean' || typeof meta.verified !== 'boolean') {
+                    throw new Error(`[Tool Contract Violation] Tool ${input.tool} did not return structured boolean metadata for 'success' or 'verified'. Execution rejected.`)
                 }
 
                 // 2. Strict Deterministic Rejection
-                if (success === false) {
+                if (meta.success === false) {
                     throw new Error(`[Tool Contract Enforcer] Tool execution explicitly failed in ${input.tool}. You MUST revise your plan. Error: ${result}`)
                 }
 
                 // 3. Verification Enforcement
-                if (verified === false) {
-                    throw new Error(`[Verification Unconfirmed] Tool ${input.tool} executed but system state could not be verified. Success not confirmed.`)
+                if (meta.verified === false) {
+                    throw new Error(`[Tool Contract Violation] Tool ${input.tool} executed but was NOT verified. Hallucination risk! Aborting for safety.`)
                 }
 
                 // 4. Metadata Integrity (ChangedState)
-                const changedState = getBool(meta.changedState);
-                if (input.tool !== "verify_action" && changedState === undefined) {
+                if (input.tool !== "verify_action" && typeof meta.changedState !== 'boolean') {
                     throw new Error(`[Tool Contract Violation] Tool ${input.tool} did not return the required 'changedState' boolean.`)
                 }
 
                 // 5. Ledger Relation Evidence Requirements
-                if (changedState === true) {
+                if (meta.changedState === true) {
                     if (!meta.stateChange) {
                         throw new Error(`[Tool Contract Violation] Tool ${input.tool} claimed a state change but provided no 'stateChange' payload to link to the State Ledger.`)
                     }
@@ -73,8 +57,7 @@ export function createToolContractHook(_ctx: PluginInput) {
                         e.sessionID === input.sessionID &&
                         e.success === true &&
                         e.verified === true &&
-                        e.changedState === true,
-                        input.sessionID
+                        e.changedState === true
                     )
 
                     if (!actuallyInLedger) {

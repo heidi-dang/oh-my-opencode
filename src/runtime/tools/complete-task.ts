@@ -64,7 +64,8 @@ export function createCompleteTaskTool(options?: { client?: any, backgroundManag
 
             const entries = ledger.getEntries(undefined, sessionIDs).filter(e =>
                 e.verified === true &&
-                e.success === true
+                e.success === true &&
+                e.changedState === true
             )
 
             // Compile verifiable evidence report

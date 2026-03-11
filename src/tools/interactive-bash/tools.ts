@@ -2,7 +2,7 @@ import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool"
 import { spawnWithWindowsHide } from "../../shared/spawn-with-windows-hide"
 import { BLOCKED_TMUX_SUBCOMMANDS, DEFAULT_TIMEOUT_MS, INTERACTIVE_BASH_DESCRIPTION } from "./constants"
 import { getCachedTmuxPath } from "./tmux-path-resolver"
-import { sandboxManager } from "../../features/sandbox/sandbox-manager"
+
 import { log } from "../../shared"
 import { getMainSessionID } from "../../features/claude-code-session-state"
 

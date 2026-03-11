@@ -15,6 +15,9 @@ import { createAtlasAgent, atlasPromptMetadata } from "./atlas"
 import { createMomusAgent, momusPromptMetadata } from "./momus"
 import { createHephaestusAgent } from "./hephaestus"
 import { createChatAgent, CHAT_PROMPT_METADATA } from "./chat"
+import { createHeidiAgent, HEIDI_PROMPT_METADATA } from "./heidi"
+import { createPythonSpecialistAgent, PYTHON_SPECIALIST_PROMPT_METADATA } from "./builtin-agents/python-specialist"
+import { createTypeScriptSpecialistAgent, TYPESCRIPT_SPECIALIST_PROMPT_METADATA } from "./builtin-agents/typescript-specialist"
 import type { AvailableCategory } from "./types";
 import {
   fetchAvailableModels,
@@ -43,6 +46,9 @@ const agentSources: Record<BuiltinAgentName, AgentSource> = {
   metis: createMetisAgent,
   momus: createMomusAgent,
   chat: createChatAgent,
+  heidi: createHeidiAgent as AgentFactory,
+  "python-specialist": createPythonSpecialistAgent,
+  "typescript-specialist": createTypeScriptSpecialistAgent,
   // Note: Atlas is handled specially in createBuiltinAgents()
   // because it needs OrchestratorContext, not just a model string
   atlas: createAtlasAgent as AgentFactory,
@@ -62,6 +68,9 @@ const agentMetadata: Partial<Record<BuiltinAgentName, AgentPromptMetadata>> = {
   momus: momusPromptMetadata,
   atlas: atlasPromptMetadata,
   chat: CHAT_PROMPT_METADATA,
+  heidi: HEIDI_PROMPT_METADATA,
+  "python-specialist": PYTHON_SPECIALIST_PROMPT_METADATA,
+  "typescript-specialist": TYPESCRIPT_SPECIALIST_PROMPT_METADATA,
 }
 
 export async function createBuiltinAgents(

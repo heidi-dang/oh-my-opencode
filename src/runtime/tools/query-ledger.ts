@@ -13,7 +13,7 @@ export function createQueryLedgerTool(options?: { backgroundManager?: any }): an
             type: z.string().optional().describe("Optional filter by type (e.g. 'git.commit', 'file.write', 'git.push')")
         },
         execute: withToolContract("query_ledger", async (args, toolContext) => {
-            const descendantSessions = options?.backgroundManager?.getAllDescendantTasks 
+            const descendantSessions = options?.backgroundManager?.getAllDescendantTasks
                 ? options.backgroundManager.getAllDescendantTasks(toolContext.sessionID).map((t: any) => t.sessionID).filter(Boolean)
                 : [];
             const sessionIDs = [toolContext.sessionID, ...descendantSessions];

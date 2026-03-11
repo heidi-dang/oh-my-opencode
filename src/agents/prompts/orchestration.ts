@@ -319,8 +319,8 @@ Plan Agent returns a structured work breakdown with parallel execution opportuni
 }
 
 export function buildDeepParallelSection(model: string, categories: AvailableCategory[]): string {
-    const hasDeepCategory = categories.some(c => c.name === 'deep')
     const isClaude = model.toLowerCase().includes('claude')
+    const hasDeepCategory = categories.some(c => c.name === 'deep')
 
     if (!hasDeepCategory) return ""
 
@@ -329,11 +329,12 @@ ${isClaude ? "\nAnthropic Prompt Caching is active. Parallel searches are extrem
 
 Delegate EVERY independent research or implementation unit to a \`deep\` agent in parallel (\`run_in_background=true\`).
 Do NOT wait for one task to finish before starting the next if they are independent.
+If a task decomposes into multiple independent units, spawn agents simultaneously — not 1 at a time.
 
 1. Decompose the goal into independent work units (e.g. searching 3 different modules)
 2. Spawn \`deep\` agents simultaneously for each unit via \`run_in_background=true\`
-3. Provide each agent with clear objectives and success criteria
-4. Integrate results once background notifications arrive`
+3. Provide each agent with clear objectives/GOALS and success criteria
+4. Integrate results once background notifications arrive or collect all results to verify coherence`
 }
 
 export function buildUltraworkSection(

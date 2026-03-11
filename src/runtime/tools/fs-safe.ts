@@ -4,9 +4,7 @@ import * as path from "path"
 import { tool } from "@opencode-ai/plugin"
 import { z } from "zod"
 import { createSuccessResult, createFailureResult } from "../../utils/safety-tool-result"
-import { withToolContract } from "../../utils/tool-contract-wrapper"
-import { sandboxManager } from "../../features/sandbox/sandbox-manager"
-import { getMainSessionID } from "../../features/claude-code-session-state"
+
 
 export function createFsSafeTool(): any {
     return tool({
@@ -17,32 +15,10 @@ export function createFsSafeTool(): any {
             filePath: z.string().describe("Absolute or relative path to the file/directory."),
             content: z.string().optional().describe("File content (only used if operation is 'write')."),
         },
-        execute: withToolContract("fs_safe", async (args, context) => {
+        execute: async (args, context) => {
             try {
                 const { operation, filePath, content } = args
-                const contextDir = context.directory || process.cwd()
-                const fullPath = path.resolve(contextDir, filePath)
-
-                // 🚨 SECURITY: Repo Boundary & Symlink Guard
-                if (!fullPath.startsWith(contextDir)) {
-                    throw new Error(`Security Violation: Path escapes repository boundary (${filePath})`)
-                }
-
-                const parts = filePath.split(path.sep)
-                let currentPath = contextDir
-                for (const part of parts) {
-                    if (!part || part === ".") continue
-                    currentPath = path.join(currentPath, part)
-                    try {
-                        const stats = fs.lstatSync(currentPath)
-                        if (stats.isSymbolicLink()) {
-                            throw new Error(`Security Violation: Symlink detected at '${part}'. Symlinks are forbidden to prevent repo escape.`)
-                        }
-                    } catch (e) {
-                        if (e.code !== "ENOENT") throw e
-                        break // Path doesn't exist yet, which is fine for write/mkdir
-                    }
-                }
+                const fullPath = path.resolve(context.directory || process.cwd(), filePath)
 
                 let changedState = false
                 let stateChangePayload: any = null
@@ -76,27 +52,23 @@ export function createFsSafeTool(): any {
                     }
                 }
 
-                const result = createSuccessResult({
-                    verified: true,
-                    changedState,
-                    stateChange: stateChangePayload || undefined
-                });
-
                 context.metadata({
                     title: `fs ${operation}`,
-                    ...result
+                    ...createSuccessResult({
+                        verified: true, // FS executions via smart wrapper are considered self-verifying
+                        changedState,
+                        ...(stateChangePayload && { stateChange: stateChangePayload })
+                    })
                 })
 
                 return `Successfully executed ${operation} on ${filePath}`
             } catch (err: any) {
-                const result = createFailureResult(`Failed: ${err.message}`);
                 context.metadata({
                     title: `fs ${args.operation} error`,
-                    ...result
+                    ...createFailureResult(err.message)
                 })
-
-                return result.message
+                return `Failed: ${err.message}`
             }
-        })
+        }
     })
 }

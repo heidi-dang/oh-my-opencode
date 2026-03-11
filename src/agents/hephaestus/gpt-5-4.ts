@@ -330,12 +330,13 @@ Every \`task()\` output includes a session_id. USE IT for follow-ups.
 - Follow-up on result — \`session_id="{id}", prompt="Also: {question}"\`
 - Verification failed — \`session_id="{id}", prompt="Failed: {error}. Fix."\`
 
-${oracleSection
-      ? `
+${
+  oracleSection
+    ? `
 ${oracleSection}
 `
-      : ""
-    }
+    : ""
+}
 
 ## Output Contract
 

@@ -97,10 +97,10 @@ export function createDelegateTask(options: DelegateTaskToolOptions): ToolDefini
   return tool({
     description,
     args: {
-      load_skills: tool.schema.array(tool.schema.string()).describe("Skill names to inject. REQUIRED - pass [] if no skills needed."),
+      load_skills: tool.schema.array(tool.schema.string()).optional().describe("Skill names to inject. Pass [] if no skills needed."),
       description: tool.schema.string().describe("Short task description (3-5 words)"),
       prompt: tool.schema.string().describe("Full detailed prompt for the agent"),
-      run_in_background: tool.schema.boolean().describe("true=async (returns task_id), false=sync (waits). Default: false"),
+      run_in_background: tool.schema.boolean().optional().describe("true=async (returns task_id), false=sync (waits). Default: false"),
       category: tool.schema.string().optional().describe(`REQUIRED if subagent_type not provided. Do NOT provide both category and subagent_type.`),
       subagent_type: tool.schema.string().optional().describe("REQUIRED if category not provided. Do NOT provide both category and subagent_type."),
       session_id: tool.schema.string().optional().describe("Existing Task session to continue"),
@@ -123,7 +123,7 @@ export function createDelegateTask(options: DelegateTaskToolOptions): ToolDefini
       })
 
       if (args.run_in_background === undefined) {
-        throw new Error(`Invalid arguments: 'run_in_background' parameter is REQUIRED. Use run_in_background=false for task delegation, run_in_background=true only for parallel exploration.`)
+        args.run_in_background = false
       }
       if (typeof args.load_skills === "string") {
         try {
@@ -133,11 +133,8 @@ export function createDelegateTask(options: DelegateTaskToolOptions): ToolDefini
           args.load_skills = []
         }
       }
-      if (args.load_skills === undefined) {
-        throw new Error(`Invalid arguments: 'load_skills' parameter is REQUIRED. Pass [] if no skills needed.`)
-      }
-      if (args.load_skills === null) {
-        throw new Error(`Invalid arguments: load_skills=null is not allowed. Pass [] if no skills needed.`)
+      if (args.load_skills === undefined || args.load_skills === null) {
+        args.load_skills = []
       }
 
       const runInBackground = args.run_in_background === true

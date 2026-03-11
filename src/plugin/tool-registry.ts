@@ -30,6 +30,8 @@ import {
   createBatchReadTool,
   createBatchGrepTool,
   createRecallMemoryTool,
+  createSaveLanguageFixTool,
+  createAutonomousDiagnoseTool,
 } from "../tools"
 import { getMainSessionID } from "../features/claude-code-session-state"
 import { filterDisabledTools } from "../shared/disabled-tools"
@@ -47,7 +49,7 @@ export type ToolRegistryResult = {
 export function createToolRegistry(args: {
   ctx: PluginContext
   pluginConfig: OhMyOpenCodeConfig
-  managers: Pick<Managers, "backgroundManager" | "tmuxSessionManager" | "skillMcpManager" | "sandboxManager">
+  managers: Pick<Managers, "backgroundManager" | "tmuxSessionManager" | "skillMcpManager">
   skillContext: SkillContext
   availableCategories: AvailableCategory[]
 }): ToolRegistryResult {
@@ -128,13 +130,11 @@ export function createToolRegistry(args: {
     ? { edit: createHashlineEditTool() }
     : {}
 
-  const wrap = (name: string, toolDef: ToolDefinition) => managers.sandboxManager.wrapTool(name, toolDef)
+  const wrap = (name: string, toolDef: ToolDefinition) => toolDef
 
   const allTools: Record<string, ToolDefinition> = {
     ...builtinTools,
     grep: wrap("grep", createGrepTools(ctx).grep),
-    setup_grep: wrap("setup_grep", createGrepTools(ctx).setup_grep),
-    ls: wrap("ls", createGlobTools(ctx).ls),
     glob: wrap("glob", createGlobTools(ctx).glob),
     ...createAstGrepTools(ctx),
     ...createSessionManagerTools(ctx),
@@ -152,6 +152,8 @@ export function createToolRegistry(args: {
     batch_read: wrap("batch_read", createBatchReadTool()),
     batch_grep: wrap("batch_grep", createBatchGrepTool(ctx)),
     recall_memory: createRecallMemoryTool(),
+    save_language_fix: createSaveLanguageFixTool(ctx),
+  
     git_safe: wrap("git_safe", DETERMINISTIC_TOOLS["git_safe"]()),
     fs_safe: wrap("fs_safe", DETERMINISTIC_TOOLS["fs_safe"]()),
     verify_action: DETERMINISTIC_TOOLS["verify_action"](),
@@ -162,8 +164,9 @@ export function createToolRegistry(args: {
     complete_task: DETERMINISTIC_TOOLS["complete_task"]({ client: ctx.client, backgroundManager: managers.backgroundManager }),
     report_issue_verification: DETERMINISTIC_TOOLS["report_issue_verification"](),
     gh_safe: wrap("gh_safe", DETERMINISTIC_TOOLS["gh_safe"]()),
-    read_file: wrap("read_file", builtinTools.read_file),
-    write_file: wrap("write_file", builtinTools.write_file),
+    ...(builtinTools.read_file ? { read_file: wrap("read_file", builtinTools.read_file) } : {}),
+    ...(builtinTools.write_file ? { write_file: wrap("write_file", builtinTools.write_file) } : {}),
+    autonomous_diagnose: createAutonomousDiagnoseTool(),
   }
 
   const filteredTools = filterDisabledTools(allTools, pluginConfig.disabled_tools)

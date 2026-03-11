@@ -149,6 +149,10 @@ export class SandboxManager {
    * Transparently wraps a tool's execute function to redirect to the sandbox if enabled.
    */
   public wrapTool(name: string, definition: ToolDefinition): ToolDefinition {
+    if (!definition || typeof definition.execute !== "function") {
+      log(`[SandboxManager] WARNING: tool '${name}' has no valid definition (${typeof definition}), returning passthrough`);
+      return definition;
+    }
     const originalExecute = definition.execute;
 
     return {

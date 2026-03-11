@@ -13,6 +13,10 @@ export { lspManager }
 export { createAstGrepTools } from "./ast-grep"
 export { createGrepTools } from "./grep"
 export { createGlobTools } from "./glob"
+import { createReadFileTool, createWriteFileTool } from "./fs"
+export { createReadFileTool, createWriteFileTool }
+
+
 export { createSkillTool } from "./skill"
 export { discoverCommandsSync } from "./slashcommand"
 export { createSessionManagerTools } from "./session-manager"
@@ -48,6 +52,8 @@ export { createMemoryBankTools } from "./memory-bank"
 export { createMultiReplaceTool } from "./multi-replace"
 export { createBatchReadTool, createBatchGrepTool } from "./batch"
 export { createRecallMemoryTool } from "./recall-memory"
+export { createSaveLanguageFixTool } from "./save-language-fix"
+export { createAutonomousDiagnoseTool } from "./smart-debug"
 
 export function createBackgroundTools(manager: BackgroundManager, client: OpencodeClient): Record<string, ToolDefinition> {
   const outputManager: BackgroundOutputManager = manager
@@ -65,4 +71,6 @@ export const builtinTools: Record<string, ToolDefinition> = {
   lsp_diagnostics,
   lsp_prepare_rename,
   lsp_rename,
+  read_file: createReadFileTool(),
+  write_file: createWriteFileTool(),
 }

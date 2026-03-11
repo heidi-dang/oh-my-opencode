@@ -134,6 +134,9 @@ export type BuiltinAgentName =
   | "momus"
   | "atlas"
   | "chat"
+  | "heidi"
+  | "python-specialist"
+  | "typescript-specialist"
 
 export type OverridableAgentName =
   | "build"

@@ -123,7 +123,7 @@ def run_git_doctor():
     if toplevel.returncode != 0:
         print("[FAIL] Not a git repository (or any of the parent directories).")
         return False
-        
+    
     print(f"[PASS] Git detected at: {toplevel.stdout.decode().strip()}")
     return True
 
@@ -135,6 +135,11 @@ def run_upstream_merge_doctor():
 def run_plan_compiler_guard_doctor():
     print("Running Plan Compiler Guard Doctor...")
     result = subprocess.run(["python3", "tools/checks/check_plan_compiler_guard.py"])
+    return result.returncode == 0
+
+def run_runtime_enforcement_doctor():
+    print("Running Runtime Enforcement Guard Doctor...")
+    result = subprocess.run(["python3", "tools/checks/check_runtime_enforcement_guard.py"])
     return result.returncode == 0
 
 def main():
@@ -166,7 +171,9 @@ def main():
     # Run plan compiler guard checks
     guard_pass = run_plan_compiler_guard_doctor()
     
-    if not reliability_pass or not git_pass or not contract_pass or not lsp_pass or not upstream_pass or not guard_pass:
+    runtime_guard_pass = run_runtime_enforcement_doctor()
+    
+    if not reliability_pass or not git_pass or not contract_pass or not lsp_pass or not upstream_pass or not guard_pass or not runtime_guard_pass:
         print("\nERROR: Doctor checks failed. System integrity compromised.")
         sys.exit(1)
         

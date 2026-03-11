@@ -74,11 +74,14 @@ export function createMemoryBankTools(): Record<string, ToolDefinition> {
       id: tool.schema.number().describe("The ID of the memory to remove")
     },
     execute: withToolContract("memo_forget", async (args: { id: number }, context) => {
-      memoryDB.delete(args.id)
-      const output = `Memory ${args.id} has been removed from the bank.`
+      const deletedCount = memoryDB.delete(args.id)
+      const output = deletedCount > 0 
+        ? `Memory ${args.id} has been removed from the bank.`
+        : `Memory ${args.id} was not found in the bank.`
+      
       context.metadata({
         title: "Memory Forgotten",
-        success: true,
+        success: deletedCount > 0,
         verified: true,
         output
       })
