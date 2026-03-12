@@ -143,6 +143,15 @@ export function createEventHandler(args: {
   const lastHandledRetryStatusKey = new Map<string, string>();
   const lastKnownModelBySession = new Map<string, { providerID: string; modelID: string }>();
 
+  const safeHookCall = async (hookName: string, fn: (() => unknown) | undefined): Promise<void> => {
+    if (!fn) return;
+    try {
+      await Promise.resolve(fn());
+    } catch (err) {
+      log(`[event] Hook "${hookName}" threw during dispatch:`, { error: err instanceof Error ? err.message : String(err) });
+    }
+  };
+
   const dispatchToHooks = async (input: EventInput): Promise<void> => {
     // Invalidate session cache on session events
     const sessionID = (input.event.properties as Record<string, unknown> | undefined)?.sessionID as string | undefined;
@@ -154,28 +163,28 @@ export function createEventHandler(args: {
       }
     }
 
-    await Promise.resolve(hooks.autoUpdateChecker?.event?.(input));
-    await Promise.resolve(hooks.claudeCodeHooks?.event?.(input));
-    await Promise.resolve(hooks.backgroundNotificationHook?.event?.(input));
-    await Promise.resolve(hooks.sessionNotification?.(input));
-    await Promise.resolve(hooks.todoContinuationEnforcer?.handler?.(input));
-    await Promise.resolve(hooks.unstableAgentBabysitter?.event?.(input));
-    await Promise.resolve(hooks.contextWindowMonitor?.event?.(input));
-    await Promise.resolve(hooks.directoryAgentsInjector?.event?.(input));
-    await Promise.resolve(hooks.directoryReadmeInjector?.event?.(input));
-    await Promise.resolve(hooks.rulesInjector?.event?.(input));
-    await Promise.resolve(hooks.thinkMode?.event?.(input));
-    await Promise.resolve(hooks.anthropicContextWindowLimitRecovery?.event?.(input));
-    await Promise.resolve(hooks.runtimeFallback?.event?.(input));
-    await Promise.resolve(hooks.agentUsageReminder?.event?.(input));
-    await Promise.resolve(hooks.categorySkillReminder?.event?.(input));
-    await Promise.resolve(hooks.interactiveBashSession?.event?.(input as EventInput));
-    await Promise.resolve(hooks.ralphLoop?.event?.(input));
-    await Promise.resolve(hooks.stopContinuationGuard?.event?.(input));
-    await Promise.resolve(hooks.compactionTodoPreserver?.event?.(input));
-    await Promise.resolve(hooks.writeExistingFileGuard?.event?.(input));
-    await Promise.resolve(hooks.atlasHook?.handler?.(input));
-    await Promise.resolve((hooks as any).runStateWatchdog?.event?.(input));
+    await safeHookCall("autoUpdateChecker", () => hooks.autoUpdateChecker?.event?.(input));
+    await safeHookCall("claudeCodeHooks", () => hooks.claudeCodeHooks?.event?.(input));
+    await safeHookCall("backgroundNotificationHook", () => hooks.backgroundNotificationHook?.event?.(input));
+    await safeHookCall("sessionNotification", () => hooks.sessionNotification?.(input));
+    await safeHookCall("todoContinuationEnforcer", () => hooks.todoContinuationEnforcer?.handler?.(input));
+    await safeHookCall("unstableAgentBabysitter", () => hooks.unstableAgentBabysitter?.event?.(input));
+    await safeHookCall("contextWindowMonitor", () => hooks.contextWindowMonitor?.event?.(input));
+    await safeHookCall("directoryAgentsInjector", () => hooks.directoryAgentsInjector?.event?.(input));
+    await safeHookCall("directoryReadmeInjector", () => hooks.directoryReadmeInjector?.event?.(input));
+    await safeHookCall("rulesInjector", () => hooks.rulesInjector?.event?.(input));
+    await safeHookCall("thinkMode", () => hooks.thinkMode?.event?.(input));
+    await safeHookCall("anthropicContextWindowLimitRecovery", () => hooks.anthropicContextWindowLimitRecovery?.event?.(input));
+    await safeHookCall("runtimeFallback", () => hooks.runtimeFallback?.event?.(input));
+    await safeHookCall("agentUsageReminder", () => hooks.agentUsageReminder?.event?.(input));
+    await safeHookCall("categorySkillReminder", () => hooks.categorySkillReminder?.event?.(input));
+    await safeHookCall("interactiveBashSession", () => hooks.interactiveBashSession?.event?.(input as EventInput));
+    await safeHookCall("ralphLoop", () => hooks.ralphLoop?.event?.(input));
+    await safeHookCall("stopContinuationGuard", () => hooks.stopContinuationGuard?.event?.(input));
+    await safeHookCall("compactionTodoPreserver", () => hooks.compactionTodoPreserver?.event?.(input));
+    await safeHookCall("writeExistingFileGuard", () => hooks.writeExistingFileGuard?.event?.(input));
+    await safeHookCall("atlasHook", () => hooks.atlasHook?.handler?.(input));
+    await safeHookCall("runStateWatchdog", () => (hooks as any).runStateWatchdog?.event?.(input));
   };
 
   const recentSyntheticIdles = new Map<string, number>();
@@ -213,7 +222,11 @@ export function createEventHandler(args: {
       }
     }
 
-    await dispatchToHooks(input);
+    try {
+      await dispatchToHooks(input);
+    } catch (err) {
+      log("[event] dispatchToHooks failed:", { error: err instanceof Error ? err.message : String(err) });
+    }
 
 
     const syntheticIdle = normalizeSessionStatusToIdle(input);
@@ -259,24 +272,28 @@ export function createEventHandler(args: {
     }
 
     if (event.type === "session.created") {
-      const sessionInfo = props?.info as { id?: string; title?: string; parentID?: string } | undefined;
+      try {
+        const sessionInfo = props?.info as { id?: string; title?: string; parentID?: string } | undefined;
 
-      if (!sessionInfo?.parentID) {
-        setMainSession(sessionInfo?.id);
+        if (!sessionInfo?.parentID) {
+          setMainSession(sessionInfo?.id);
+        }
+
+        const sessionID = sessionInfo?.id;
+
+        firstMessageVariantGate.markSessionCreated(sessionInfo);
+
+        await managers.tmuxSessionManager.onSessionCreated(
+          event as {
+            type: string;
+            properties?: {
+              info?: { id?: string; parentID?: string; title?: string };
+            };
+          },
+        );
+      } catch (err) {
+        log("[event] Error in session.created handler:", { error: err });
       }
-
-      const sessionID = sessionInfo?.id;
-
-      firstMessageVariantGate.markSessionCreated(sessionInfo);
-
-      await managers.tmuxSessionManager.onSessionCreated(
-        event as {
-          type: string;
-          properties?: {
-            info?: { id?: string; parentID?: string; title?: string };
-          };
-        },
-      );
     }
 
     if (event.type === "session.deleted") {

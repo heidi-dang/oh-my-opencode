@@ -42,34 +42,38 @@ export function createAutoRetryHelpers(deps: HookDeps) {
     if (timeoutMs <= 0) return
 
     const timer = setTimeout(async () => {
-      sessionFallbackTimeouts.delete(sessionID)
+      try {
+        sessionFallbackTimeouts.delete(sessionID)
 
-      const state = sessionStates.get(sessionID)
-      if (!state) return
+        const state = sessionStates.get(sessionID)
+        if (!state) return
 
-      if (sessionRetryInFlight.has(sessionID)) {
-        log(`[${HOOK_NAME}] Overriding in-flight retry due to session timeout`, { sessionID })
-      }
+        if (sessionRetryInFlight.has(sessionID)) {
+          log(`[${HOOK_NAME}] Overriding in-flight retry due to session timeout`, { sessionID })
+        }
 
-      await abortSessionRequest(sessionID, "session.timeout")
-      sessionRetryInFlight.delete(sessionID)
+        await abortSessionRequest(sessionID, "session.timeout")
+        sessionRetryInFlight.delete(sessionID)
 
-      if (state.pendingFallbackModel) {
-        state.pendingFallbackModel = undefined
-      }
+        if (state.pendingFallbackModel) {
+          state.pendingFallbackModel = undefined
+        }
 
-      const fallbackModels = getFallbackModelsForSession(sessionID, resolvedAgent, pluginConfig)
-      if (fallbackModels.length === 0) return
+        const fallbackModels = getFallbackModelsForSession(sessionID, resolvedAgent, pluginConfig)
+        if (fallbackModels.length === 0) return
 
-      log(`[${HOOK_NAME}] Session fallback timeout reached`, {
-        sessionID,
-        timeoutSeconds: config.timeout_seconds,
-        currentModel: state.currentModel,
-      })
+        log(`[${HOOK_NAME}] Session fallback timeout reached`, {
+          sessionID,
+          timeoutSeconds: config.timeout_seconds,
+          currentModel: state.currentModel,
+        })
 
-      const result = prepareFallback(sessionID, state, fallbackModels, config)
-      if (result.success && result.newModel) {
-        await autoRetryWithFallback(sessionID, result.newModel, resolvedAgent, "session.timeout")
+        const result = prepareFallback(sessionID, state, fallbackModels, config)
+        if (result.success && result.newModel) {
+          await autoRetryWithFallback(sessionID, result.newModel, resolvedAgent, "session.timeout")
+        }
+      } catch (err) {
+        log(`[${HOOK_NAME}] Error in session fallback timeout handler:`, { sessionID, error: String(err) })
       }
     }, timeoutMs)
 
