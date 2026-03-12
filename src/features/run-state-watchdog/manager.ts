@@ -35,7 +35,7 @@ export class RunStateWatchdogManager {
   constructor(client: OpencodeClient, opts?: { pollingIntervalMs?: number; stallThresholdMs?: number }) {
     this.client = client
     this.pollingIntervalMs = opts?.pollingIntervalMs ?? 10000
-    this.stallThresholdMs = opts?.stallThresholdMs ?? 600000 // 10 minutes (prev 90s)
+    this.stallThresholdMs = opts?.stallThresholdMs ?? 90000
   }
 
   public start() {

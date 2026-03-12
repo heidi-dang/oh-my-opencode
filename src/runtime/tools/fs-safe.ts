@@ -4,12 +4,12 @@ import * as path from "path"
 import { tool } from "@opencode-ai/plugin"
 import { z } from "zod"
 import { createSuccessResult, createFailureResult } from "../../utils/safety-tool-result"
+import { storeToolMetadata } from "../../features/tool-metadata-store"
 
 
 export function createFsSafeTool(): any {
     return tool({
         description: "Safe, structured execution of filesystem writes. Returns verifiable status.",
-        // @ts-ignore zod version mismatch against opencode-ai/plugin
         args: {
             operation: z.enum(["write", "delete", "mkdir"]).describe("The filesystem operation to perform."),
             filePath: z.string().describe("Absolute or relative path to the file/directory."),
@@ -52,21 +52,31 @@ export function createFsSafeTool(): any {
                     }
                 }
 
-                context.metadata({
-                    title: `fs ${operation}`,
-                    ...createSuccessResult({
-                        verified: true, // FS executions via smart wrapper are considered self-verifying
-                        changedState,
-                        ...(stateChangePayload && { stateChange: stateChangePayload })
-                    })
+                const successResult = createSuccessResult({
+                    verified: true,
+                    changedState,
+                    ...(stateChangePayload && { stateChange: stateChangePayload })
                 })
+
+                const metadata = {
+                    title: `fs ${operation}`,
+                    metadata: successResult
+                }
+
+                storeToolMetadata(context.sessionID, context.callID, metadata)
+                context.metadata(metadata)
 
                 return `Successfully executed ${operation} on ${filePath}`
             } catch (err: any) {
-                context.metadata({
+                const failureResult = createFailureResult(err.message)
+                const metadata = {
                     title: `fs ${args.operation} error`,
-                    ...createFailureResult(err.message)
-                })
+                    metadata: failureResult
+                }
+
+                storeToolMetadata(context.sessionID, context.callID, metadata)
+                context.metadata(metadata)
+
                 return `Failed: ${err.message}`
             }
         }

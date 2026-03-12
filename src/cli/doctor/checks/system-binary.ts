@@ -123,6 +123,10 @@ export async function getOpenCodeVersion(
 }
 
 export function compareVersions(current: string, minimum: string): boolean {
+  if (current.includes("-main-") || current.includes("-dev-") || current.includes("-develop-")) {
+    return true
+  }
+
   const parseVersion = (version: string): number[] =>
     version
       .replace(/^v/, "")

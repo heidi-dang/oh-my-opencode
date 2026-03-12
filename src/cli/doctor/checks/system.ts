@@ -103,15 +103,21 @@ export async function checkSystem(): Promise<CheckResult> {
   if (
     systemInfo.loadedVersion &&
     latestVersion &&
-    !binary.compareVersions(systemInfo.loadedVersion, latestVersion)
+    !pluginInfo.isLocalDev
   ) {
-    issues.push({
-      title: "Loaded plugin is outdated",
-      description: `Loaded ${systemInfo.loadedVersion}, latest ${latestVersion}.`,
-      fix: `Update: cd "${loadedInfo.cacheDir}" && bun add oh-my-opencode@${installTag}`,
-      severity: "warning",
-      affects: ["plugin features"],
-    })
+    const loadedParts = systemInfo.loadedVersion.split(".").map(Number)
+    const latestParts = latestVersion.split(".").map(Number)
+    const isMinorOutdated = (loadedParts[0] ?? 0) < (latestParts[0] ?? 0) || (loadedParts[1] ?? 0) < (latestParts[1] ?? 0)
+    
+    if (isMinorOutdated) {
+      issues.push({
+        title: "Loaded plugin is outdated",
+        description: `Loaded ${systemInfo.loadedVersion}, latest ${latestVersion}.`,
+        fix: `Update: cd "${loadedInfo.cacheDir}" && bun add oh-my-opencode@${installTag}`,
+        severity: "warning",
+        affects: ["plugin features"],
+      })
+    }
   }
 
   const status = getResultStatus(issues)
