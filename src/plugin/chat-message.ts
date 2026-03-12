@@ -1,5 +1,6 @@
 import type { OhMyOpenCodeConfig } from "../config"
 import type { PluginContext } from "./types"
+import { executeHooksForEvent } from "./hooks/hook-event-router"
 
 import { hasConnectedProvidersCache, log } from "../shared"
 import { setSessionModel } from "../shared/session-model-state"
@@ -45,6 +46,9 @@ export function createChatMessageHandler(args: {
   output: ChatMessageHandlerOutput
 ) => Promise<void> {
   const { ctx, pluginConfig, firstMessageVariantGate, hooks } = args
+  
+  // Check if hook event router is enabled
+  const enableHookRouter = pluginConfig.performance?.enableHookEventRouter ?? false
   const pluginContext = ctx as {
     client: {
       tui: {
@@ -79,38 +83,62 @@ export function createChatMessageHandler(args: {
       firstMessageVariantGate.markApplied(input.sessionID)
     }
 
-    if (!isRuntimeFallbackEnabled) {
-      await hooks.modelFallback?.["chat.message"]?.(input, output)
-    }
-    const modelOverride = output.message["model"]
-    if (
-      modelOverride &&
-      typeof modelOverride === "object" &&
-      "providerID" in modelOverride &&
-      "modelID" in modelOverride
-    ) {
-      const providerID = (modelOverride as { providerID?: string }).providerID
-      const modelID = (modelOverride as { modelID?: string }).modelID
-      if (typeof providerID === "string" && typeof modelID === "string") {
-        setSessionModel(input.sessionID, { providerID, modelID })
+    // Convert hooks to the format expected by HookEventRouter
+    const hookFunctions = Object.entries(hooks)
+      .filter(([_, hook]) => hook !== null && hook !== undefined)
+      .map(([name, hook]) => ({
+        name,
+        execute: (input: unknown, output: unknown) => {
+          // Call the actual hook
+          const hookFn = hook as any
+          if (typeof hookFn === 'function') {
+            return hookFn(input, output)
+          }
+          return undefined
+        }
+      }))
+    
+    // Execute hooks using optimized router if enabled
+    if (enableHookRouter) {
+      executeHooksForEvent('chat.message', hookFunctions, input, output, {
+        featureEnabled: true,
+        measurePerformance: true,
+        logSkipped: false
+      })
+    } else {
+      // Fallback to original sequential execution
+      if (!isRuntimeFallbackEnabled) {
+        await hooks.modelFallback?.["chat.message"]?.(input, output)
       }
-    } else if (input.model) {
-      setSessionModel(input.sessionID, input.model)
+      const modelOverride = output.message["model"]
+      if (
+        modelOverride &&
+        typeof modelOverride === "object" &&
+        "providerID" in modelOverride &&
+        "modelID" in modelOverride
+      ) {
+        const providerID = (modelOverride as { providerID?: string }).providerID
+        const modelID = (modelOverride as { modelID?: string }).modelID
+        if (typeof providerID === "string" && typeof modelID === "string") {
+          setSessionModel(input.sessionID, { providerID, modelID })
+        }
+      } else if (input.model) {
+        setSessionModel(input.sessionID, input.model)
+      }
+      await hooks.stopContinuationGuard?.["chat.message"]?.(input)
+      await hooks.backgroundNotificationHook?.["chat.message"]?.(input, output)
+      await hooks.runtimeFallback?.["chat.message"]?.(input, output)
+      await hooks.keywordDetector?.["chat.message"]?.(input, output)
+      await hooks.thinkMode?.["chat.message"]?.(input, output)
+      await hooks.claudeCodeHooks?.["chat.message"]?.(input, output)
+      await hooks.autoSlashCommand?.["chat.message"]?.(input, output)
+      await hooks.noSisyphusGpt?.["chat.message"]?.(input, output)
+      await hooks.noHephaestusNonGpt?.["chat.message"]?.(input, output)
+      if (hooks.startWork && isStartWorkHookOutput(output)) {
+        await hooks.startWork["chat.message"]?.(input, output)
+      }
+      await hooks.languageIntelligence?.["chat.message"]?.(input, output)
     }
-    await hooks.stopContinuationGuard?.["chat.message"]?.(input)
-    await hooks.backgroundNotificationHook?.["chat.message"]?.(input, output)
-    await hooks.runtimeFallback?.["chat.message"]?.(input, output)
-    await hooks.keywordDetector?.["chat.message"]?.(input, output)
-    await hooks.thinkMode?.["chat.message"]?.(input, output)
-    await hooks.claudeCodeHooks?.["chat.message"]?.(input, output)
-    await hooks.autoSlashCommand?.["chat.message"]?.(input, output)
-    await hooks.noSisyphusGpt?.["chat.message"]?.(input, output)
-    await hooks.noHephaestusNonGpt?.["chat.message"]?.(input, output)
-    if (hooks.startWork && isStartWorkHookOutput(output)) {
-      await hooks.startWork["chat.message"]?.(input, output)
-    }
-
-    await hooks.languageIntelligence?.["chat.message"]?.(input, output)
 
     if (!hasConnectedProvidersCache()) {
       pluginContext.client.tui

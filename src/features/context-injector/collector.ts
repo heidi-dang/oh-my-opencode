@@ -1,4 +1,5 @@
 import { memoryDB } from "../../shared/memory-db";
+import { OptimizedContextDB } from "./optimized-db";
 import type {
   ContextEntry,
   ContextPriority,
@@ -28,7 +29,22 @@ function withLock<T>(fn: () => T): T {
 }
 
 export class ContextCollector {
+  private optimizedDB?: OptimizedContextDB
+  
+  constructor() {
+    // Initialize optimized DB if available
+    try {
+      const db = (memoryDB as any).db;
+      if (db) {
+        this.optimizedDB = new OptimizedContextDB(db);
+      }
+    } catch (error) {
+      // Fallback to original DB
+    }
+  }
+  
   private get db() {
+    // Use optimized DB if available, fallback to original
     return (memoryDB as any).db;
   }
 

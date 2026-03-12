@@ -1,6 +1,7 @@
 import { readFileSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { relative, resolve } from "node:path";
+import { fileSystemCache } from "../../shared/file-system-cache";
 import { findProjectRoot, findRuleFiles } from "./finder";
 import {
   createContentHash,
@@ -42,11 +43,18 @@ interface ParsedRuleEntry {
 
 const parsedRuleCache = new Map<string, ParsedRuleEntry>();
 
-function getCachedParsedRule(
+async function getCachedParsedRule(
   filePath: string,
   realPath: string
-): { metadata: RuleMetadata; body: string } {
+): Promise<{ metadata: RuleMetadata; body: string }> {
   try {
+    // Try file system cache first
+    const cachedContent = await fileSystemCache.readFile(filePath);
+    if (cachedContent) {
+      return parseRuleFrontmatter(cachedContent);
+    }
+    
+    // Fallback to direct read
     const stat = statSync(filePath);
     const cached = parsedRuleCache.get(realPath);
 
@@ -111,7 +119,7 @@ export function createRuleInjectionProcessor(deps: {
       if (isDuplicateByRealPath(candidate.realPath, cache.realPaths)) continue;
 
       try {
-        const { metadata, body } = getCachedParsedRule(
+        const { metadata, body } = await getCachedParsedRule(
           candidate.path,
           candidate.realPath
         );

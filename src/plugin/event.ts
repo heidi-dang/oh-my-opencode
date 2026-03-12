@@ -32,6 +32,7 @@ import { resolveSessionAgent } from "./session-agent-resolver"
 
 import type { CreatedHooks } from "../create-hooks";
 import type { Managers } from "../create-managers";
+import { sessionStateCache } from "../shared/session-state-cache";
 import { pruneRecentSyntheticIdles } from "./recent-synthetic-idles";
 import { normalizeSessionStatusToIdle } from "./session-status-normalizer";
 
@@ -143,6 +144,16 @@ export function createEventHandler(args: {
   const lastKnownModelBySession = new Map<string, { providerID: string; modelID: string }>();
 
   const dispatchToHooks = async (input: EventInput): Promise<void> => {
+    // Invalidate session cache on session events
+    const sessionID = (input.event.properties as Record<string, unknown> | undefined)?.sessionID as string | undefined;
+    if (sessionID) {
+      const eventType = input.event.type;
+      if (eventType === "session.created" || eventType === "session.deleted" || 
+          eventType === "session.status" || eventType === "message.updated") {
+        sessionStateCache.invalidate(sessionID);
+      }
+    }
+
     await Promise.resolve(hooks.autoUpdateChecker?.event?.(input));
     await Promise.resolve(hooks.claudeCodeHooks?.event?.(input));
     await Promise.resolve(hooks.backgroundNotificationHook?.event?.(input));
