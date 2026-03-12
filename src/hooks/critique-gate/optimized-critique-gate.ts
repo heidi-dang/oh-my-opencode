@@ -7,19 +7,11 @@ const COMPLETE_TASK_TOOLS = ["complete_task", "task_update"]
  * Optimized Critique Gate Hook
  * 
  * Performance improvements:
-<<<<<<< HEAD
- * 1. Pre-compiled regex with better pattern matching
- * 2. Optimized content extraction with early exits
- * 3. Reduced string operations
- * 4. Better cache management with TTL
- * 5. Batch processing for multiple messages
-=======
  * 1. Pre-compiled regex patterns for faster matching
  * 2. Optimized content extraction with early exits
  * 3. Reduced string operations
  * 4. Better cache management with TTL
  * 5. Set-based tool name checking (O(1) lookup)
->>>>>>> edc0be9f (Optimize guard gating functions for 100-200% performance improvement)
  */
 export function createOptimizedCritiqueGateHook() {
   // Performance optimizations
@@ -77,11 +69,7 @@ export function createOptimizedCritiqueGateHook() {
       input: { tool: string; sessionID: string; input: Record<string, unknown> },
       output: { allow: boolean; message?: string }
     ) => {
-<<<<<<< HEAD
-      // Fast check using Set
-=======
       // Fast check using Set for O(1) lookup
->>>>>>> edc0be9f (Optimize guard gating functions for 100-200% performance improvement)
       if (!COMPLETE_TASK_TOOLS_SET.has(input.tool)) return
       
       // For task_update, only gate completion status

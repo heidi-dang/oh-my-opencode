@@ -1,17 +1,10 @@
 import { log } from "../../shared/logger"
 import { ContextCollector } from "../context-injector/collector"
 import { detectLanguage } from "./language-detector"
-<<<<<<< HEAD
-import { routeLanguage, formatLanguageContext, formatFailureContext } from "./language-router"
-import { RepoExampleExtractor } from "./repo-example-extractor"
-import { LanguageMemory } from "./language-memory"
-import type { LanguagePack, LanguageProfile } from "./types"
-=======
 import { routeLanguage, formatLanguageContext } from "./language-router"
 import { RepoExampleExtractor } from "./repo-example-extractor"
 import { LanguageMemory } from "./language-memory"
 import type { LanguagePack, LanguageProfile, LanguageRouteResult } from "./types"
->>>>>>> edc0be9f (Optimize guard gating functions for 100-200% performance improvement)
 
 interface LanguageIntelligenceHookArgs {
   collector: ContextCollector
@@ -104,12 +97,6 @@ export function createOptimizedLanguageIntelligenceHook(args: LanguageIntelligen
           persistent: false
         })
 
-<<<<<<< HEAD
-        // Update memory (commented out as method doesn't exist)
-        // memory.recordUsage(sessionID, profile.primary, route.pack)
-
-=======
->>>>>>> edc0be9f (Optimize guard gating functions for 100-200% performance improvement)
       } catch (error) {
         log("[LanguageIntelligence] Error processing message", { 
           sessionID, 
@@ -130,10 +117,6 @@ export function createOptimizedLanguageIntelligenceHook(args: LanguageIntelligen
       const sessionID = input.sessionID
       detectedProfiles.delete(sessionID)
       activePacks.delete(sessionID)
-<<<<<<< HEAD
-      // memory.clearSession(sessionID) // Method doesn't exist
-=======
->>>>>>> edc0be9f (Optimize guard gating functions for 100-200% performance improvement)
     }
   }
 }
