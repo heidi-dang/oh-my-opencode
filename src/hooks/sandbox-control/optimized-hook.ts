@@ -1,6 +1,10 @@
 import { log } from "../../shared/logger";
 import { sandboxManager } from "../../features/sandbox/sandbox-manager";
+<<<<<<< HEAD
 import { SafeToastWrapper } from "../../shared/safe-toast-wrapper";
+=======
+import type { PluginInput } from "@opencode-ai/plugin";
+>>>>>>> edc0be9f (Optimize guard gating functions for 100-200% performance improvement)
 
 /**
  * Optimized Sandbox Control Hook

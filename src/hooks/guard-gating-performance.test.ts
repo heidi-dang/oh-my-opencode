@@ -20,7 +20,11 @@ describe("Guard Gating Performance Tests", () => {
     }
     
     mockCollector = {
+<<<<<<< HEAD
       injectContext: async () => {}
+=======
+      register: async () => {}
+>>>>>>> edc0be9f (Optimize guard gating functions for 100-200% performance improvement)
     }
   })
   
