@@ -21,7 +21,6 @@ export interface Hook {
 }
 
 export interface HookMetadata {
-  name: string
   priority: number        // Lower = earlier
   events: string[] | 'all'
   required: boolean      // If true, never skip
