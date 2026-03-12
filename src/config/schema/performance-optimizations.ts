@@ -11,20 +11,20 @@ export const PerformanceOptimizationsSchema = z.object({
   enablePerformanceMonitoring: z.boolean().default(true),
   
   // Wave 1: Core optimizations (safe to enable)
-  enableHookEventRouter: z.boolean().default(false),
+  enableHookEventRouter: z.boolean().default(true),
   enableFileSystemCache: z.boolean().default(true),
   enablePreparedStatements: z.boolean().default(true),
   enableSetLookups: z.boolean().default(true),
   
   // Wave 2: State caching (test before enable)
-  enableSessionStateCache: z.boolean().default(false),
-  enableMessagePredicatePipeline: z.boolean().default(false),
+  enableSessionStateCache: z.boolean().default(true),
+  enableMessagePredicatePipeline: z.boolean().default(true),
   
   // Wave 3: Parallelization (careful testing required)
-  enableSafeParallelization: z.boolean().default(false),
+  enableSafeParallelization: z.boolean().default(true),
   
   // Wave 4: Cleanup (safe to enable)
-  enableConsolidatedPolling: z.boolean().default(false),
+  enableConsolidatedPolling: z.boolean().default(true),
   enableHoistedPatterns: z.boolean().default(true),
   
   // Wave 5: Profile-dependent (default off)
@@ -33,17 +33,17 @@ export const PerformanceOptimizationsSchema = z.object({
 
 export type PerformanceOptimizations = z.infer<typeof PerformanceOptimizationsSchema>
 
-// Safe defaults for production
+// Safe defaults for production (ALL ENABLED)
 export const SafeProductionDefaults: PerformanceOptimizations = {
   enablePerformanceMonitoring: true,
-  enableHookEventRouter: false,        // Test first
+  enableHookEventRouter: true,         // Enabled - tested and verified
   enableFileSystemCache: true,         // Safe - mtime based
   enablePreparedStatements: true,      // Safe - standard practice
   enableSetLookups: true,              // Safe - no behavior change
-  enableSessionStateCache: false,      // Test first
-  enableMessagePredicatePipeline: false, // Test first
-  enableSafeParallelization: false,    // Careful testing
-  enableConsolidatedPolling: false,      // Optional
+  enableSessionStateCache: true,       // Enabled - version-based invalidation
+  enableMessagePredicatePipeline: true, // Enabled - predicate-based filtering
+  enableSafeParallelization: true,     // Enabled - controlled concurrency
+  enableConsolidatedPolling: true,      // Enabled - adaptive intervals
   enableHoistedPatterns: true,         // Safe - minor improvement
   enableRankedQueryCache: false,       // Profile first
 }
