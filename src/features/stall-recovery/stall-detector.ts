@@ -10,8 +10,10 @@ import { taskStateMachine } from "../controlled-agent-runtime/task-state-machine
 import type { TaskRecord } from "../controlled-agent-runtime/task-record"
 import type { StallSymptom, StallClass } from "./types"
 import { tryRecovery } from "./recovery-manager"
+import { compiler } from "../../runtime/plan-compiler"
 
-const STALL_THRESHOLD_MS = 45_000 // 45 seconds without any activity implies a stall
+const STALL_THRESHOLD_STANDARD_MS = 45_000 // 45 seconds for standard models
+const STALL_THRESHOLD_REASONING_MS = 180_000 // 3 minutes for reasoning models (o1, etc)
 
 export class StallDetector {
   private activeInterval: NodeJS.Timer | null = null
@@ -79,11 +81,31 @@ export class StallDetector {
       // Time since last heartbeat
       const lastActivity = this.lastActivityLog.get(sessionID) || task.updated_at
       const idleTime = now - lastActivity
+      const threshold = this.getThreshold(sessionID, task)
 
-      if (idleTime > STALL_THRESHOLD_MS) {
+      if (idleTime > threshold) {
         this.handleStallDetected(sessionID, task, idleTime)
+      } else if (idleTime > threshold / 2) {
+        const lastNudge = (task as any).metadata?.last_nudge_at || 0
+        if (now - lastNudge > threshold / 2) {
+          const nudgeMsg = `[Stall Detector] Active task detected but no heartbeat for ${(idleTime / 1000).toFixed(1)}s. I should provide a status update or move to the next step if I'm blocked.`
+          log(`[StallDetector] Nudging session ${sessionID} (Idle: ${(idleTime / 1000).toFixed(1)}s)`)
+          compiler.injectHint(sessionID, nudgeMsg)
+          ;(task as any).metadata = { ...(task as any).metadata, last_nudge_at: now }
+        }
       }
     }
+  }
+
+  private getThreshold(sessionID: string, task: TaskRecord): number {
+    // Check if the current model is a reasoning model
+    // We can infer this from the task intent or metadata if available, 
+    // or fallback to checking the active session via plugin context if we had it.
+    // For now, we'll check common reasoning model names in the task metadata if it exists.
+    const modelID = (task as any).metadata?.model_id?.toLowerCase() || ""
+    const isReasoning = modelID.includes("o1") || modelID.includes("reasoning") || modelID.includes("thinking")
+    
+    return isReasoning ? STALL_THRESHOLD_REASONING_MS : STALL_THRESHOLD_STANDARD_MS
   }
 
   private handleStallDetected(sessionID: string, task: TaskRecord, idleTimeMs: number): void {

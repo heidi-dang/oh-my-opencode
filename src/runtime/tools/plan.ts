@@ -2,6 +2,7 @@
 import { tool } from "@opencode-ai/plugin"
 import { z } from "zod"
 import { compiler } from "../plan-compiler"
+import { validatePlan } from "../../features/controlled-agent-runtime/plan-quality-gate"
 import { createSuccessResult } from "../../utils/safety-tool-result"
 import { withToolContract } from "../../utils/tool-contract-wrapper"
 
@@ -17,6 +18,16 @@ export function createSubmitPlanTool(): any {
             })).describe("The execution DAG (Directed Acyclic Graph) of operations")
         },
         execute: withToolContract("submit_plan", async (args, toolContext) => {
+            const validation = validatePlan(args)
+            if (!validation.valid) {
+                for (const hint of validation.hints) {
+                    compiler.injectHint(toolContext.sessionID, hint)
+                }
+                for (const reason of validation.rejection_reasons) {
+                    compiler.injectHint(toolContext.sessionID, `[Plan Quality] ${reason}`)
+                }
+            }
+
             const taskID = compiler.submit(toolContext.sessionID, args.steps)
 
             const result = createSuccessResult({

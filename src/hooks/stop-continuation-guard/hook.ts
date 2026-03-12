@@ -19,6 +19,7 @@ export interface StopContinuationGuard {
   "chat.message": (input: { sessionID?: string }) => Promise<void>
   stop: (sessionID: string) => void
   isStopped: (sessionID: string) => boolean
+  allowResume: (sessionID: string) => void
   clear: (sessionID: string) => void
 }
 
@@ -72,6 +73,14 @@ export function createStopContinuationGuardHook(
     return stoppedSessions.has(sessionID)
   }
 
+  const allowResume = (sessionID: string): void => {
+    if (stoppedSessions.has(sessionID)) {
+      stoppedSessions.delete(sessionID)
+      setContinuationMarkerSource(ctx.directory, sessionID, "stop", "idle")
+      log(`[${HOOK_NAME}] Auto-resumed session following safety validation`, { sessionID })
+    }
+  }
+
   const clear = (sessionID: string): void => {
     stoppedSessions.delete(sessionID)
     setContinuationMarkerSource(ctx.directory, sessionID, "stop", "idle")
@@ -111,6 +120,7 @@ export function createStopContinuationGuardHook(
     "chat.message": chatMessage,
     stop,
     isStopped,
+    allowResume,
     clear,
   }
 }

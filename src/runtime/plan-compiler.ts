@@ -1,3 +1,5 @@
+import { log } from "../shared/logger"
+
 export interface ExecutionGraphNode {
     id: string
     action: string      // e.g. "run_tests", "fix", "commit"
@@ -17,6 +19,7 @@ interface SessionState {
     mode: PlanMode
     lastTouchTimestamp: number
     recoveryAttempts: number
+    hints: string[]
 }
 
 export class PlanCompiler {
@@ -45,10 +48,29 @@ export class PlanCompiler {
             runID: taskID, // Initial runID matches taskID
             mode: "planned",
             lastTouchTimestamp: Date.now(),
-            recoveryAttempts: 0
+            recoveryAttempts: 0,
+            hints: []
         })
 
         return taskID
+    }
+
+    public injectHint(sessionID: string, hint: string): void {
+        const state = this.sessionStates.get(sessionID)
+        if (state) {
+            state.hints.push(hint)
+            log(`[PlanCompiler] Injected hint for session ${sessionID}: ${hint}`)
+        }
+    }
+
+    public consumeHints(sessionID: string): string[] {
+        const state = this.sessionStates.get(sessionID)
+        if (state && state.hints.length > 0) {
+            const hints = [...state.hints]
+            state.hints = []
+            return hints
+        }
+        return []
     }
 
     public getActiveStep(sessionID: string): (ExecutionGraphNode & { mode: PlanMode; taskID: string; runID: string; lastTouch: number; recoveryAttempts: number }) | null {

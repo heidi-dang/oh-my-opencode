@@ -13,6 +13,7 @@ export interface PlanValidationResult {
   valid: boolean
   rejection_reasons: string[]
   warnings: string[]
+  hints: string[]
 }
 
 const MIN_STEPS = 2
@@ -25,22 +26,26 @@ const VAGUE_PATTERNS = [
 export function validatePlan(plan: TaskPlan): PlanValidationResult {
   const reasons: string[] = []
   const warnings: string[] = []
+  const hints: string[] = []
 
   // Rule 1: Minimum step count
   if (plan.steps.length < MIN_STEPS) {
     reasons.push(`Plan has ${plan.steps.length} steps, minimum is ${MIN_STEPS}.`)
+    hints.push("Please expand your plan to include at least 2 concrete steps (e.g., one for the fix, one for verification).")
   }
 
   // Rule 2: Every step must map to a file, tool, or verification action
   for (const step of plan.steps) {
     if (!step.target_type || !step.target_value) {
       reasons.push(`Step "${step.id}" has no target_type or target_value. Every step must map to a file, tool, or verification action.`)
+      hints.push(`Ensure step "${step.id}" specifies WHAT it is acting on (a file path or a tool name).`)
     }
 
     // Check for vague descriptions
     for (const pattern of VAGUE_PATTERNS) {
       if (pattern.test(step.description)) {
         reasons.push(`Step "${step.id}" has a vague description: "${step.description}". Be concrete about what will change.`)
+        hints.push(`Be more specific in step "${step.id}". Instead of "fix it", say "update function X in Y.ts to handle Z".`)
         break
       }
     }
@@ -50,11 +55,13 @@ export function validatePlan(plan: TaskPlan): PlanValidationResult {
   const hasVerification = plan.steps.some(s => s.target_type === "verification")
   if (!hasVerification && plan.verification_commands.length === 0) {
     reasons.push("Plan has no verification steps or commands. At least one verification action is required.")
+    hints.push("Add a verification step or command (e.g., 'bun test' or a specific verification tool call) to confirm your changes.")
   }
 
   // Rule 4: Bugfix plans should have a hypothesis
   if (!plan.hypothesis) {
     warnings.push("Plan has no root cause hypothesis. Recommended for bugfix tasks.")
+    hints.push("Providing a hypothesis helps me validate your logic. Why do you think this bug exists?")
   }
 
   // Rule 5: Destructive changes should have rollback path
@@ -65,6 +72,7 @@ export function validatePlan(plan: TaskPlan): PlanValidationResult {
   )
   if (hasDestructiveSteps && !plan.rollback_path) {
     warnings.push("Plan includes destructive changes but has no rollback path.")
+    hints.push("Since you are performing destructive changes, please specify a rollback path (e.g., use 'git stash' or a backup).")
   }
 
   const valid = reasons.length === 0
@@ -75,7 +83,7 @@ export function validatePlan(plan: TaskPlan): PlanValidationResult {
     log(`[PlanQualityGate] Plan REJECTED: ${reasons.length} reasons`)
   }
 
-  return { valid, rejection_reasons: reasons, warnings }
+  return { valid, rejection_reasons: reasons, warnings, hints }
 }
 
 /**

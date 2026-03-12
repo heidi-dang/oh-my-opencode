@@ -1,7 +1,8 @@
 import crypto from "crypto"
 import type { PluginInput } from "@opencode-ai/plugin"
-import { ledger } from "../../runtime/state-ledger"
+import { ledger, type LedgerEntry } from "../../runtime/state-ledger"
 import { compiler } from "../../runtime/plan-compiler"
+import { log } from "../../shared/logger"
 import { SafeToastWrapper } from "../../shared/safe-toast-wrapper"
 
 /**
@@ -26,7 +27,7 @@ export function createSemanticLoopGuardHook(_ctx: PluginInput) {
         ) => {
             // 1. Compute current state hash from Ledger
             const stateEntries = ledger.getEntries(undefined, input.sessionID)
-            const stateString = JSON.stringify(stateEntries.map(e => ({ type: e.type, key: e.key })))
+            const stateString = JSON.stringify(stateEntries.map((e: LedgerEntry) => ({ type: e.type, key: e.key })))
 
             // 2. Compute intent hash (Tool + Args)
             const intentString = JSON.stringify({ tool: input.tool, args: output.args })
@@ -45,8 +46,15 @@ export function createSemanticLoopGuardHook(_ctx: PluginInput) {
 
             hashes[fingerprint] = (hashes[fingerprint] || 0) + 1
 
-            if (hashes[fingerprint] > 3) {
-                const message = `[Semantic Loop Guard] Repeated action (${input.tool}) blocked for safety. Switching strategy...`;
+            if (hashes[fingerprint] === 3) {
+                const hint = `[Semantic Loop Guard] Note: I've detected a repeated pattern. If this approach continues to fail, I should consider a fundamentally different strategy or more defensive implementation.`;
+                log(hint);
+                // Inject hint into the compiler without blocking the current turn
+                compiler.injectHint(input.sessionID, hint);
+            }
+
+            if (hashes[fingerprint] > 5) {
+                const message = `[Semantic Loop Guard] Critical safety block: Repeated action (${input.tool}) exceeded safety threshold. Switching strategy...`;
 
                 // 1. Show a green "protection" toast in the UI (non-blocking)
                 _ctx.client?.tui?.showToast({

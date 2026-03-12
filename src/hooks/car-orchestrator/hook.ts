@@ -13,6 +13,7 @@ import type { PluginInput } from "@opencode-ai/plugin"
 import { log } from "../../shared/logger"
 import { taskStateMachine } from "../../features/controlled-agent-runtime/task-state-machine"
 import { recordFileChange } from "../../features/controlled-agent-runtime/runtime-gates"
+import { compiler } from "../../runtime/plan-compiler"
 
 const FILE_WRITE_TOOLS = new Set([
   "write_to_file",
@@ -81,8 +82,13 @@ export function createCARRuntimeHook(_ctx: PluginInput) {
 
       const stateReport = taskStateMachine.getStateReport(sessionID)
       const score = taskStateMachine.getAcceptanceScore(sessionID)
+      const hints = compiler.consumeHints(sessionID)
 
       const injections: string[] = [stateReport]
+
+      if (hints.length > 0) {
+        injections.push(`\n[CAR HINTS] Guided feedback:`, ...hints.map(h => `- ${h}`))
+      }
 
       if (record.lifecycle_state === "REPAIRING") {
         const lastRepair = record.repairs[record.repairs.length - 1]

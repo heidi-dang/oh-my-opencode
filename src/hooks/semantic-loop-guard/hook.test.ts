@@ -41,20 +41,31 @@ describe("Semantic Loop Guard Recovery", () => {
         // 2nd attempt
         await hook["tool.execute.before"]({ tool, sessionID, callID: "2" }, { args });
 
-        // 3rd attempt
+        // 3rd attempt -> Should inject hint
         await hook["tool.execute.before"]({ tool, sessionID, callID: "3" }, { args });
+        const step = compiler.getActiveStep(sessionID);
+        // @ts-ignore
+        const state = compiler.sessionStates.get(sessionID);
+        expect(state?.hints.length).toBe(1);
+        expect(state?.hints[0]).toContain("detected a repeated pattern");
 
-        // 4th attempt should throw and trigger recovery
+        // 4th attempt
+        await hook["tool.execute.before"]({ tool, sessionID, callID: "4" }, { args });
+
+        // 5th attempt
+        await hook["tool.execute.before"]({ tool, sessionID, callID: "5" }, { args });
+
+        // 6th attempt should throw and trigger recovery
         let thrownError: Error | null = null;
         try {
-            await hook["tool.execute.before"]({ tool, sessionID, callID: "4" }, { args });
+            await hook["tool.execute.before"]({ tool, sessionID, callID: "6" }, { args });
         } catch (e: any) {
             thrownError = e;
         }
 
         expect(thrownError).not.toBeNull();
         expect(thrownError?.message).toContain("[Semantic Loop Guard]");
-        expect(thrownError?.message).toContain("blocked for safety");
+        expect(thrownError?.message).toContain("exceeded safety threshold");
 
         // Verify Green Toast was shown
         expect(toastCalls.length).toBe(1);
