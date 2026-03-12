@@ -17,6 +17,7 @@ interface FileCacheEntry {
   mtime: number
   size: number
   timestamp: number
+  validatedAt: number
 }
 
 interface CacheStats {
@@ -35,6 +36,9 @@ class FileSystemCache {
   
   // TTL for entries even if mtime hasn't changed (5 minutes)
   private readonly CACHE_TTL_MS = 5 * 60 * 1000
+
+  // Very short hot-read window that avoids repeat stat() calls for immediate re-reads.
+  private readonly HOT_READ_WINDOW_MS = 50
   
   /**
    * Read file with caching
@@ -43,21 +47,33 @@ class FileSystemCache {
    */
   async readFile(path: string): Promise<string | null> {
     try {
+      const now = Date.now()
+      const cached = this.cache.get(path)
+
+      if (
+        cached &&
+        now - cached.validatedAt < this.HOT_READ_WINDOW_MS &&
+        now - cached.timestamp < this.CACHE_TTL_MS
+      ) {
+        this.stats.hits++
+        return cached.content
+      }
+
       // Get current file stats
       const stats = await stat(path)
       const currentMtime = stats.mtime.getTime()
       const currentSize = stats.size
-      
+
       // Check cache
-      const cached = this.cache.get(path)
       if (cached) {
         // Validate cache entry
         const isValid = 
           cached.mtime === currentMtime && 
           cached.size === currentSize &&
-          Date.now() - cached.timestamp < this.CACHE_TTL_MS
+          now - cached.timestamp < this.CACHE_TTL_MS
         
         if (isValid) {
+          cached.validatedAt = now
           this.stats.hits++
           return cached.content
         }
@@ -75,7 +91,8 @@ class FileSystemCache {
         content,
         mtime: currentMtime,
         size: currentSize,
-        timestamp: Date.now()
+        timestamp: now,
+        validatedAt: now,
       })
       
       // Enforce max cache size (LRU eviction)

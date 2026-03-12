@@ -65,6 +65,7 @@ export const EVENT_HOOK_MAP: Map<string, Set<string>> = new Map()
 
 // Build reverse mapping from metadata
 function buildEventHookMap(): void {
+  EVENT_HOOK_MAP.clear()
   for (const [hookName, meta] of HOOK_METADATA.entries()) {
     if (meta.events === 'all') {
       // These hooks run on all events - skip from specific mapping
@@ -80,6 +81,13 @@ function buildEventHookMap(): void {
       hooks.add(hookName)
     }
   }
+}
+
+function hookMatchesEvent(meta: HookMetadata | undefined, event: string): boolean {
+  if (!meta) return true
+  if (meta.required) return true
+  if (meta.events === 'all') return true
+  return meta.events.includes(event)
 }
 
 // Initialize on load
@@ -123,31 +131,16 @@ export function executeHooksForEvent(
   }
   
   // Get hooks relevant to this event
-  const relevantHookNames = EVENT_HOOK_MAP.get(event)
-  
   // Determine which hooks to run
   const hooksToRun = hooks.filter(hook => {
     const meta = HOOK_METADATA.get(hook.name)
-    
-    // Required hooks always run
-    if (meta?.required) {
-      return true
+    const shouldRun = hookMatchesEvent(meta, event)
+
+    if (!shouldRun && logSkipped) {
+      log(`[HookRouter] Skipping ${hook.name} for ${event}`)
     }
-    
-    // If event is in map, only run if explicitly listed
-    if (relevantHookNames) {
-      const shouldRun = relevantHookNames.has(hook.name)
-      
-      if (!shouldRun && logSkipped) {
-        log(`[HookRouter] Skipping ${hook.name} for ${event}`)
-      }
-      
-      return shouldRun
-    }
-    
-    // Unknown event: safe fallback
-    // Run hooks that are marked for 'all' events or have no metadata (legacy)
-    return meta?.events === 'all' || !meta
+
+    return shouldRun
   })
   
   // Sort by priority
@@ -206,18 +199,7 @@ export function executeHooksForEvent(
  */
 export function shouldHookRunForEvent(hookName: string, event: string): boolean {
   const meta = HOOK_METADATA.get(hookName)
-  
-  // Required hooks always run
-  if (meta?.required) return true
-  
-  // Check event mapping
-  const relevant = EVENT_HOOK_MAP.get(event)
-  if (relevant) {
-    return relevant.has(hookName)
-  }
-  
-  // Unknown event - run hooks marked for 'all' or without metadata
-  return meta?.events === 'all' || !meta
+  return hookMatchesEvent(meta, event)
 }
 
 /**
@@ -241,6 +223,7 @@ export function validateHookCoverage(events: string[]): {
   covered: string[]
   uncovered: string[]
 } {
+  buildEventHookMap()
   const covered: string[] = []
   const uncovered: string[] = []
   

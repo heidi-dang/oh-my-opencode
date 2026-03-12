@@ -48,6 +48,7 @@ export function createPluginInterface(args: {
 
     "experimental.chat.messages.transform": createMessagesTransformHandler({
       hooks,
+      pluginConfig,
     }),
 
     "experimental.chat.system.transform": createSystemTransformHandler(),

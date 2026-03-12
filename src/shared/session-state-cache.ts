@@ -15,12 +15,14 @@ interface CachedSessionState {
   status?: string
   agent?: string
   tools?: Record<string, boolean>
+  version?: number
   timestamp: number
 }
 
 interface CacheEntry<T> {
   data: T
   timestamp: number
+  updatedAt: number
   version: number // For optimistic concurrency
 }
 
@@ -36,6 +38,9 @@ class SessionStateCache {
   // Track invalidation events
   private invalidationLog = new Map<string, number>()
   private readonly INVALIDATION_WINDOW_MS = 1000
+
+  // Compatibility alias for tests and introspection that expect a single cache map.
+  private cache = this.l1Cache
   
   // Cache statistics for monitoring
   private stats = {
@@ -49,14 +54,14 @@ class SessionStateCache {
    * Get session state from cache
    * Checks L1 first, then L2, returns undefined if expired
    */
-  get(sessionID: string): CachedSessionState | undefined {
+  get(sessionID: string, expectedVersion?: number): CachedSessionState | undefined {
     const now = Date.now()
     
     // Check L1 (hot) cache
     const l1Entry = this.l1Cache.get(sessionID)
-    if (l1Entry && now - l1Entry.timestamp < this.L1_TTL_MS) {
+    if (l1Entry && now - this.getEntryTimestamp(l1Entry) < this.L1_TTL_MS) {
       // Check if invalidated recently
-      if (!this.isInvalidated(sessionID, l1Entry.timestamp)) {
+      if (!this.isInvalidated(sessionID, this.getEntryTimestamp(l1Entry)) && this.matchesVersion(l1Entry, expectedVersion)) {
         this.stats.hits++
         return l1Entry.data
       }
@@ -64,9 +69,9 @@ class SessionStateCache {
     
     // Check L2 (warm) cache
     const l2Entry = this.l2Cache.get(sessionID)
-    if (l2Entry && now - l2Entry.timestamp < this.L2_TTL_MS) {
+    if (l2Entry && now - this.getEntryTimestamp(l2Entry) < this.L2_TTL_MS) {
       // Check if invalidated recently
-      if (!this.isInvalidated(sessionID, l2Entry.timestamp)) {
+      if (!this.isInvalidated(sessionID, this.getEntryTimestamp(l2Entry)) && this.matchesVersion(l2Entry, expectedVersion)) {
         // Promote to L1
         this.l1Cache.set(sessionID, l2Entry)
         this.stats.hits++
@@ -83,10 +88,12 @@ class SessionStateCache {
    * Always writes to L1, async write-through to L2
    */
   set(sessionID: string, state: CachedSessionState): void {
+    const nextVersion = state.version ?? this.getNextVersion(sessionID)
     const entry: CacheEntry<CachedSessionState> = {
-      data: state,
+      data: { ...state, version: nextVersion },
       timestamp: Date.now(),
-      version: this.getNextVersion(sessionID)
+      updatedAt: Date.now(),
+      version: nextVersion,
     }
     
     this.l1Cache.set(sessionID, entry)
@@ -103,9 +110,7 @@ class SessionStateCache {
     
     // Immediate removal from L1
     this.l1Cache.delete(sessionID)
-    
-    // Mark L2 for lazy eviction (will be checked on next access)
-    // This prevents thundering herd on session updates
+    this.l2Cache.delete(sessionID)
   }
   
   /**
@@ -113,8 +118,18 @@ class SessionStateCache {
    */
   invalidateAll(): void {
     this.l1Cache.clear()
+    this.l2Cache.clear()
     this.invalidationLog.clear()
-    this.stats.invalidations += this.l2Cache.size
+    this.stats.invalidations++
+  }
+
+  private matchesVersion(entry: CacheEntry<CachedSessionState>, expectedVersion?: number): boolean {
+    if (expectedVersion === undefined) return true
+    return entry.version === expectedVersion || entry.data.version === expectedVersion
+  }
+
+  private getEntryTimestamp(entry: CacheEntry<CachedSessionState>): number {
+    return entry.updatedAt ?? entry.timestamp
   }
   
   /**
@@ -155,7 +170,7 @@ class SessionStateCache {
     
     // Clean L1
     for (const [key, entry] of this.l1Cache.entries()) {
-      if (now - entry.timestamp > this.L1_TTL_MS) {
+      if (now - this.getEntryTimestamp(entry) > this.L1_TTL_MS) {
         this.l1Cache.delete(key)
         evicted++
       }
@@ -163,7 +178,7 @@ class SessionStateCache {
     
     // Clean L2
     for (const [key, entry] of this.l2Cache.entries()) {
-      if (now - entry.timestamp > this.L2_TTL_MS * 2) { // L2 gets 2x grace period
+      if (now - this.getEntryTimestamp(entry) > this.L2_TTL_MS * 2) { // L2 gets 2x grace period
         this.l2Cache.delete(key)
         evicted++
       }

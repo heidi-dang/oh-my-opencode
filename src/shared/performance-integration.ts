@@ -11,9 +11,9 @@ import { log } from "./logger"
 import { perfMonitor, BaselineMetrics } from "./performance-monitor"
 import { fileSystemCache } from "./file-system-cache"
 import { sessionStateCache } from "./session-state-cache"
-import { rankedQueryCache } from "./ranked-query-cache"
 import { adaptivePoller } from "./adaptive-poller"
 import { SafeProductionDefaults, AggressiveTestingSettings } from "../config/schema/performance-optimizations"
+import { setRankedQueryCacheEnabled, rankedQueryCache } from "./ranked-query-cache"
 
 export interface OptimizationIntegration {
   enabled: boolean
@@ -57,6 +57,8 @@ export function initializePerformanceOptimizations(
   if (effectiveConfig.enableConsolidatedPolling) {
     initializeAdaptivePoller()
   }
+
+  setRankedQueryCacheEnabled(effectiveConfig.enableRankedQueryCache !== false)
   
   // Wave 5: Ranked query cache
   if (effectiveConfig.enableRankedQueryCache) {

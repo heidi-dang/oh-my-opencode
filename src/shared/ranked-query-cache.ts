@@ -1,248 +1,182 @@
-/**
- * Ranked Query Cache (Wave 5)
- * 
- * Caches ranked memory query results to avoid recomputing expensive scoring.
- * 
- * Features:
- * - LRU eviction with configurable max size
- * - TTL-based invalidation (default: 30 seconds for ranked queries)
- * - Cache key based on normalized query parameters
- * - Profiling hooks for hit/miss metrics
- * - Write-through invalidation on memory updates
- * 
- * Expected improvement: 50-80% reduction in ranked query latency for repeated queries
- */
-
 import { log } from "./logger"
-import { perfMonitor } from "./performance-monitor"
 
-interface CacheEntry<T> {
-  data: T
-  timestamp: number
-  hits: number
-  lastAccessed: number
-}
-
-interface RankedQueryCacheConfig {
-  maxSize: number
-  ttlMs: number
-  enableProfiling: boolean
-}
-
-interface CacheStats {
-  hits: number
-  misses: number
-  evictions: number
-  hitRate: number
-  size: number
-  avgLatencyMs: number
-}
-
-interface QueryCacheKey {
+export interface RankedQueryCacheKey {
   category?: string
-  tags?: string
-  keyword?: string
   repo?: string
-  signature?: string
   language?: string
   task_type?: string
+  signature?: string
+  tags?: string
+  keyword?: string
   path_scope?: string[]
   limit?: number
 }
 
+interface CacheEntry<T> {
+  data: T[]
+  timestamp: number
+  lastAccessedAt: number
+  category?: string
+}
+
+export interface RankedQueryCacheStats {
+  hits: number
+  misses: number
+  evictions: number
+  size: number
+  hitRate: number
+  enabled: boolean
+  avgLatencyMs: number
+}
+
 class RankedQueryCache {
-  private cache = new Map<string, CacheEntry<any[]>>()
-  private config: RankedQueryCacheConfig
+  private cache = new Map<string, CacheEntry<unknown>>()
+  private readonly maxSize = 100
+  private readonly ttlMs = 30_000
+  private enabled = true
   private stats = {
     hits: 0,
     misses: 0,
     evictions: 0,
     totalLatencyMs: 0,
-    queryCount: 0
+    queryCount: 0,
   }
 
-  constructor(config: Partial<RankedQueryCacheConfig> = {}) {
-    this.config = {
-      maxSize: config.maxSize ?? 100,
-      ttlMs: config.ttlMs ?? 30000, // 30 seconds default
-      enableProfiling: config.enableProfiling ?? true
+  setEnabled(enabled: boolean): void {
+    this.enabled = enabled
+    if (!enabled) {
+      this.invalidateAll()
     }
   }
 
-  /**
-   * Generate cache key from query parameters
-   */
-  private generateKey(params: QueryCacheKey): string {
-    // Normalize and sort for consistent keys
-    const normalized: Record<string, string | number | undefined> = {}
-    
-    if (params.category) normalized.category = params.category
-    if (params.tags) normalized.tags = params.tags.toLowerCase().trim()
-    if (params.keyword) normalized.keyword = params.keyword.toLowerCase().trim()
-    if (params.repo) normalized.repo = params.repo
-    if (params.signature) normalized.signature = params.signature
-    if (params.language) normalized.language = params.language
-    if (params.task_type) normalized.task_type = params.task_type
-    if (params.path_scope?.length) {
-      normalized.path_scope = params.path_scope.sort().join(",")
-    }
-    normalized.limit = params.limit ?? 10
+  get<T>(params: RankedQueryCacheKey): T[] | undefined {
+    if (!this.enabled) return undefined
 
-    return JSON.stringify(normalized)
-  }
-
-  /**
-   * Get cached result if valid
-   */
-  get<T>(params: QueryCacheKey): T[] | undefined {
-    const key = this.generateKey(params)
+    const key = this.createKey(params)
     const entry = this.cache.get(key)
-
     if (!entry) {
       this.stats.misses++
       return undefined
     }
 
-    // Check TTL
-    const now = Date.now()
-    if (now - entry.timestamp > this.config.ttlMs) {
+    if (Date.now() - entry.timestamp > this.ttlMs) {
       this.cache.delete(key)
+      this.stats.evictions++
       this.stats.misses++
       return undefined
     }
 
-    // Update access tracking
-    entry.hits++
-    entry.lastAccessed = now
+    entry.lastAccessedAt = Date.now()
     this.stats.hits++
-
     return entry.data as T[]
   }
 
-  /**
-   * Store result in cache
-   */
-  set<T>(params: QueryCacheKey, data: T[]): void {
-    const key = this.generateKey(params)
+  set<T>(params: RankedQueryCacheKey, data: T[]): void {
+    if (!this.enabled) return
+
+    const key = this.createKey(params)
     const now = Date.now()
-
-    // Evict if at capacity (LRU - remove least recently accessed)
-    if (this.cache.size >= this.config.maxSize && !this.cache.has(key)) {
-      this.evictLRU()
-    }
-
     this.cache.set(key, {
       data,
       timestamp: now,
-      hits: 0,
-      lastAccessed: now
+      lastAccessedAt: now,
+      category: params.category,
     })
-  }
 
-  /**
-   * Evict least recently used entry
-   */
-  private evictLRU(): void {
-    let oldest: { key: string; lastAccessed: number } | null = null
-
-    for (const [key, entry] of this.cache.entries()) {
-      if (!oldest || entry.lastAccessed < oldest.lastAccessed) {
-        oldest = { key, lastAccessed: entry.lastAccessed }
-      }
-    }
-
-    if (oldest) {
-      this.cache.delete(oldest.key)
-      this.stats.evictions++
+    if (this.cache.size > this.maxSize) {
+      this.evictLeastRecentlyUsed()
     }
   }
 
-  /**
-   * Invalidate cache entries matching category
-   */
-  invalidateCategory(category: string): void {
-    let count = 0
+  invalidateCategory(category?: string): void {
+    if (!category) {
+      this.invalidateAll()
+      return
+    }
+
     for (const [key, entry] of this.cache.entries()) {
-      const params = JSON.parse(key) as QueryCacheKey
-      if (params.category === category) {
+      if (entry.category === category) {
         this.cache.delete(key)
-        count++
+        this.stats.evictions++
       }
     }
-    
-    if (count > 0 && this.config.enableProfiling) {
-      log(`[RankedQueryCache] Invalidated ${count} entries for category: ${category}`)
-    }
   }
 
-  /**
-   * Invalidate entire cache
-   */
   invalidateAll(): void {
-    const size = this.cache.size
+    this.stats.evictions += this.cache.size
     this.cache.clear()
-    
-    if (size > 0 && this.config.enableProfiling) {
-      log(`[RankedQueryCache] Invalidated all ${size} entries`)
-    }
   }
 
-  /**
-   * Get cache statistics
-   */
-  getStats(): CacheStats {
+  getStats(): RankedQueryCacheStats {
     const total = this.stats.hits + this.stats.misses
     return {
       hits: this.stats.hits,
       misses: this.stats.misses,
       evictions: this.stats.evictions,
-      hitRate: total > 0 ? this.stats.hits / total : 0,
       size: this.cache.size,
-      avgLatencyMs: this.stats.queryCount > 0 
-        ? this.stats.totalLatencyMs / this.stats.queryCount 
-        : 0
+      hitRate: total > 0 ? this.stats.hits / total : 0,
+      enabled: this.enabled,
+      avgLatencyMs: this.stats.queryCount > 0
+        ? this.stats.totalLatencyMs / this.stats.queryCount
+        : 0,
     }
   }
 
-  /**
-   * Record query latency for profiling
-   */
   recordLatency(latencyMs: number): void {
     this.stats.totalLatencyMs += latencyMs
     this.stats.queryCount++
   }
 
-  /**
-   * Get cache size
-   */
-  get size(): number {
-    return this.cache.size
-  }
-
-  /**
-   * Cleanup expired entries (can be called periodically)
-   */
   cleanup(): number {
     const now = Date.now()
-    let cleaned = 0
-
+    let evicted = 0
     for (const [key, entry] of this.cache.entries()) {
-      if (now - entry.timestamp > this.config.ttlMs) {
+      if (now - entry.timestamp > this.ttlMs) {
         this.cache.delete(key)
-        cleaned++
+        evicted++
       }
     }
 
-    return cleaned
+    if (evicted > 0) {
+      this.stats.evictions += evicted
+      log("[RankedQueryCache] Cleaned expired entries", { evicted })
+    }
+
+    return evicted
+  }
+
+  private createKey(params: RankedQueryCacheKey): string {
+    const normalized = {
+      ...params,
+      path_scope: params.path_scope ? [...params.path_scope].sort() : undefined,
+    }
+    return JSON.stringify(normalized)
+  }
+
+  private evictLeastRecentlyUsed(): void {
+    let oldestKey: string | undefined
+    let oldestAccess = Number.POSITIVE_INFINITY
+
+    for (const [key, entry] of this.cache.entries()) {
+      if (entry.lastAccessedAt < oldestAccess) {
+        oldestAccess = entry.lastAccessedAt
+        oldestKey = key
+      }
+    }
+
+    if (oldestKey) {
+      this.cache.delete(oldestKey)
+      this.stats.evictions++
+    }
   }
 }
 
-// Singleton instance
-export const rankedQueryCache = new RankedQueryCache({
-  maxSize: 100,
-  ttlMs: 30000, // 30 seconds
-  enableProfiling: true
-})
+export const rankedQueryCache = new RankedQueryCache()
 
-// Export for testing
-export { RankedQueryCache, QueryCacheKey, CacheStats }
+export function setRankedQueryCacheEnabled(enabled: boolean): void {
+  rankedQueryCache.setEnabled(enabled)
+}
+
+setInterval(() => rankedQueryCache.cleanup(), 60_000)
+
+export { RankedQueryCache }

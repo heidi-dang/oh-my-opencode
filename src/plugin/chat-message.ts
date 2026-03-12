@@ -48,7 +48,7 @@ export function createChatMessageHandler(args: {
   const { ctx, pluginConfig, firstMessageVariantGate, hooks } = args
   
   // Check if hook event router is enabled
-  const enableHookRouter = pluginConfig.performance?.enableHookEventRouter ?? false
+  const enableHookRouter = pluginConfig.performance?.enableHookEventRouter ?? true
   const pluginContext = ctx as {
     client: {
       tui: {

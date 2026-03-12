@@ -27,7 +27,7 @@ export const PerformanceOptimizationsSchema = z.object({
   enableConsolidatedPolling: z.boolean().default(true),
   enableHoistedPatterns: z.boolean().default(true),
   
-  // Wave 5: Profile-dependent (default off)
+  // Wave 5: Ranked memory retrieval cache
   enableRankedQueryCache: z.boolean().default(true),
 }).describe("Performance optimization feature flags")
 
@@ -60,7 +60,7 @@ export const AggressiveTestingSettings: PerformanceOptimizations = {
   enableSafeParallelization: true,
   enableConsolidatedPolling: true,
   enableHoistedPatterns: true,
-  enableRankedQueryCache: false,      // Still needs profiling
+  enableRankedQueryCache: true,
 }
 
 // Rollout phases

@@ -10,6 +10,7 @@ import { createPluginInterface } from "./plugin-interface"
 
 import { loadPluginConfig } from "./plugin-config"
 import { createModelCacheState } from "./plugin-state"
+import { initializePerformanceOptimizations } from "./shared/performance-integration"
 import { createFirstMessageVariantGate } from "./shared/first-message-variant"
 import { injectServerAuthIntoClient, log, injectYGKAInterceptor } from "./shared"
 import { startTmuxCheck } from "./tools"
@@ -74,6 +75,7 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
   // -------------------------------
 
   const pluginConfig = loadPluginConfig(ctx.directory, ctx)
+  initializePerformanceOptimizations(pluginConfig, ctx)
   const disabledHooks = new Set(pluginConfig.disabled_hooks ?? [])
 
   const isHookEnabled = (hookName: HookName): boolean => !disabledHooks.has(hookName)

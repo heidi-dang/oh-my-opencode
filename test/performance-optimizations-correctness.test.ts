@@ -535,7 +535,10 @@ describe("Performance Benchmarks", () => {
     // First read (miss)
     const missResult = await runBenchmark(
       "file.read.miss",
-      async () => await cache.readFile(testFile),
+      async () => {
+        cache.invalidate(testFile)
+        return cache.readFile(testFile)
+      },
       { warmup: 0, iterations: 10, discardOutliers: 0 }
     )
 

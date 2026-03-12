@@ -306,10 +306,7 @@ export class MemoryDB {
         )
 
         log(`[MemoryDB] Upserted memory id=${existing.id} (${item.category}/${effectiveSignature})`)
-        
-        // Invalidate ranked query cache for this category
         rankedQueryCache.invalidateCategory(item.category)
-        
         return existing.id
       }
     }
@@ -336,9 +333,7 @@ export class MemoryDB {
       now
     )
 
-    // Invalidate ranked query cache for this category
-    rankedQueryCache.invalidateCategory(item.category)
-
+  rankedQueryCache.invalidateCategory(item.category)
     return result.lastInsertRowid as number
   }
 
@@ -347,8 +342,6 @@ export class MemoryDB {
    */
   public markUsed(id: number): void {
     this.db.prepare(`UPDATE memories SET last_used_at = ? WHERE id = ?`).run(Date.now(), id)
-    
-    // Invalidate cache since recency affects rankings
     rankedQueryCache.invalidateAll()
   }
 
@@ -418,20 +411,7 @@ export class MemoryDB {
   public rankedQuery(
     params: MemoryQueryParams & { path_scope?: string[]; limit?: number }
   ): RankedMemoryItem[] {
-    // Check cache first
-    const cacheKey = {
-      category: params.category,
-      tags: params.tags,
-      keyword: params.keyword,
-      repo: params.repo,
-      signature: params.signature,
-      language: params.language,
-      task_type: params.task_type,
-      path_scope: params.path_scope,
-      limit: params.limit
-    }
-    
-    const cached = rankedQueryCache.get<RankedMemoryItem>(cacheKey)
+    const cached = rankedQueryCache.get<RankedMemoryItem>(params)
     if (cached) {
       return cached
     }
@@ -527,10 +507,8 @@ export class MemoryDB {
       })
       .sort((a, b) => b.relevance_score - a.relevance_score)
       .slice(0, params.limit ?? 10)
-      
-    // Cache results
-    rankedQueryCache.set(cacheKey, results)
-    
+
+    rankedQueryCache.set(params, results)
     return results
   }
 
@@ -560,6 +538,7 @@ export class MemoryDB {
 
   public delete(id: number): number {
     const result = this.db.prepare(`DELETE FROM memories WHERE id = ?`).run(id)
+    rankedQueryCache.invalidateAll()
     return result.changes
   }
 
