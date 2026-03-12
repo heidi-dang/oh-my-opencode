@@ -8,6 +8,10 @@ import type {
   AvailableCategory,
 } from "../types";
 import { categorizeTools } from "../prompts";
+import {
+  buildAgentPromptInvariantSection,
+  buildHeidiAgentCapabilityMatrixSection,
+} from "../capability-matrix";
 
 import { buildHephaestusPrompt as buildGptPrompt } from "./gpt";
 import { buildHephaestusPrompt as buildGpt53CodexPrompt } from "./gpt-5-3-codex";
@@ -87,7 +91,7 @@ function buildDynamicHephaestusPrompt(ctx?: HephaestusContext): string {
       break;
   }
 
-  return basePrompt;
+  return `${basePrompt}\n\n${buildHeidiAgentCapabilityMatrixSection(["hephaestus"])}\n\n${buildAgentPromptInvariantSection("hephaestus")}`;
 }
 
 export function createHephaestusAgent(

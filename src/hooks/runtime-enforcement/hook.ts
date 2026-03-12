@@ -37,6 +37,7 @@ export function createRuntimeEnforcementHook(_ctx: PluginInput) {
         ) => {
             const sessionID = output.messages[0]?.info.sessionID
             ledger.startNewFlow(sessionID)
+            let criticalError: Error | undefined
 
             // 1. Redact False Success Claims
             for (let i = 0; i < output.messages.length - 1; i++) {
@@ -156,11 +157,16 @@ export function createRuntimeEnforcementHook(_ctx: PluginInput) {
                             if (part.type === "text" && typeof part.text === "string") {
                                 if (part.text.toLowerCase().includes(check.phrase)) {
                                     part.text = `[REDACTED: False completion claim (${check.phrase})]\n\nI described changes as completed, but the corresponding tool (${check.tool}) was not executed in the current completion flow. My claim has been intercepted.`
+                                    criticalError = new Error(`[Runtime Enforcement Guard] State claim REJECTED: '${check.phrase}' requires ${check.tool} in the current completion flow.`)
                                 }
                             }
                         }
                     }
                 }
+            }
+
+            if (criticalError) {
+                ;(output as { __criticalTransformError?: Error }).__criticalTransformError = criticalError
             }
         }
     }

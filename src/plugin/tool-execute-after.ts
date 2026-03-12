@@ -1,6 +1,7 @@
 import { consumeToolMetadata } from "../features/tool-metadata-store"
 import { log } from "../shared"
 import type { CreatedHooks } from "../create-hooks"
+import { isSafetyCriticalHookError } from "../shared/safety-critical-hook-error"
 
 export function createToolExecuteAfterHandler(args: {
   hooks: CreatedHooks
@@ -79,6 +80,10 @@ export function createToolExecuteAfterHandler(args: {
 
       await hooks.languageIntelligence?.["tool.execute.after"]?.(input, output as any)
     } catch (err: any) {
+      if (isSafetyCriticalHookError(err)) {
+        throw err
+      }
+
       log("[tool-execute-after.ts] Unhandled hook error caught:", { error: err?.message || String(err) })
     }
   }

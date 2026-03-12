@@ -136,7 +136,7 @@ export class MemoryDB {
         registration_order INTEGER,
         metadata TEXT,
         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (session_id, id)
+        PRIMARY KEY (session_id, source, id)
       );
     `)
 
@@ -178,6 +178,65 @@ export class MemoryDB {
     // Remove legacy embeddings BLOB column data (column stays but we stop using it)
     if (existingNames.has("embeddings")) {
       log("[MemoryDB] Legacy embeddings column detected — data will be ignored")
+    }
+
+    this.migrateSessionContextsSchema()
+  }
+
+  private migrateSessionContextsSchema(): void {
+    const columns = this.db.prepare("PRAGMA table_info(session_contexts)").all() as Array<{
+      name: string
+      pk: number
+    }>
+
+    if (columns.length === 0) return
+
+    const primaryKey = columns
+      .filter(column => column.pk > 0)
+      .sort((left, right) => left.pk - right.pk)
+      .map(column => column.name)
+
+    const expectedPrimaryKey = ["session_id", "source", "id"]
+    const hasExpectedPrimaryKey =
+      primaryKey.length === expectedPrimaryKey.length
+      && primaryKey.every((name, index) => name === expectedPrimaryKey[index])
+
+    if (hasExpectedPrimaryKey) return
+
+    log("[MemoryDB] Migrating session_contexts primary key to (session_id, source, id)")
+
+    this.db.run("BEGIN")
+    try {
+      this.db.run(`
+        CREATE TABLE session_contexts_new (
+          id TEXT NOT NULL,
+          session_id TEXT NOT NULL,
+          source TEXT NOT NULL,
+          content TEXT NOT NULL,
+          priority TEXT NOT NULL,
+          persistent INTEGER DEFAULT 0,
+          registration_order INTEGER,
+          metadata TEXT,
+          timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY (session_id, source, id)
+        );
+      `)
+
+      this.db.run(`
+        INSERT INTO session_contexts_new (
+          id, session_id, source, content, priority, persistent, registration_order, metadata, timestamp
+        )
+        SELECT
+          id, session_id, source, content, priority, persistent, registration_order, metadata, timestamp
+        FROM session_contexts
+      `)
+
+      this.db.run(`DROP TABLE session_contexts`)
+      this.db.run(`ALTER TABLE session_contexts_new RENAME TO session_contexts`)
+      this.db.run("COMMIT")
+    } catch (error) {
+      this.db.run("ROLLBACK")
+      throw error
     }
   }
 

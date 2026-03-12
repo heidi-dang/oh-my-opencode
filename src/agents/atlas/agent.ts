@@ -28,6 +28,10 @@ import {
   buildSkillsSection,
   buildDecisionMatrix,
 } from "./prompt-section-builder"
+import {
+  buildAgentPromptInvariantSection,
+  buildHeidiAgentCapabilityMatrixSection,
+} from "../capability-matrix"
 
 const MODE: AgentMode = "all"
 
@@ -90,12 +94,12 @@ function buildDynamicOrchestratorPrompt(ctx?: OrchestratorContext): string {
 
   const basePrompt = getAtlasPrompt(model)
 
-  return basePrompt
+  return `${basePrompt
     .replace("{CATEGORY_SECTION}", categorySection)
     .replace("{AGENT_SECTION}", agentSection)
     .replace("{DECISION_MATRIX}", decisionMatrix)
     .replace("{SKILLS_SECTION}", skillsSection)
-    .replace("{{CATEGORY_SKILLS_DELEGATION_GUIDE}}", categorySkillsGuide)
+    .replace("{{CATEGORY_SKILLS_DELEGATION_GUIDE}}", categorySkillsGuide)}\n\n${buildHeidiAgentCapabilityMatrixSection(["atlas", "sisyphus", "hephaestus", "prometheus"])}\n\n${buildAgentPromptInvariantSection("atlas")}`
 }
 
 export function createAtlasAgent(ctx: OrchestratorContext): AgentConfig {

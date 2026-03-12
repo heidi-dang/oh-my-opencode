@@ -7,6 +7,10 @@ import { PROMETHEUS_BEHAVIORAL_SUMMARY } from "./behavioral-summary"
 import { getGptPrometheusPrompt } from "./gpt"
 import { getGeminiPrometheusPrompt } from "./gemini"
 import { isGptModel, isGeminiModel } from "../types"
+import {
+  buildAgentPromptInvariantSection,
+  buildHeidiAgentCapabilityMatrixSection,
+} from "../capability-matrix"
 
 /**
  * Combined Prometheus system prompt (Claude-optimized, default).
@@ -54,14 +58,20 @@ export function getPrometheusPromptSource(model?: string): PrometheusPromptSourc
  */
 export function getPrometheusPrompt(model?: string): string {
   const source = getPrometheusPromptSource(model)
+  let prompt: string
 
   switch (source) {
     case "gpt":
-      return getGptPrometheusPrompt()
+      prompt = getGptPrometheusPrompt()
+      break
     case "gemini":
-      return getGeminiPrometheusPrompt()
+      prompt = getGeminiPrometheusPrompt()
+      break
     case "default":
     default:
-      return PROMETHEUS_SYSTEM_PROMPT
+      prompt = PROMETHEUS_SYSTEM_PROMPT
+      break
   }
+
+  return `${prompt}\n\n${buildHeidiAgentCapabilityMatrixSection(["prometheus"])}\n\n${buildAgentPromptInvariantSection("prometheus")}`
 }

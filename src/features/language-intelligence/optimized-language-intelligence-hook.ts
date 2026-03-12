@@ -76,10 +76,9 @@ export function createOptimizedLanguageIntelligenceHook(args: LanguageIntelligen
 
         activePacks.set(sessionID, route.pack)
 
-        // Get cached examples or extract if needed
         let examplesContext = cachedExamples
         if (!examplesContext || (now - examplesTimestamp) > examplesCacheTTL) {
-          const [examples] = await Promise.all([
+          await Promise.all([
             exampleExtractor.extractIfNeeded()
           ])
           examplesContext = exampleExtractor.formatForInjection()
@@ -87,20 +86,85 @@ export function createOptimizedLanguageIntelligenceHook(args: LanguageIntelligen
           examplesTimestamp = now
         }
 
-        // Format and inject context
-        const context = formatLanguageContext(route, profile)
+        const memoryContext = memory.formatForInjection(profile.primary)
+
+        let context = formatLanguageContext(route, profile)
+        if (examplesContext) {
+          context += `\n\n${examplesContext}`
+        }
+        if (memoryContext) {
+          context += `\n\n${memoryContext}`
+        }
+
         collector.register(sessionID, {
           id: "language-intelligence",
-          source: "language-intelligence" as any,
+          source: "custom",
           content: context,
           priority: "high",
-          persistent: false
+          persistent: true,
+          metadata: {
+            type: "language-intelligence",
+            language: profile.primary,
+            taskClass: route.taskClass,
+            stepbook: route.stepbook?.id,
+          },
+        })
+          log("[Heidi Language Intelligence] Injected language context", {
+            sessionID,
+            language: profile.primary,
+            confidence: profile.confidence,
+            stepbook: route.stepbook?.id ?? "none",
+          })
+
+<<<<<<< HEAD
+=======
+        log("[Heidi Language Intelligence] Injected language context", {
+          sessionID,
+          language: profile.primary,
+          confidence: profile.confidence,
+          stepbook: route.stepbook?.id ?? "none",
         })
 
+>>>>>>> dfb6377a (chore(agents): add Heidi capability matrix, wire into prompts, add invariants/tests; fix hephaestus model selector)
       } catch (error) {
-        log("[LanguageIntelligence] Error processing message", { 
-          sessionID, 
-          error: error instanceof Error ? error.message : String(error) 
+        log("[Heidi Language Intelligence] Detection/Injection failed", {
+          error: String(error),
+        })
+      }
+    },
+
+    "tool.execute.after": async (
+      input: { tool: string; sessionID: string; callID: string },
+      output: { title: string; output: string; metadata: unknown }
+    ) => {
+      const pack = activePacks.get(input.sessionID)
+      if (!pack) return
+
+      const commandTools = ["bash", "terminal", "execute_command", "shell", "git"]
+      const toolName = input.tool.toLowerCase()
+      if (!commandTools.some((tool) => toolName.includes(tool))) return
+
+      try {
+        const failureContext = formatFailureContext(pack, output.output)
+        if (!failureContext) return
+
+        collector.register(input.sessionID, {
+          id: `failure-diagnosis-${input.callID}`,
+          source: "custom",
+          content: failureContext,
+          priority: "critical",
+          persistent: false,
+          metadata: { type: "failure-diagnosis", tool: input.tool },
+        })
+
+        log("[Heidi Language Intelligence] Failure signature matched", {
+          sessionID: input.sessionID,
+          tool: input.tool,
+          language: pack.language,
+        })
+      } catch (error) {
+        log("[Heidi Language Intelligence] Diagnosis failed", {
+          error: String(error),
         })
       }
     },
@@ -113,7 +177,6 @@ export function createOptimizedLanguageIntelligenceHook(args: LanguageIntelligen
     },
 
     "session.deleted": async (input: { sessionID: string }) => {
-      // Clean up session-specific data
       const sessionID = input.sessionID
       detectedProfiles.delete(sessionID)
       activePacks.delete(sessionID)

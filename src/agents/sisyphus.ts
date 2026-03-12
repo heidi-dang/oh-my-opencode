@@ -9,6 +9,10 @@ import {
   buildGeminiToolGuide,
   buildGeminiToolCallExamples,
 } from "./sisyphus-gemini-overlays";
+import {
+  buildAgentPromptInvariantSection,
+  buildHeidiAgentCapabilityMatrixSection,
+} from "./capability-matrix";
 
 const MODE: AgentMode = "all";
 export const SISYPHUS_PROMPT_METADATA: AgentPromptMetadata = {
@@ -595,6 +599,8 @@ export function createSisyphusAgent(
       useTaskSystem,
     )
     : buildDynamicSisyphusPrompt(model, [], tools, skills, categories, useTaskSystem);
+
+  prompt = `${prompt}\n\n${buildHeidiAgentCapabilityMatrixSection(["sisyphus", "hephaestus", "prometheus", "atlas"])}\n\n${buildAgentPromptInvariantSection("sisyphus")}`;
 
   if (isGeminiModel(model)) {
     // 1. Intent gate + tool mandate — early in prompt (after intent verbalization)

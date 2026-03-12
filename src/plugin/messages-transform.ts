@@ -1,6 +1,7 @@
 import type { Message, Part } from "@opencode-ai/sdk"
 
 import type { CreatedHooks } from "../create-hooks"
+import { isSafetyCriticalHookError } from "../shared/safety-critical-hook-error"
 
 type MessageWithParts = {
   info: Message
@@ -17,6 +18,11 @@ export function createMessagesTransformHandler(args: {
       await args.hooks.runtimeEnforcement?.[
         "experimental.chat.messages.transform"
       ]?.(input, output)
+
+      const criticalTransformError = (output as MessagesTransformOutput & { __criticalTransformError?: Error }).__criticalTransformError
+      if (criticalTransformError) {
+        throw criticalTransformError
+      }
 
       await args.hooks.contextInjectorMessagesTransform?.[
         "experimental.chat.messages.transform"
@@ -38,6 +44,10 @@ export function createMessagesTransformHandler(args: {
         "experimental.chat.messages.transform"
       ]?.(input, output)
     } catch (error) {
+      if (isSafetyCriticalHookError(error)) {
+        throw error
+      }
+
       console.error("[Transform Boundary Error] Caught unhandled exception in message transform:", error)
       // We log but DO NOT throw, to ensure the session rendering loop remains intact.
     }

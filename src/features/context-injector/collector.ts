@@ -9,6 +9,21 @@ import type {
 
 const CONTEXT_SEPARATOR = "\n\n---\n\n";
 
+function serializeMetadata(metadata?: Record<string, unknown>): string | null {
+  if (!metadata) return null;
+  return JSON.stringify(metadata);
+}
+
+function parseMetadata(value: unknown): Record<string, unknown> | undefined {
+  if (typeof value !== "string" || value.length === 0) return undefined;
+
+  try {
+    return JSON.parse(value) as Record<string, unknown>;
+  } catch {
+    return undefined;
+  }
+}
+
 /** Lock for serializing DB access to prevent SQLITE_BUSY */
 let dbLock = false;
 const dbLockQueue: (() => void)[] = [];
@@ -53,7 +68,7 @@ export class ContextCollector {
       INSERT OR REPLACE INTO session_contexts 
       (id, session_id, source, content, priority, persistent, registration_order, metadata)
       VALUES ($id, $session_id, $source, $content, $priority, $persistent, 
-              (SELECT COALESCE(MAX(registration_order), 0) + 1 FROM session_contexts), $metadata)
+              (SELECT COALESCE(MAX(registration_order), 0) + 1 FROM session_contexts WHERE session_id = $session_id), $metadata)
     `);
 
     query.run({
@@ -63,7 +78,7 @@ export class ContextCollector {
       $content: options.content,
       $priority: options.priority ?? "normal",
       $persistent: options.persistent ? 1 : 0,
-      $metadata: options.metadata || null
+      $metadata: serializeMetadata(options.metadata)
     });
   }
 
@@ -81,7 +96,7 @@ export class ContextCollector {
       content: row.content,
       priority: row.priority as ContextPriority,
       registrationOrder: row.registration_order,
-      metadata: row.metadata,
+      metadata: parseMetadata(row.metadata),
       persistent: row.persistent === 1
     };
   }
@@ -109,7 +124,7 @@ export class ContextCollector {
       content: row.content,
       priority: row.priority as ContextPriority,
       registrationOrder: row.registration_order,
-      metadata: row.metadata,
+      metadata: parseMetadata(row.metadata),
       persistent: row.persistent === 1
     }));
 

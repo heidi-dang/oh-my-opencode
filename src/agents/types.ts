@@ -119,6 +119,10 @@ export function isGpt5_4Model(model: string): boolean {
 
 export function isGpt5_3CodexModel(model: string): boolean {
   const modelName = extractModelName(model).toLowerCase()
+  if (modelName === "o3-mini") {
+    return true
+  }
+
   return (modelName.includes("gpt-5") || modelName.includes("gpt-4o")) && modelName.includes("codex")
 }
 

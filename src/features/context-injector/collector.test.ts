@@ -101,6 +101,29 @@ describe("ContextCollector", () => {
       const pending = collector.getPending(sessionID)
       expect(pending.entries).toHaveLength(2)
     })
+
+    it("round-trips metadata as an object", () => {
+      const sessionID = "ses_metadata"
+
+      collector.register(sessionID, {
+        id: "ctx-meta",
+        source: "custom",
+        content: "metadata content",
+        metadata: {
+          type: "language-intelligence",
+          language: "typescript",
+          stepbook: "fix-build",
+        },
+      })
+
+      const pending = collector.getPending(sessionID)
+      expect(pending.entries).toHaveLength(1)
+      expect(pending.entries[0].metadata).toEqual({
+        type: "language-intelligence",
+        language: "typescript",
+        stepbook: "fix-build",
+      })
+    })
   })
 
   describe("getPending", () => {
