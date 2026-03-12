@@ -119,9 +119,9 @@ export class RunStateWatchdogManager {
     if (!this.client) return undefined;
     try {
       const clientAny = this.client as any;
-      const session = clientAny.session;
+      const session = clientAny?.session;
       if (!session) return undefined;
-      const stateFn = session.state;
+      const stateFn = session?.state;
       if (typeof stateFn !== 'function') return undefined;
       const sessionState = stateFn.call(session, { path: { id: sessionID } });
       return sessionState?.modelID;
@@ -132,6 +132,17 @@ export class RunStateWatchdogManager {
 
   private async checkStalledRuns() {
     try {
+      if (!this.client) {
+        log("[RunStateWatchdog] Skipping checkStalledRuns - no client available")
+        return
+      }
+
+      const clientAny = this.client as any
+      if (!clientAny?.session) {
+        log("[RunStateWatchdog] Skipping checkStalledRuns - no client.session available")
+        return
+      }
+
       const now = Date.now()
       for (const [sessionID, ctx] of this.activeSessions.entries()) {
         if (ctx.currentState !== "running" && ctx.currentState !== "waiting") continue
@@ -165,18 +176,13 @@ export class RunStateWatchdogManager {
           this.nudgedSessions.delete(sessionID)
 
           try {
-            const session = this.client?.session
+            const session = clientAny?.session
             if (session && typeof session.abort === "function") {
-              const reason = `Session terminated due to auto-stall detection (${Math.round(timeSinceLastActivity / 1000)}s inactivity)`;  
-              log(`[RunStateWatchdog] TERMINATING stalled session ${sessionID}: ${reason}`);  
-              
-              if (session && typeof session.abort === 'function') {  
-                session.abort({ path: { id: sessionID } }).catch((err: unknown) => {  
-                  log(`[RunStateWatchdog] Failed to abort stalled session ${sessionID}`, { error: String(err) });  
-                });  
-              } else {  
-                log(`[RunStateWatchdog] Cannot abort session ${sessionID}: client.session.abort not available`);  
-              }
+              const reason = `Session terminated due to auto-stall detection (${Math.round(timeSinceLastActivity / 1000)}s inactivity)`;
+              log(`[RunStateWatchdog] TERMINATING stalled session ${sessionID}: ${reason}`);
+              session.abort({ path: { id: sessionID } }).catch((err: unknown) => {
+                log(`[RunStateWatchdog] Failed to abort stalled session ${sessionID}`, { error: String(err) });
+              });
             } else {
               log(`[RunStateWatchdog] Cannot abort session ${sessionID}: client.session.abort not available`)
             }

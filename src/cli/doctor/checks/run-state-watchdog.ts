@@ -21,6 +21,7 @@ export const checkRunStateWatchdog: CheckDefinition = {
             }  
           }
         
+        try {
         // Use a 5ms interval, 20ms stall threshold for fast execution
         const manager = new RunStateWatchdogManager(mockClient as any, { pollingIntervalMs: 5, stallThresholdMs: 20 })
 
@@ -59,6 +60,15 @@ export const checkRunStateWatchdog: CheckDefinition = {
         }
         
         manager.stop()
+        } catch (err) {
+            hasError = true
+            issues.push({
+                severity: "error",
+                title: "Watchdog Check Error",
+                description: `Watchdog check threw an error: ${err instanceof Error ? err.message : String(err)}`,
+                fix: "Debug the RunStateWatchdogManager implementation."
+            })
+        }
 
         if (hasError) {
             return {

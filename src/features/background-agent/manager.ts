@@ -421,9 +421,11 @@ export class BackgroundManager {
         }
 
         // Abort the session to prevent infinite polling hang
-        this.client.session.abort({
-          path: { id: sessionID },
-        }).catch(() => {})
+        try {
+          this.client?.session?.abort({
+            path: { id: sessionID },
+          }).catch(() => {})
+        } catch {}
 
         this.markForNotification(existingTask)
         this.cleanupPendingByParent(existingTask)
@@ -803,9 +805,11 @@ export class BackgroundManager {
 
       // Abort the session to prevent infinite polling hang
       if (existingTask.sessionID) {
-        this.client.session.abort({
-          path: { id: existingTask.sessionID },
-        }).catch(() => {})
+        try {
+          this.client?.session?.abort({
+            path: { id: existingTask.sessionID },
+          }).catch(() => {})
+        } catch {}
       }
 
       this.markForNotification(existingTask)
@@ -1305,11 +1309,11 @@ export class BackgroundManager {
     this.cleanupPendingByParent(task)
 
     if (abortSession && task.sessionID) {
-      this.client.session.abort({
-        path: { id: task.sessionID },
-      }).catch(() => {})
-
-      SessionCategoryRegistry.remove(task.sessionID)
+      try {
+        this.client?.session?.abort({
+          path: { id: task.sessionID },
+        }).catch(() => {})
+      } catch {}
     }
 
     if (options?.skipNotification) {
@@ -1431,11 +1435,11 @@ export class BackgroundManager {
     }
 
     if (task.sessionID) {
-      this.client.session.abort({
-        path: { id: task.sessionID },
-      }).catch(() => {})
-
-      SessionCategoryRegistry.remove(task.sessionID)
+      try {
+        this.client?.session?.abort({
+          path: { id: task.sessionID },
+        }).catch(() => {})
+      } catch {}
     }
 
     // Fire-and-forget notification to avoid potential deadlock
@@ -1867,9 +1871,11 @@ Use \`background_output(task_id="${task.id}")\` to retrieve this result when rea
     // Abort all running sessions to prevent zombie processes (#1240)
     for (const task of this.tasks.values()) {
       if (task.status === "running" && task.sessionID) {
-        this.client.session.abort({
-          path: { id: task.sessionID },
-        }).catch(() => {})
+        try {
+          this.client?.session?.abort({
+            path: { id: task.sessionID },
+          }).catch(() => {})
+        } catch {}
       }
     }
 
