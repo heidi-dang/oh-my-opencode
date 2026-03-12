@@ -14,10 +14,10 @@ export const checkStability: CheckDefinition = {
         let hasError = false
 
         // 1. Verify Watchdog Threshold (90s default)
-        const watchdogManager = new RunStateWatchdogManager({ 
-            session: { abort: async () => ({ data: {} }) },
-            tui: { showToast: async () => ({ data: {} }) }
-        } as any)
+        const watchdogManager = new RunStateWatchdogManager({   
+            session: { state: () => ({}), abort: async () => ({ data: {} }) },  
+            tui: { showToast: async () => ({ data: {} }) }  
+          } as any)
         const threshold = (watchdogManager as any).stallThresholdMs
         if (threshold !== 90000) {
             hasError = true

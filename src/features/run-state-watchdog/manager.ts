@@ -116,11 +116,17 @@ export class RunStateWatchdogManager {
   }
 
   private getModelID(sessionID: string): string | undefined {
+    if (!this.client) return undefined;
     try {
-      const sessionState = (this.client as any).session?.state?.({ path: { id: sessionID } })
-      return sessionState?.modelID
+      const clientAny = this.client as any;
+      const session = clientAny.session;
+      if (!session) return undefined;
+      const stateFn = session.state;
+      if (typeof stateFn !== 'function') return undefined;
+      const sessionState = stateFn.call(session, { path: { id: sessionID } });
+      return sessionState?.modelID;
     } catch {
-      return undefined
+      return undefined;
     }
   }
 
@@ -161,16 +167,16 @@ export class RunStateWatchdogManager {
           try {
             const session = this.client?.session
             if (session && typeof session.abort === "function") {
-              const reason = `Session terminated due to auto-stall detection (${Math.round(timeSinceLastActivity / 1000)}s inactivity)`;
-              log(`[RunStateWatchdog] TERMINATING stalled session ${sessionID}: ${reason}`);
+              const reason = `Session terminated due to auto-stall detection (${Math.round(timeSinceLastActivity / 1000)}s inactivity)`;  
+              log(`[RunStateWatchdog] TERMINATING stalled session ${sessionID}: ${reason}`);  
               
-              // Use any cast to allow passing reason to abort body for UI propagation enrichment
-              (session as any).abort({
-                path: { id: sessionID },
-                body: { reason }
-              }).catch((err: unknown) => {
-                log(`[RunStateWatchdog] Failed to abort stalled session ${sessionID}`, { error: String(err) })
-              });
+              if (session && typeof session.abort === 'function') {  
+                session.abort({ path: { id: sessionID } }).catch((err: unknown) => {  
+                  log(`[RunStateWatchdog] Failed to abort stalled session ${sessionID}`, { error: String(err) });  
+                });  
+              } else {  
+                log(`[RunStateWatchdog] Cannot abort session ${sessionID}: client.session.abort not available`);  
+              }
             } else {
               log(`[RunStateWatchdog] Cannot abort session ${sessionID}: client.session.abort not available`)
             }

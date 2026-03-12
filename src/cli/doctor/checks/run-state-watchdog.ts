@@ -11,14 +11,15 @@ export const checkRunStateWatchdog: CheckDefinition = {
         let hasError = false
 
         let toastCalls = 0
-        const mockClient = {
-            tui: {
-                showToast: async () => { toastCalls++; return { data: {} } }
-            },
-            session: {
-                abort: async () => ({ data: {} })
-            }
-        }
+        const mockClient = {  
+            tui: {  
+              showToast: async () => { toastCalls++; return { data: {} } }  
+            },  
+            session: {  
+              state: () => ({}),  
+              abort: async () => ({ data: {} })  
+            }  
+          }
         
         // Use a 5ms interval, 20ms stall threshold for fast execution
         const manager = new RunStateWatchdogManager(mockClient as any, { pollingIntervalMs: 5, stallThresholdMs: 20 })
@@ -27,8 +28,8 @@ export const checkRunStateWatchdog: CheckDefinition = {
         manager.updateState("sess-doctor", "running")
         manager.recordActivity("sess-doctor", "text")
         
-        // Wait longer than stall threshold
-        await new Promise(r => setTimeout(r, 25))
+        // Wait for warn threshold (0.5-0.6 ratio) ~12ms for 20ms threshold  
+        await new Promise(r => setTimeout(r, 12))  
         await (manager as any).checkStalledRuns()
         
         if (toastCalls === 0) {
