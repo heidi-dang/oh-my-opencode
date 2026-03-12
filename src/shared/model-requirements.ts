@@ -25,9 +25,8 @@ const DEFAULT_AGENT_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {
   },
   hephaestus: {
     fallbackChain: [
-      { providers: ["openai", "venice", "github-copilot", "opencode"], model: "gpt-5.3-codex", variant: "medium" },
-      { providers: ["github-copilot"], model: "gpt-5.2", variant: "medium" },
-      { providers: ["openai", "github-copilot", "opencode"], model: "gpt-4o", variant: "medium" },
+      { providers: ["openai", "venice", "github-copilot", "opencode"], model: "gpt-4o", variant: "medium" },
+      { providers: ["github-copilot"], model: "gpt-4o-mini", variant: "medium" },
       { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-3-5-sonnet", variant: "max" },
     ],
     requiresAnyModel: true,
@@ -90,7 +89,7 @@ const DEFAULT_AGENT_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {
   },
   heidi: {
     fallbackChain: [
-      { providers: ["github-copilot"], model: "gpt-5-mini", variant: "low" },
+      { providers: ["github-copilot"], model: "gpt-4o-mini", variant: "low" },
       { providers: ["openai", "github-copilot", "opencode"], model: "gpt-4o-mini", variant: "low" },
       { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-3-5-haiku" },
       { providers: ["google", "github-copilot", "opencode"], model: "gemini-1.5-flash" },
@@ -134,13 +133,13 @@ const DEFAULT_CATEGORY_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {
     fallbackChain: [
       { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-3-5-haiku" },
       { providers: ["google", "github-copilot", "opencode"], model: "gemini-1.5-flash" },
-      { providers: ["opencode"], model: "gpt-4o-mini" },
+      { providers: ["openai", "github-copilot", "opencode"], model: "gpt-4o-mini" },
     ],
   },
   "unspecified-low": {
     fallbackChain: [
       { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-3-5-sonnet" },
-      { providers: ["openai", "opencode"], model: "gpt-4o", variant: "medium" },
+      { providers: ["openai", "github-copilot", "opencode"], model: "gpt-4o", variant: "medium" },
       { providers: ["google", "github-copilot", "opencode"], model: "gemini-1.5-flash" },
     ],
   },

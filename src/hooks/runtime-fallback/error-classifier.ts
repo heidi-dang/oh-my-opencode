@@ -92,6 +92,14 @@ export function classifyErrorType(error: unknown): string | undefined {
     return "model_not_found"
   }
 
+  if (/requested model.*not supported|model.*not available|invalid model|unknown model/i.test(message)) {
+    return "model_not_supported"
+  }
+
+  if (errorName?.includes("rateLimitError") || /rate.?limit|too.?many.?requests|quota.?exceeded/i.test(message)) {
+    return "rate_limit"
+  }
+
   return undefined
 }
 
@@ -158,6 +166,14 @@ export function isRetryableError(error: unknown, retryOnErrors: number[]): boole
   }
 
   if (errorType === "model_not_found") {
+    return true
+  }
+
+  if (errorType === "model_not_supported") {
+    return true
+  }
+
+  if (errorType === "rate_limit") {
     return true
   }
 

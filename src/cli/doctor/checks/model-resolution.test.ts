@@ -14,7 +14,7 @@ describe("model-resolution check", () => {
       // then: Should have agent entries
       const sisyphus = info.agents.find((a) => a.name === "sisyphus")
       expect(sisyphus).toBeDefined()
-      expect(sisyphus!.requirement.fallbackChain[0]?.model).toBe("claude-3-5-sonnet")
+      expect(sisyphus!.requirement.fallbackChain[0]?.model).toBe("claude-sonnet-4-6")
       expect(sisyphus!.requirement.fallbackChain[0]?.providers).toContain("anthropic")
     })
 

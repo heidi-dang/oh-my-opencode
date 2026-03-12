@@ -376,7 +376,7 @@ describe("generateModelConfig", () => {
       const result = generateModelConfig(config)
 
       // #then
-      expect(result.agents?.sisyphus?.model).toBe("anthropic/claude-opus-4-6")
+      expect(result.agents?.sisyphus?.model).toBe("anthropic/claude-sonnet-4-5")
     })
 
     test("Sisyphus is created when multiple fallback providers are available", () => {
@@ -393,7 +393,7 @@ describe("generateModelConfig", () => {
       const result = generateModelConfig(config)
 
       // #then
-      expect(result.agents?.sisyphus?.model).toBe("anthropic/claude-opus-4-6")
+      expect(result.agents?.sisyphus?.model).toBe("anthropic/claude-sonnet-4-5")
     })
 
     test("Sisyphus is omitted when no fallback provider is available (OpenAI not in chain)", () => {
@@ -417,7 +417,7 @@ describe("generateModelConfig", () => {
       const result = generateModelConfig(config)
 
       // #then
-      expect(result.agents?.hephaestus?.model).toBe("openai/gpt-5.3-codex")
+      expect(result.agents?.hephaestus?.model).toBe("openai/gpt-4o")
       expect(result.agents?.hephaestus?.variant).toBe("medium")
     })
 
@@ -428,9 +428,9 @@ describe("generateModelConfig", () => {
       // #when
       const result = generateModelConfig(config)
 
-      // #then - hephaestus now uses claude-opus-4-6 via Copilot fallback
-      expect(result.agents?.hephaestus?.model).toBe("github-copilot/claude-opus-4.6")
-      expect(result.agents?.hephaestus?.variant).toBe("max")
+      // #then - hephaestus now uses gpt-4o-mini via Copilot fallback
+      expect(result.agents?.hephaestus?.model).toBe("github-copilot/gpt-4o-mini")
+      expect(result.agents?.hephaestus?.variant).toBe("medium")
     })
 
     test("Hephaestus is created when OpenCode Zen is available (opencode provider connected)", () => {
@@ -441,7 +441,7 @@ describe("generateModelConfig", () => {
       const result = generateModelConfig(config)
 
       // #then
-      expect(result.agents?.hephaestus?.model).toBe("opencode/gpt-5.3-codex")
+      expect(result.agents?.hephaestus?.model).toBe("opencode/gpt-4o")
       expect(result.agents?.hephaestus?.variant).toBe("medium")
     })
 
@@ -452,8 +452,8 @@ describe("generateModelConfig", () => {
       // #when
       const result = generateModelConfig(config)
 
-      // #then - hephaestus now uses claude-opus-4-6 via Claude fallback
-      expect(result.agents?.hephaestus?.model).toBe("anthropic/claude-opus-4-6")
+      // #then - hephaestus now uses claude-sonnet-4-5 via Claude fallback
+      expect(result.agents?.hephaestus?.model).toBe("anthropic/claude-sonnet-4-5")
       expect(result.agents?.hephaestus?.variant).toBe("max")
     })
 
