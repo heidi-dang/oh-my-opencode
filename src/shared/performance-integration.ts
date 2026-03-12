@@ -11,6 +11,7 @@ import { log } from "./logger"
 import { perfMonitor, BaselineMetrics } from "./performance-monitor"
 import { fileSystemCache } from "./file-system-cache"
 import { sessionStateCache } from "./session-state-cache"
+import { rankedQueryCache } from "./ranked-query-cache"
 import { adaptivePoller } from "./adaptive-poller"
 import { SafeProductionDefaults, AggressiveTestingSettings } from "../config/schema/performance-optimizations"
 
@@ -55,6 +56,11 @@ export function initializePerformanceOptimizations(
   // Wave 4: Polling consolidation
   if (effectiveConfig.enableConsolidatedPolling) {
     initializeAdaptivePoller()
+  }
+  
+  // Wave 5: Ranked query cache
+  if (effectiveConfig.enableRankedQueryCache) {
+    initializeRankedQueryCache()
   }
   
   return {
@@ -146,6 +152,29 @@ function initializeAdaptivePoller(): void {
 }
 
 /**
+ * Initialize ranked query cache
+ */
+function initializeRankedQueryCache(): void {
+  log("[Performance] Ranked query cache enabled")
+  
+  // Auto-cleanup expired entries every minute
+  setInterval(() => {
+    const cleaned = rankedQueryCache.cleanup()
+    const stats = rankedQueryCache.getStats()
+    
+    if (stats.hits + stats.misses > 0) {
+      log("[Performance] Ranked query cache stats", {
+        hitRate: (stats.hitRate * 100).toFixed(1) + '%',
+        size: stats.size,
+        hits: stats.hits,
+        misses: stats.misses,
+        cleaned: cleaned
+      })
+    }
+  }, 60000)
+}
+
+/**
  * Get performance report for diagnostics
  */
 export function getPerformanceReport(): Record<string, unknown> {
@@ -153,6 +182,7 @@ export function getPerformanceReport(): Record<string, unknown> {
     monitoring: perfMonitor.report(),
     fileCache: fileSystemCache.getStats(),
     sessionCache: sessionStateCache.getStats(),
+    rankedQueryCache: rankedQueryCache.getStats(),
     pollers: {
       count: adaptivePoller.getPollerCount()
     }
@@ -195,5 +225,6 @@ export {
   perfMonitor,
   fileSystemCache,
   sessionStateCache,
-  adaptivePoller
+  adaptivePoller,
+  rankedQueryCache
 }

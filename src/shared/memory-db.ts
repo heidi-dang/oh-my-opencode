@@ -3,6 +3,7 @@ import { join } from "node:path"
 import { existsSync, mkdirSync } from "node:fs"
 import { getOpenCodeConfigDir } from "./opencode-config-dir"
 import { log } from "./logger"
+import { rankedQueryCache } from "./ranked-query-cache"
 
 export type MemoryCategory =
   | "failure_signature"
@@ -305,6 +306,10 @@ export class MemoryDB {
         )
 
         log(`[MemoryDB] Upserted memory id=${existing.id} (${item.category}/${effectiveSignature})`)
+        
+        // Invalidate ranked query cache for this category
+        rankedQueryCache.invalidateCategory(item.category)
+        
         return existing.id
       }
     }
@@ -331,6 +336,9 @@ export class MemoryDB {
       now
     )
 
+    // Invalidate ranked query cache for this category
+    rankedQueryCache.invalidateCategory(item.category)
+
     return result.lastInsertRowid as number
   }
 
@@ -339,6 +347,9 @@ export class MemoryDB {
    */
   public markUsed(id: number): void {
     this.db.prepare(`UPDATE memories SET last_used_at = ? WHERE id = ?`).run(Date.now(), id)
+    
+    // Invalidate cache since recency affects rankings
+    rankedQueryCache.invalidateAll()
   }
 
   /**
@@ -392,6 +403,8 @@ export class MemoryDB {
   /**
    * Ranked retrieval — queries memories and scores them by relevance to the
    * current context. Results are ordered by composite score, not just recency.
+   * 
+   * Now with LRU caching for repeated queries.
    *
    * Ranking priority:
    *   1. Exact repo match
@@ -405,6 +418,24 @@ export class MemoryDB {
   public rankedQuery(
     params: MemoryQueryParams & { path_scope?: string[]; limit?: number }
   ): RankedMemoryItem[] {
+    // Check cache first
+    const cacheKey = {
+      category: params.category,
+      tags: params.tags,
+      keyword: params.keyword,
+      repo: params.repo,
+      signature: params.signature,
+      language: params.language,
+      task_type: params.task_type,
+      path_scope: params.path_scope,
+      limit: params.limit
+    }
+    
+    const cached = rankedQueryCache.get<RankedMemoryItem>(cacheKey)
+    if (cached) {
+      return cached
+    }
+
     // Broad candidate pool: category-filtered, but allow repo-global fallback
     // Use only category as hard filter; everything else is scored in app code
     const candidates = this.query({
@@ -421,7 +452,7 @@ export class MemoryDB {
       ? normalizeTags(params.tags).split(",")
       : []
 
-    return candidates
+    const results = candidates
       .map(item => {
         let score = 0
 
@@ -496,6 +527,11 @@ export class MemoryDB {
       })
       .sort((a, b) => b.relevance_score - a.relevance_score)
       .slice(0, params.limit ?? 10)
+      
+    // Cache results
+    rankedQueryCache.set(cacheKey, results)
+    
+    return results
   }
 
   /**

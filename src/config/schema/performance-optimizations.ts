@@ -28,7 +28,7 @@ export const PerformanceOptimizationsSchema = z.object({
   enableHoistedPatterns: z.boolean().default(true),
   
   // Wave 5: Profile-dependent (default off)
-  enableRankedQueryCache: z.boolean().default(false),
+  enableRankedQueryCache: z.boolean().default(true),
 }).describe("Performance optimization feature flags")
 
 export type PerformanceOptimizations = z.infer<typeof PerformanceOptimizationsSchema>
@@ -45,7 +45,7 @@ export const SafeProductionDefaults: PerformanceOptimizations = {
   enableSafeParallelization: true,     // Enabled - controlled concurrency
   enableConsolidatedPolling: true,      // Enabled - adaptive intervals
   enableHoistedPatterns: true,         // Safe - minor improvement
-  enableRankedQueryCache: false,       // Profile first
+  enableRankedQueryCache: true,       // Enabled - LRU cache with TTL
 }
 
 // Aggressive settings for testing
