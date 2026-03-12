@@ -21,6 +21,7 @@ import { TmuxConfigSchema } from "./tmux"
 import { StartWorkConfigSchema } from "./start-work"
 import { WebsearchConfigSchema } from "./websearch"
 import { SandboxConfigSchema } from "./sandbox"
+import { PerformanceOptimizationsSchema } from "./performance-optimizations"
 
 
 export const ProviderConfigSchema = z.object({
@@ -77,6 +78,8 @@ export const OhMyOpenCodeConfigSchema = z.object({
   sandbox: SandboxConfigSchema.optional(),
   sisyphus: SisyphusConfigSchema.optional(),
   start_work: StartWorkConfigSchema.optional(),
+  /** Performance optimization feature flags */
+  performance: PerformanceOptimizationsSchema.optional(),
   /** Migration history to prevent re-applying migrations (e.g., model version upgrades) */
   _migrations: z.array(z.string()).optional(),
 })
