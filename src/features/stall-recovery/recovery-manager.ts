@@ -17,6 +17,7 @@ import { requestTransition } from "../controlled-agent-runtime/runtime-gates"
 import { memoryDB } from "../../shared/memory-db"
 import type { TaskRecord } from "../controlled-agent-runtime/task-record"
 import type { StallSymptom, RecoveryAttempt, RecoveryStepResult } from "./types"
+import { getStalledProcesses, killTrackedProcess } from "./process-liveness"
 
 /**
  * Try to recover from a detected stall, escalating through the recovery ladder.
@@ -72,8 +73,15 @@ export async function tryRecovery(
     return attempt
   }
 
-  // Step C: Process sync (placeholder — needs process-liveness tracker)
-  attempt.steps_taken.push("process_sync: skipped (no tracked processes)")
+  // Step C: Process sync
+  const processSyncResult = stepProcessSync(sessionID)
+  attempt.steps_taken.push(`process_sync: ${processSyncResult}`)
+  if (processSyncResult === "process_killed") {
+    attempt.resolved = true
+    attempt.ended_at = Date.now()
+    storeRecoverySignature(sessionID, symptom, attempt)
+    return attempt
+  }
 
   // Step D: Escalate to sub-agent
   log(`[RecoveryManager] Soft recovery failed. Escalating to SUBAGENT_DEBUGGING for session ${sessionID}`)
@@ -132,6 +140,31 @@ function stepNudge(sessionID: string, task: TaskRecord): RecoveryStepResult {
       log(`[RecoveryManager] Nudged: forced AUTO_RECOVERING → EXECUTING`)
       return "nudged"
     }
+  }
+
+  return "failed"
+}
+
+/**
+ * Step C: Identify and terminate stalled or orphaned background processes.
+ */
+function stepProcessSync(sessionID: string): RecoveryStepResult {
+  const stalled = getStalledProcesses(sessionID)
+  if (stalled.length === 0) {
+    return "failed"
+  }
+
+  let killedCount = 0
+  for (const proc of stalled) {
+    if (proc.cancelable) {
+      const success = killTrackedProcess(proc.pid)
+      if (success) killedCount++
+    }
+  }
+
+  if (killedCount > 0) {
+    log(`[RecoveryManager] Process sync: terminated ${killedCount} stalled/orphaned process(es)`)
+    return "process_killed"
   }
 
   return "failed"

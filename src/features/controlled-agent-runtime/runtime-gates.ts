@@ -9,7 +9,7 @@
  * Not Heidi, not the verifier, not the repair manager.
  */
 
-import { exec } from "child_process"
+import { spawn, exec } from "child_process"
 import { promisify } from "util"
 import { log } from "../../shared/logger"
 import { taskStateMachine } from "./task-state-machine"
@@ -56,6 +56,29 @@ export function recordFileChange(sessionID: string, filePath: string): void {
 }
 
 /**
+ * Safe wrapper for git commands that avoids shell interpretation of arguments.
+ */
+async function gitSafe(args: string[], cwd: string, timeout = 10000): Promise<{ stdout: string; stderr: string; exitCode: number }> {
+  return new Promise((resolve) => {
+    const proc = spawn("git", args, { cwd, timeout })
+    let stdout = ""
+    let stderr = ""
+
+    proc.stdout?.on("data", (data) => { stdout += data.toString() })
+    proc.stderr?.on("data", (data) => { stderr += data.toString() })
+
+    proc.on("close", (code) => {
+      resolve({ stdout: stdout.trim(), stderr: stderr.trim(), exitCode: code ?? 1 })
+    })
+
+    proc.on("error", (err) => {
+      log(`[RuntimeGates] Git spawn error:`, err)
+      resolve({ stdout: "", stderr: err.message, exitCode: 1 })
+    })
+  })
+}
+
+/**
  * Create a rollback checkpoint before execution.
  * Rollback policy determines what kind of checkpoint:
  *   - noop: no checkpoint (research/read-only tasks)
@@ -80,8 +103,13 @@ export async function createRollbackCheckpoint(
     const stashName = `car-checkpoint-${record.task_id}`
 
     if (policy === "lightweight" || policy === "full") {
-      await execAsync(`git stash push -m "${stashName}" --include-untracked`, { cwd, timeout: 10000 })
-      await execAsync("git stash pop", { cwd, timeout: 10000 })
+      const { exitCode, stderr } = await gitSafe(["stash", "push", "-m", stashName, "--include-untracked"], cwd)
+      if (exitCode !== 0) {
+        log(`[RuntimeGates] Git stash push failed:`, stderr)
+        return null
+      }
+
+      await gitSafe(["stash", "pop"], cwd)
       log(`[RuntimeGates] Created ${policy} checkpoint: ${stashName}`)
       return stashName
     }
@@ -102,7 +130,9 @@ export async function rollbackToCheckpoint(
   cwd: string
 ): Promise<boolean> {
   try {
-    const { stdout } = await execAsync("git stash list", { cwd, timeout: 5000 })
+    const { stdout, exitCode } = await gitSafe(["stash", "list"], cwd)
+    if (exitCode !== 0) return false
+
     const stashEntry = stdout.split("\n").find(line => line.includes(stashRef))
 
     if (!stashEntry) {
@@ -110,8 +140,20 @@ export async function rollbackToCheckpoint(
       return false
     }
 
-    const stashIndex = stashEntry.split(":")[0]
-    await execAsync(`git stash apply ${stashIndex}`, { cwd, timeout: 10000 })
+    const stashIndexMatch = stashEntry.match(/^stash@\{(\d+)\}/)
+    if (!stashIndexMatch) {
+      log(`[RuntimeGates] Could not parse stash index from: ${stashEntry}`)
+      return false
+    }
+
+    const stashIndex = stashIndexMatch[0]
+    const { exitCode: applyCode, stderr } = await gitSafe(["stash", "apply", stashIndex], cwd)
+    
+    if (applyCode !== 0) {
+      log(`[RuntimeGates] Rollback apply failed:`, stderr)
+      return false
+    }
+
     log(`[RuntimeGates] Rolled back to checkpoint: ${stashRef}`)
     return true
   } catch (err) {

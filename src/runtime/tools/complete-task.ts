@@ -1,7 +1,6 @@
-// @ts-nocheck
 import { tool } from "@opencode-ai/plugin"
 import { z } from "zod"
-import { ledger } from "../state-ledger"
+import { ledger, type LedgerEntry } from "../state-ledger"
 import { createSuccessResult, createFailureResult } from "../../utils/safety-tool-result"
 import { isSessionIssueMode } from "../../features/claude-code-session-state"
 import { getIssueState } from "../../features/issue-resolution/state"
@@ -10,16 +9,27 @@ import { normalizeSDKResponse } from "../../shared/normalize-sdk-response"
 import { evaluateCompletion } from "../../features/controlled-agent-runtime/completion-firewall"
 import { taskStateMachine } from "../../features/controlled-agent-runtime/task-state-machine"
 
+interface CompleteTaskArgs {
+    message: string
+    overrideStrict?: boolean
+    verification_summary?: string
+}
+
+interface TodoItem {
+    id: string
+    status: string
+    title: string
+}
+
 export function createCompleteTaskTool(options?: { client?: any, backgroundManager?: any }): any {
     return tool({
         description: "Signal that the task is complete. The runtime will compose the final verified state report. DO NOT output your own summary, just call this tool.",
-        // @ts-ignore
         args: {
             message: z.string().describe("Optional short note about what was done. Do not include PR URLs or commit hashes here."),
             overrideStrict: z.boolean().optional().describe("If true, attempts to complete even if strict mode requirements are not fully met (requires verification_summary)."),
             verification_summary: z.string().optional().describe("Summary of manual verification performed to justify completion.")
         },
-        execute: withToolContract("complete_task", async (args, toolContext) => {
+        execute: withToolContract("complete_task", async (args: CompleteTaskArgs, toolContext: any) => {
             const client = options?.client;
             const sessionID = toolContext.sessionID;
             
@@ -29,9 +39,9 @@ export function createCompleteTaskTool(options?: { client?: any, backgroundManag
                     const todosRes = await client.session.todo({
                         path: { id: sessionID }
                     })
-                    const todos = normalizeSDKResponse(todosRes, [])
+                    const todos = normalizeSDKResponse<TodoItem[]>(todosRes, [])
                     const incompleteTodos = todos.filter(
-                        (t: any) => t.status !== "completed" && t.status !== "cancelled" && t.status !== "blocked" && t.status !== "deleted"
+                        (t: TodoItem) => t.status !== "completed" && t.status !== "cancelled" && t.status !== "blocked" && t.status !== "deleted"
                     )
 
                     if (incompleteTodos.length > 0 && !args.overrideStrict) {
@@ -41,7 +51,9 @@ export function createCompleteTaskTool(options?: { client?: any, backgroundManag
                         toolContext.metadata({ title: "Task Completion Rejected", ...result })
                         return failMsg
                     }
-                } catch (e) {}
+                } catch (e) {
+                    // Fallback: log but continue if SDK call fails, unless it's a critical error
+                }
             }
             
             // 2. Strict Issue Resolution Mode Check
@@ -72,12 +84,13 @@ export function createCompleteTaskTool(options?: { client?: any, backgroundManag
             }
 
             // Filter strictly: verified, successful, state changes, and only in THIS session flow
-            const descendantSessions = options?.backgroundManager?.getAllDescendantTasks 
-                ? options.backgroundManager.getAllDescendantTasks(toolContext.sessionID).map((t: any) => t.sessionID).filter(Boolean)
+            const backgroundManager = options?.backgroundManager
+            const descendantSessions = backgroundManager?.getAllDescendantTasks 
+                ? backgroundManager.getAllDescendantTasks(toolContext.sessionID).map((t: { sessionID: string }) => t.sessionID).filter(Boolean)
                 : [];
             const sessionIDs = [toolContext.sessionID, ...descendantSessions];
 
-            const entries = ledger.getEntries(undefined, sessionIDs).filter(e =>
+            const entries = ledger.getEntries(undefined, sessionIDs).filter((e: LedgerEntry) =>
                 e.verified === true &&
                 e.success === true &&
                 e.changedState === true

@@ -1,10 +1,4 @@
-/**
- * Task Record — Persistent task record shape and serialization.
- *
- * Captures the full lifecycle of a CAR-managed task for replay,
- * debugging, and telemetry. Locked shape — do not add fields ad hoc.
- */
-
+import { z } from "zod"
 import type {
   TaskState,
   TaskType,
@@ -72,6 +66,27 @@ export interface TaskRecord {
   updated_at: number
 }
 
+export const TaskRecordSchema = z.object({
+  task_id: z.string(),
+  session_id: z.string(),
+  raw_prompt: z.string(),
+  interpreted_intent: z.any().optional(),
+  retrieval_bundle_refs: z.array(z.string()),
+  approved_plan: z.any().optional(),
+  lifecycle_state: z.string() as z.ZodType<TaskState>,
+  repair_loop_count: z.number(),
+  repairs: z.array(z.any()),
+  changed_files: z.array(z.string()),
+  latest_verification: z.any().optional(),
+  acceptance_statuses: z.array(z.any()),
+  blocked_reason: z.string().optional(),
+  blocked_remaining: z.array(z.string()).optional(),
+  rollback_policy: z.string() as z.ZodType<RollbackPolicy>,
+  rollback_ref: z.string().optional(),
+  created_at: z.number(),
+  updated_at: z.number(),
+})
+
 let taskIDCounter = 0
 
 export function createTaskRecord(sessionID: string, rawPrompt: string): TaskRecord {
@@ -97,5 +112,6 @@ export function serializeTaskRecord(record: TaskRecord): string {
 }
 
 export function deserializeTaskRecord(json: string): TaskRecord {
-  return JSON.parse(json) as TaskRecord
+  const parsed = JSON.parse(json)
+  return TaskRecordSchema.parse(parsed) as TaskRecord
 }

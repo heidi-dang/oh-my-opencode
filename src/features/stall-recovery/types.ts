@@ -37,6 +37,7 @@ export interface TrackedProcess {
   timeout_ms?: number
   cancelable: boolean
   exited: boolean
+  exited_at?: number
 }
 
 export type RecoveryStepResult =

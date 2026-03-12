@@ -1,15 +1,10 @@
-/**
- * Process Liveness Tracker — Monitors spawned background processes.
- *
- * Tracks PID, start time, last output, and health classification.
- * Used by the RecoveryManager to distinguish "still loading" from
- * "runtime forgot to advance".
- */
-
 import { log } from "../../shared/logger"
 import type { TrackedProcess, ProcessHealth } from "./types"
 
 const trackedProcesses = new Map<number, TrackedProcess>()
+
+/** Grace period before an exited process is pruned (ms) */
+const EXIT_PRUNE_GRACE_PERIOD = 300_000 // 5 minutes
 
 /**
  * Register a new background process for tracking.
@@ -54,6 +49,7 @@ export function markProcessExited(pid: number): void {
   const proc = trackedProcesses.get(pid)
   if (proc) {
     proc.exited = true
+    proc.exited_at = Date.now()
     proc.last_known_health = "exited_but_not_reconciled"
     log(`[ProcessLiveness] PID ${pid} exited but not yet reconciled`)
   }
@@ -64,6 +60,22 @@ export function markProcessExited(pid: number): void {
  */
 export function reconcileProcess(pid: number): void {
   trackedProcesses.delete(pid)
+}
+
+/**
+ * Force kill a tracked process.
+ */
+export function killTrackedProcess(pid: number): boolean {
+  try {
+    process.kill(pid, "SIGKILL")
+    trackedProcesses.delete(pid)
+    log(`[ProcessLiveness] Force killed PID ${pid}`)
+    return true
+  } catch (err) {
+    log(`[ProcessLiveness] Failed to kill PID ${pid}:`, err)
+    trackedProcesses.delete(pid) // Remove anyway to stop tracking ghost
+    return false
+  }
 }
 
 /**
@@ -104,6 +116,24 @@ export function getStalledProcesses(sessionID: string): TrackedProcess[] {
   return classifySessionProcesses(sessionID).filter(
     p => p.last_known_health === "stalled_no_output" || p.last_known_health === "orphaned"
   )
+}
+
+/**
+ * Prune old exited processes to prevent memory leaks.
+ */
+export function pruneOrphanedProcesses(): number {
+  const now = Date.now()
+  let pruned = 0
+  for (const [pid, proc] of trackedProcesses) {
+    if (proc.exited && proc.exited_at && (now - proc.exited_at > EXIT_PRUNE_GRACE_PERIOD)) {
+      trackedProcesses.delete(pid)
+      pruned++
+    }
+  }
+  if (pruned > 0) {
+    log(`[ProcessLiveness] Pruned ${pruned} old exited process records`)
+  }
+  return pruned
 }
 
 /**
