@@ -1,7 +1,7 @@
 import { log } from "../../shared/logger"
 import { ContextCollector } from "../context-injector/collector"
 import { detectLanguage } from "./language-detector"
-import { routeLanguage, formatLanguageContext } from "./language-router"
+import { routeLanguage, formatLanguageContext, formatFailureContext } from "./language-router"
 import { RepoExampleExtractor } from "./repo-example-extractor"
 import { LanguageMemory } from "./language-memory"
 import type { LanguagePack, LanguageProfile, LanguageRouteResult } from "./types"
@@ -115,17 +115,6 @@ export function createOptimizedLanguageIntelligenceHook(args: LanguageIntelligen
             confidence: profile.confidence,
             stepbook: route.stepbook?.id ?? "none",
           })
-
-<<<<<<< HEAD
-=======
-        log("[Heidi Language Intelligence] Injected language context", {
-          sessionID,
-          language: profile.primary,
-          confidence: profile.confidence,
-          stepbook: route.stepbook?.id ?? "none",
-        })
-
->>>>>>> dfb6377a (chore(agents): add Heidi capability matrix, wire into prompts, add invariants/tests; fix hephaestus model selector)
       } catch (error) {
         log("[Heidi Language Intelligence] Detection/Injection failed", {
           error: String(error),
