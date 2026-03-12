@@ -94,6 +94,8 @@ export class MemoryDB {
     const dbPath = join(dbDir, "memories.sqlite")
 
     this.db = new Database(dbPath, { create: true })
+    this.db.run("PRAGMA journal_mode = WAL")
+    this.db.run("PRAGMA busy_timeout = 5000")
     this.init()
   }
 

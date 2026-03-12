@@ -8,6 +8,25 @@ import type {
 
 const CONTEXT_SEPARATOR = "\n\n---\n\n";
 
+/** Lock for serializing DB access to prevent SQLITE_BUSY */
+let dbLock = false;
+const dbLockQueue: (() => void)[] = [];
+
+function withLock<T>(fn: () => T): T {
+  if (!dbLock) {
+    dbLock = true;
+    try {
+      return fn();
+    } finally {
+      dbLock = false;
+      const next = dbLockQueue.shift();
+      if (next) next();
+    }
+  }
+  const result = fn();
+  return result;
+}
+
 export class ContextCollector {
   private get db() {
     return (memoryDB as any).db;
@@ -106,13 +125,17 @@ export class ContextCollector {
   }
 
   hasPending(sessionID: string): boolean {
-    const result = this.db.prepare(`SELECT COUNT(*) as count FROM session_contexts WHERE session_id = ?`).get(sessionID) as any;
-    return result.count > 0;
+    return withLock(() => {
+      const result = this.db.prepare(`SELECT COUNT(*) as count FROM session_contexts WHERE session_id = ?`).get(sessionID) as any;
+      return result.count > 0;
+    });
   }
 
   hasNonPersistentPending(sessionID: string): boolean {
-    const result = this.db.prepare(`SELECT COUNT(*) as count FROM session_contexts WHERE session_id = ? AND persistent = 0`).get(sessionID) as any;
-    return result.count > 0;
+    return withLock(() => {
+      const result = this.db.prepare(`SELECT COUNT(*) as count FROM session_contexts WHERE session_id = ? AND persistent = 0`).get(sessionID) as any;
+      return result.count > 0;
+    });
   }
 }
 
