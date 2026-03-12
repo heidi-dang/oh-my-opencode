@@ -18,6 +18,7 @@ import { createChatAgent, CHAT_PROMPT_METADATA } from "./chat"
 import { createHeidiAgent, HEIDI_PROMPT_METADATA } from "./heidi"
 import { createPythonSpecialistAgent, PYTHON_SPECIALIST_PROMPT_METADATA } from "./builtin-agents/python-specialist"
 import { createTypeScriptSpecialistAgent, TYPESCRIPT_SPECIALIST_PROMPT_METADATA } from "./builtin-agents/typescript-specialist"
+import { createUiUxSpecialistAgent, UI_UX_SPECIALIST_PROMPT_METADATA } from "./builtin-agents/ui-ux-specialist"
 import type { AvailableCategory } from "./types";
 import {
   fetchAvailableModels,
@@ -30,6 +31,7 @@ import { buildAvailableSkills } from "./builtin-agents/available-skills"
 import { collectPendingBuiltinAgents } from "./builtin-agents/general-agents"
 import { maybeCreatePrimaryAgentConfig } from "./builtin-agents/sisyphus-agent"
 import { maybeCreateHephaestusConfig } from "./builtin-agents/hephaestus-agent"
+import { maybeCreateHeidiConfig } from "./builtin-agents/heidi-agent"
 import { maybeCreateAtlasConfig } from "./builtin-agents/atlas-agent"
 import { buildCustomAgentMetadata, parseRegisteredAgentSummaries } from "./custom-agent-summaries"
 
@@ -49,6 +51,7 @@ const agentSources: Record<BuiltinAgentName, AgentSource> = {
   heidi: createHeidiAgent as AgentFactory,
   "python-specialist": createPythonSpecialistAgent,
   "typescript-specialist": createTypeScriptSpecialistAgent,
+  "ui-ux-specialist": createUiUxSpecialistAgent,
   // Note: Atlas is handled specially in createBuiltinAgents()
   // because it needs OrchestratorContext, not just a model string
   atlas: createAtlasAgent as AgentFactory,
@@ -71,6 +74,7 @@ const agentMetadata: Partial<Record<BuiltinAgentName, AgentPromptMetadata>> = {
   heidi: HEIDI_PROMPT_METADATA,
   "python-specialist": PYTHON_SPECIALIST_PROMPT_METADATA,
   "typescript-specialist": TYPESCRIPT_SPECIALIST_PROMPT_METADATA,
+  "ui-ux-specialist": UI_UX_SPECIALIST_PROMPT_METADATA,
 }
 
 export async function createBuiltinAgents(
@@ -221,6 +225,29 @@ export async function createBuiltinAgents(
   })
   if (hephaestusConfig) {
     result["hephaestus"] = hephaestusConfig
+  }
+
+  pendingAgentConfigs.delete("heidi")
+
+  const heidiConfig = maybeCreateHeidiConfig({
+    disabledAgents,
+    agentOverrides,
+    availableModels,
+    systemDefaultModel,
+    uiSelectedModel,
+    sessionModel,
+    isFirstRunNoCache,
+    availableAgents,
+    availableSkills,
+    availableCategories,
+    mergedCategories,
+    directory,
+    useTaskSystem,
+    disableOmoEnv,
+    pluginConfig,
+  })
+  if (heidiConfig) {
+    result["heidi"] = heidiConfig
   }
 
   // Add pending agents after sisyphus and hephaestus to maintain order

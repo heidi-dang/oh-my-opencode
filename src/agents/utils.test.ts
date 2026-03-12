@@ -81,6 +81,44 @@ describe("createBuiltinAgents with model overrides", () => {
     }
   })
 
+  test("Heidi uses uiSelectedModel and renders dynamic agent context", async () => {
+    // #given
+    const fetchSpy = spyOn(shared, "fetchAvailableModels").mockResolvedValue(
+      new Set(["openai/gpt-5.2", "anthropic/claude-sonnet-4-6"])
+    )
+    const uiSelectedModel = "openai/gpt-5.2"
+    const customAgentSummaries = [
+      {
+        name: "researcher",
+        description: "Research agent for deep analysis",
+        hidden: false,
+      },
+    ]
+
+    try {
+      // #when
+      const agents = await createBuiltinAgents(
+        [],
+        { agents: {} } as any,
+        undefined,
+        TEST_DEFAULT_MODEL,
+        undefined,
+        [],
+        customAgentSummaries,
+        undefined,
+        uiSelectedModel,
+      )
+
+      // #then
+      expect(agents.heidi).toBeDefined()
+      expect(agents.heidi.model).toBe("openai/gpt-5.2")
+      expect(agents.heidi.prompt).toContain("researcher")
+      expect(agents.heidi.prompt).toContain("Available Specialists")
+    } finally {
+      fetchSpy.mockRestore()
+    }
+  })
+
   test("user config model takes priority over uiSelectedModel for sisyphus", async () => {
     // #given
     const fetchSpy = spyOn(shared, "fetchAvailableModels").mockResolvedValue(
@@ -293,6 +331,38 @@ describe("createBuiltinAgents with model overrides", () => {
     } finally {
       fetchSpy.mockRestore()
     }
+  })
+
+  test("registers ui-ux-specialist with frontend skill content", async () => {
+    // #given
+    const fetchSpy = spyOn(shared, "fetchAvailableModels").mockResolvedValue(
+      new Set([
+        "google/gemini-2.0-flash",
+        "anthropic/claude-sonnet-4-6",
+        "openai/gpt-4o",
+      ])
+    )
+
+    try {
+      // #when
+      const agents = await createBuiltinAgents([], { agents: {} } as any, undefined, TEST_DEFAULT_MODEL)
+
+      // #then
+      expect(agents["ui-ux-specialist"]).toBeDefined()
+      expect(agents["ui-ux-specialist"].model).toBe("google/gemini-2.0-flash")
+      expect(agents["ui-ux-specialist"].prompt).toContain("Role: Designer-Turned-Developer")
+      expect(agents["ui-ux-specialist"].prompt).toContain("UI/UX SPECIALIST")
+    } finally {
+      fetchSpy.mockRestore()
+    }
+  })
+
+  test("respects disabled_agents for ui-ux-specialist", async () => {
+    // #when
+    const agents = await createBuiltinAgents(["ui-ux-specialist"], { agents: {} } as any, undefined, TEST_DEFAULT_MODEL)
+
+    // #then
+    expect(agents["ui-ux-specialist"]).toBeUndefined()
   })
 
   test("excludes hidden custom agents from orchestrator prompts", async () => {

@@ -530,6 +530,30 @@ describe("Sisyphus-Junior agent override", () => {
       expect(result.data.agents?.momus?.category).toBe("quick")
     }
   })
+
+  test("schema accepts ui-ux-specialist agent overrides", () => {
+    // given
+    const config = {
+      agents: {
+        "ui-ux-specialist": {
+          category: "visual-engineering",
+          skills: ["frontend-ui-ux"],
+          prompt_append: "Prefer screenshot-backed verification.",
+        },
+      },
+    }
+
+    // when
+    const result = OhMyOpenCodeConfigSchema.safeParse(config)
+
+    // then
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.agents?.["ui-ux-specialist"]?.category).toBe("visual-engineering")
+      expect(result.data.agents?.["ui-ux-specialist"]?.skills).toEqual(["frontend-ui-ux"])
+      expect(result.data.agents?.["ui-ux-specialist"]?.prompt_append).toBe("Prefer screenshot-backed verification.")
+    }
+  })
 })
 
 describe("BrowserAutomationProviderSchema", () => {

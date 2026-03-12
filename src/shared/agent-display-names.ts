@@ -5,6 +5,7 @@
  */
 export const AGENT_DISPLAY_NAMES: Record<string, string> = {
   sisyphus: "Sisyphus (Ultraworker)",
+  master: "Master",
   hephaestus: "Hephaestus (Deep Agent)",
   prometheus: "Prometheus (Plan Builder)",
   atlas: "Atlas (Plan Executor)",
@@ -14,9 +15,12 @@ export const AGENT_DISPLAY_NAMES: Record<string, string> = {
   oracle: "oracle",
   librarian: "librarian",
   explore: "explore",
+  "multimodal-looker": "multimodal-looker",
   chat: "chat",
   heidi: "Heidi (GDM Antigravity)",
   "python-specialist": "python-specialist",
+  "typescript-specialist": "typescript-specialist",
+  "ui-ux-specialist": "ui-ux-specialist",
 }
 
 /**

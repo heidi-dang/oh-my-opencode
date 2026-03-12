@@ -141,6 +141,7 @@ export type BuiltinAgentName =
   | "heidi"
   | "python-specialist"
   | "typescript-specialist"
+  | "ui-ux-specialist"
 
 export type OverridableAgentName =
   | "build"

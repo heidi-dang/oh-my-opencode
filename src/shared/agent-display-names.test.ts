@@ -133,6 +133,17 @@ describe("getAgentDisplayName", () => {
     // then returns "multimodal-looker"
     expect(result).toBe("multimodal-looker")
   })
+
+  it("returns display name for ui-ux-specialist", () => {
+    // given config key "ui-ux-specialist"
+    const configKey = "ui-ux-specialist"
+
+    // when getAgentDisplayName called
+    const result = getAgentDisplayName(configKey)
+
+    // then returns "ui-ux-specialist"
+    expect(result).toBe("ui-ux-specialist")
+  })
 })
 
 describe("getAgentConfigKey", () => {
@@ -173,6 +184,7 @@ describe("getAgentConfigKey", () => {
     expect(getAgentConfigKey("Metis (Plan Consultant)")).toBe("metis")
     expect(getAgentConfigKey("Momus (Plan Critic)")).toBe("momus")
     expect(getAgentConfigKey("Sisyphus-Junior")).toBe("sisyphus-junior")
+    expect(getAgentConfigKey("ui-ux-specialist")).toBe("ui-ux-specialist")
   })
 })
 
@@ -181,6 +193,7 @@ describe("AGENT_DISPLAY_NAMES", () => {
     // given expected mappings
     const expectedMappings = {
       sisyphus: "Sisyphus (Ultraworker)",
+      master: "Master",
       hephaestus: "Hephaestus (Deep Agent)",
       prometheus: "Prometheus (Plan Builder)",
       atlas: "Atlas (Plan Executor)",
@@ -190,6 +203,11 @@ describe("AGENT_DISPLAY_NAMES", () => {
       oracle: "oracle",
       librarian: "librarian",
       explore: "explore",
+      chat: "chat",
+      heidi: "Heidi (GDM Antigravity)",
+      "python-specialist": "python-specialist",
+      "typescript-specialist": "typescript-specialist",
+      "ui-ux-specialist": "ui-ux-specialist",
       "multimodal-looker": "multimodal-looker",
     }
 

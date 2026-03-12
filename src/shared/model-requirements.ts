@@ -97,6 +97,14 @@ const DEFAULT_AGENT_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {
     ],
     requiresAnyModel: true,
   },
+  "ui-ux-specialist": {
+    fallbackChain: [
+      { providers: ["google", "github-copilot", "opencode"], model: "gemini-2.0-flash", variant: "high" },
+      { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-3-5-sonnet", variant: "max" },
+      { providers: ["openai", "github-copilot", "opencode"], model: "gpt-4o", variant: "medium" },
+    ],
+    requiresAnyModel: true,
+  },
 }
 
 const DEFAULT_CATEGORY_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {
