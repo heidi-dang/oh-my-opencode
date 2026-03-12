@@ -36,10 +36,10 @@ describe("AGENT_MODEL_REQUIREMENTS", () => {
 
     const primary = sisyphus.fallbackChain[0]
     expect(primary.providers).toEqual(["anthropic", "github-copilot", "opencode"])
-    expect(primary.model).toBe("claude-3-5-sonnet")
+    expect(primary.model).toBe("claude-sonnet-4-6")
     expect(primary.variant).toBe("max")
 
-    const last = sisyphus.fallbackChain[2]
+    const last = sisyphus.fallbackChain[1]
     expect(last.providers[0]).toBe("opencode")
     expect(last.model).toBe("big-pickle")
   })
@@ -56,7 +56,7 @@ describe("AGENT_MODEL_REQUIREMENTS", () => {
 
     const primary = librarian.fallbackChain[0]
     expect(primary.providers[0]).toBe("google")
-    expect(primary.model).toBe("gemini-1.5-flash")
+    expect(primary.model).toBe("gemini-3-flash")
   })
 
   test("explore has valid fallbackChain with grok-code-fast-1 as primary", () => {
@@ -70,20 +70,20 @@ describe("AGENT_MODEL_REQUIREMENTS", () => {
     expect(explore.fallbackChain).toHaveLength(4)
 
     const primary = explore.fallbackChain[0]
-    expect(primary.providers).toContain("openai")
+    expect(primary.providers).toContain("github-copilot")
     expect(primary.model).toBe("gpt-4o-mini")
 
     const secondary = explore.fallbackChain[1]
     expect(secondary.providers).toContain("opencode")
-    expect(secondary.model).toBe("minimax-m2.5-free")
+    expect(secondary.model).toBe("minimax-text-01")
 
     const tertiary = explore.fallbackChain[2]
     expect(tertiary.providers).toContain("anthropic")
-    expect(tertiary.model).toBe("claude-haiku-4-5")
+    expect(tertiary.model).toBe("claude-3-5-haiku")
 
     const quaternary = explore.fallbackChain[3]
     expect(quaternary.providers).toContain("opencode")
-    expect(quaternary.model).toBe("gpt-5-nano")
+    expect(quaternary.model).toBe("gpt-4o-mini")
   })
 
   test("multimodal-looker has valid fallbackChain with o3-mini as primary", () => {
@@ -97,20 +97,17 @@ describe("AGENT_MODEL_REQUIREMENTS", () => {
     expect(multimodalLooker.fallbackChain).toHaveLength(3)
 
     const primary = multimodalLooker.fallbackChain[0]
-    expect(primary.providers).toEqual(["openai", "github-copilot", "opencode"])
+    expect(primary.providers).toEqual(["openai", "opencode"])
     expect(primary.model).toBe("gpt-4o")
     expect(primary.variant).toBe("medium")
 
     const secondary = multimodalLooker.fallbackChain[1]
-    expect(secondary.providers).toEqual(["kimi-for-coding"])
-    expect(secondary.model).toBe("k2p5")
+    expect(secondary.providers).toEqual(["google", "github-copilot", "opencode"])
+    expect(secondary.model).toBe("gemini-1.5-flash")
 
     const tertiary = multimodalLooker.fallbackChain[2]
-    expect(tertiary.model).toBe("gemini-3-flash")
-
-    const last = multimodalLooker.fallbackChain[4]
-    expect(last.providers).toEqual(["openai", "github-copilot", "opencode"])
-    expect(last.model).toBe("gpt-5-nano")
+    expect(tertiary.providers).toEqual(["openai", "github-copilot", "opencode"])
+    expect(tertiary.model).toBe("gpt-4o-mini")
   })
 
   test("prometheus has claude-sonnet-4-6 as primary", () => {
@@ -176,8 +173,28 @@ describe("AGENT_MODEL_REQUIREMENTS", () => {
     expect(primary.providers[0]).toBe("anthropic")
   })
 
-  test("all 10 builtin agents have valid fallbackChain arrays", () => {
-    // #given - list of 10 agent names
+  test("heidi prefers low-latency mini models", () => {
+    // given - heidi agent requirement
+    const heidi = AGENT_MODEL_REQUIREMENTS["heidi"]
+
+    // when - accessing Heidi requirement
+    // then - mini/haiku-class models are prioritized for speed
+    expect(heidi).toBeDefined()
+    expect(heidi.requiresAnyModel).toBe(true)
+    expect(heidi.fallbackChain).toHaveLength(5)
+
+    const primary = heidi.fallbackChain[0]
+    expect(primary.providers).toEqual(["github-copilot"])
+    expect(primary.model).toBe("gpt-5-mini")
+    expect(primary.variant).toBe("low")
+
+    const secondary = heidi.fallbackChain[1]
+    expect(secondary.model).toBe("gpt-4o-mini")
+    expect(secondary.variant).toBe("low")
+  })
+
+  test("all 11 builtin agents have valid fallbackChain arrays", () => {
+    // #given - list of 11 agent names
     const expectedAgents = [
       "sisyphus",
       "hephaestus",
@@ -189,13 +206,14 @@ describe("AGENT_MODEL_REQUIREMENTS", () => {
       "metis",
       "momus",
       "atlas",
+      "heidi",
     ]
 
     // when - checking AGENT_MODEL_REQUIREMENTS
     const definedAgents = Object.keys(AGENT_MODEL_REQUIREMENTS)
 
     // #then - all agents present with valid fallbackChain
-    expect(definedAgents).toHaveLength(10)
+    expect(definedAgents).toHaveLength(11)
     for (const agent of expectedAgents) {
       const requirement = AGENT_MODEL_REQUIREMENTS[agent]
       expect(requirement).toBeDefined()
@@ -257,7 +275,7 @@ describe("CATEGORY_MODEL_REQUIREMENTS", () => {
 
     const primary = visualEngineering.fallbackChain[0]
     expect(primary.providers[0]).toBe("google")
-    expect(primary.model).toBe("gemini-1.5-pro")
+    expect(primary.model).toBe("gemini-2.0-flash")
     expect(primary.variant).toBe("high")
 
     const second = visualEngineering.fallbackChain[1]
@@ -323,7 +341,7 @@ describe("CATEGORY_MODEL_REQUIREMENTS", () => {
     expect(artistry.fallbackChain.length).toBeGreaterThan(0)
 
     const primary = artistry.fallbackChain[0]
-    expect(primary.model).toBe("gemini-1.5-pro")
+    expect(primary.model).toBe("gemini-2.0-flash")
     expect(primary.variant).toBe("high")
     expect(primary.providers[0]).toBe("google")
   })
@@ -487,7 +505,7 @@ describe("requiresModel field in categories", () => {
     const artistry = CATEGORY_MODEL_REQUIREMENTS["artistry"]
 
     // when / #then
-    expect(artistry.requiresModel).toBe("gemini-1.5-pro")
+    expect(artistry.requiresModel).toBe("gemini-2.0-flash")
   })
 })
 

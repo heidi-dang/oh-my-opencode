@@ -88,6 +88,16 @@ const DEFAULT_AGENT_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {
       { providers: ["openai", "github-copilot", "opencode"], model: "gpt-4o" },
     ],
   },
+  heidi: {
+    fallbackChain: [
+      { providers: ["github-copilot"], model: "gpt-5-mini", variant: "low" },
+      { providers: ["openai", "github-copilot", "opencode"], model: "gpt-4o-mini", variant: "low" },
+      { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-3-5-haiku" },
+      { providers: ["google", "github-copilot", "opencode"], model: "gemini-1.5-flash" },
+      { providers: ["opencode"], model: "minimax-m2.5-free" },
+    ],
+    requiresAnyModel: true,
+  },
 }
 
 const DEFAULT_CATEGORY_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {

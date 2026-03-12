@@ -185,6 +185,25 @@ const EMBEDDED_DEFAULT_CONFIG = {
       "mode": "all",
       "description": "Fast code execution/build lane."
     },
+    "heidi": {
+      "model": "github-copilot/gpt-5-mini",
+      "fallback_models": [
+        "openai/gpt-4o-mini",
+        "anthropic/claude-3-5-haiku",
+        "google/gemini-1.5-flash",
+        "opencode/minimax-m2.5-free"
+      ],
+      "reasoningEffort": "low",
+      "textVerbosity": "low",
+      "temperature": 0.1,
+      "top_p": 0.9,
+      "maxTokens": 24000,
+      "thinking": {
+        "type": "disabled"
+      },
+      "mode": "all",
+      "description": "Heidi (GDM Antigravity) — ultra-fast, low-latency agentic coding assistant."
+    },
     "hephaestus": {
       "model": "xai/grok-4-1-fast-non-reasoning",
       "fallback_models": [
