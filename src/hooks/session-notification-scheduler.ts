@@ -131,7 +131,7 @@ export function createIdleNotificationScheduler(options: {
     notificationVersions.set(sessionID, currentVersion)
 
     const timer = setTimeout(() => {
-      executeNotification(sessionID, currentVersion)
+      executeNotification(sessionID, currentVersion).catch(() => {})
     }, options.config.idleConfirmationDelay)
 
     pendingTimers.set(sessionID, timer)
