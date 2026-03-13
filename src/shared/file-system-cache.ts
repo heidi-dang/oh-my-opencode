@@ -38,7 +38,7 @@ class FileSystemCache {
   private readonly CACHE_TTL_MS = 5 * 60 * 1000
 
   // Very short hot-read window that avoids repeat stat() calls for immediate re-reads.
-  private readonly HOT_READ_WINDOW_MS = 50
+  private readonly HOT_READ_WINDOW_MS = 200
   
   /**
    * Read file with caching

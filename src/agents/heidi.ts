@@ -20,7 +20,7 @@ import {
 } from "./prompts";
 
 const MODE: AgentMode = "all";
-const HEIDI_MAX_TOKENS = 24000;
+const HEIDI_MAX_TOKENS = 64000;
 
 export interface HeidiContext {
     model?: string;
@@ -161,14 +161,13 @@ export function createHeidiAgent(
         maxTokens: HEIDI_MAX_TOKENS,
         prompt,
         color: "#9C27B0", // Purple
-        textVerbosity: "low" as const,
     };
 
     if (isGptModel(model)) {
-        return { ...base, reasoningEffort: "low" };
+        return { ...base, reasoningEffort: "high" };
     }
 
-    return { ...base, thinking: { type: "disabled" } };
+    return { ...base, thinking: { type: "enabled", budgetTokens: 16000 } };
 }
 
 createHeidiAgent.mode = MODE;

@@ -59,7 +59,7 @@ export function createMessagesTransformHandler(args: {
         "experimental.chat.messages.transform"
       ]?.(input, output)
 
-      const enablePredicatePipeline = args.pluginConfig?.performance?.enableMessagePredicatePipeline ?? true
+      const enablePredicatePipeline = args.pluginConfig?.performance?.enableMessagePredicatePipeline ?? false
       if (enablePredicatePipeline) {
         const indexedMessages = output.messages.map((message, index) => ({
           id: String(index),

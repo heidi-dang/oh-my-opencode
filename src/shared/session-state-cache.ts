@@ -61,7 +61,7 @@ class SessionStateCache {
     const l1Entry = this.l1Cache.get(sessionID)
     if (l1Entry && now - this.getEntryTimestamp(l1Entry) < this.L1_TTL_MS) {
       // Check if invalidated recently
-      if (!this.isInvalidated(sessionID, this.getEntryTimestamp(l1Entry)) && this.matchesVersion(l1Entry, expectedVersion)) {
+      if (!this.isInvalidated(sessionID, this.getEntryTimestamp(l1Entry))) {
         this.stats.hits++
         return l1Entry.data
       }
@@ -71,7 +71,7 @@ class SessionStateCache {
     const l2Entry = this.l2Cache.get(sessionID)
     if (l2Entry && now - this.getEntryTimestamp(l2Entry) < this.L2_TTL_MS) {
       // Check if invalidated recently
-      if (!this.isInvalidated(sessionID, this.getEntryTimestamp(l2Entry)) && this.matchesVersion(l2Entry, expectedVersion)) {
+      if (!this.isInvalidated(sessionID, this.getEntryTimestamp(l2Entry))) {
         // Promote to L1
         this.l1Cache.set(sessionID, l2Entry)
         this.stats.hits++

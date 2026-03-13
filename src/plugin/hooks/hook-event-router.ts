@@ -83,11 +83,16 @@ function buildEventHookMap(): void {
   }
 }
 
-function hookMatchesEvent(meta: HookMetadata | undefined, event: string): boolean {
-  if (!meta) return true
-  if (meta.required) return true
-  if (meta.events === 'all') return true
-  return meta.events.includes(event)
+function hookMatchesEvent(hookName: string, meta: HookMetadata | undefined, event: string): boolean {
+  if (meta?.required) return true
+  if (meta?.events === 'all') return true
+  
+  const relevantHookNames = EVENT_HOOK_MAP.get(event)
+  if (relevantHookNames) {
+    return relevantHookNames.has(hookName)
+  }
+  
+  return !meta
 }
 
 // Initialize on load
@@ -134,7 +139,7 @@ export function executeHooksForEvent(
   // Determine which hooks to run
   const hooksToRun = hooks.filter(hook => {
     const meta = HOOK_METADATA.get(hook.name)
-    const shouldRun = hookMatchesEvent(meta, event)
+    const shouldRun = hookMatchesEvent(hook.name, meta, event)
 
     if (!shouldRun && logSkipped) {
       log(`[HookRouter] Skipping ${hook.name} for ${event}`)
@@ -199,7 +204,7 @@ export function executeHooksForEvent(
  */
 export function shouldHookRunForEvent(hookName: string, event: string): boolean {
   const meta = HOOK_METADATA.get(hookName)
-  return hookMatchesEvent(meta, event)
+  return hookMatchesEvent(hookName, meta, event)
 }
 
 /**

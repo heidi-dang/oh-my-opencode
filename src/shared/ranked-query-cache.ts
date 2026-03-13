@@ -146,10 +146,20 @@ class RankedQueryCache {
   }
 
   private createKey(params: RankedQueryCacheKey): string {
-    const normalized = {
-      ...params,
-      path_scope: params.path_scope ? [...params.path_scope].sort() : undefined,
+    const normalized: Record<string, string | number | undefined> = {}
+    
+    if (params.category) normalized.category = params.category
+    if (params.tags) normalized.tags = params.tags.toLowerCase().trim()
+    if (params.keyword) normalized.keyword = params.keyword.toLowerCase().trim()
+    if (params.repo) normalized.repo = params.repo
+    if (params.signature) normalized.signature = params.signature
+    if (params.language) normalized.language = params.language
+    if (params.task_type) normalized.task_type = params.task_type
+    if (params.path_scope?.length) {
+      normalized.path_scope = params.path_scope.sort().join(",")
     }
+    normalized.limit = params.limit ?? 10
+
     return JSON.stringify(normalized)
   }
 
