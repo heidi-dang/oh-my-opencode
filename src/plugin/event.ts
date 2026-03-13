@@ -155,8 +155,10 @@ export function createEventHandler(args: {
   const dispatchToHooks = async (input: EventInput): Promise<void> => {
     // Invalidate session cache on session events
     const sessionID = (input.event.properties as Record<string, unknown> | undefined)?.sessionID as string | undefined;
+    const eventType = input.event.type;
+    log("[event] dispatchToHooks start", { eventType, sessionID, timestamp: Date.now() });
+
     if (sessionID) {
-      const eventType = input.event.type;
       if (eventType === "session.created" || eventType === "session.deleted" || 
           eventType === "session.status" || eventType === "message.updated") {
         sessionStateCache.invalidate(sessionID);
@@ -185,6 +187,8 @@ export function createEventHandler(args: {
     await safeHookCall("writeExistingFileGuard", () => hooks.writeExistingFileGuard?.event?.(input));
     await safeHookCall("atlasHook", () => hooks.atlasHook?.handler?.(input));
     await safeHookCall("runStateWatchdog", () => (hooks as any).runStateWatchdog?.event?.(input));
+
+    log("[event] dispatchToHooks complete", { eventType, sessionID, timestamp: Date.now() });
   };
 
   const recentSyntheticIdles = new Map<string, number>();
@@ -247,16 +251,20 @@ export function createEventHandler(args: {
     // FIX: Trigger continuation on tool.result to prevent stall if session.idle missing
     if ((event.type as string) === "tool.result") {
       const sessionID = props?.sessionID as string | undefined;
+      const toolName = props?.tool as string | undefined;
       if (sessionID) {
-        log(`[event] tool.result → synthetic idle queued for ${sessionID}`);
+        log(`[event] tool.result → synthetic idle queued`, { sessionID, toolName, timestamp: Date.now() });
         // Mirror syntheticIdle logic with 100ms delay to ensure tool metadata processed
         setTimeout(async () => {
           try {
             const emittedAt = recentRealIdles.get(sessionID);
-            if (emittedAt && Date.now() - emittedAt < DEDUP_WINDOW_MS) {
+            const now = Date.now();
+            if (emittedAt && now - emittedAt < DEDUP_WINDOW_MS) {
+              log(`[event] Skipping synthetic idle - recent real idle exists`, { sessionID, elapsed: now - emittedAt });
               return;
             }
-            recentSyntheticIdles.set(sessionID, Date.now());
+            recentSyntheticIdles.set(sessionID, now);
+            log(`[event] Dispatching synthetic idle for tool.result`, { sessionID, toolName });
             const syntheticIdleForTool: EventInput = {
               event: {
                 type: "session.idle",
@@ -274,12 +282,14 @@ export function createEventHandler(args: {
     if (event.type === "session.created") {
       try {
         const sessionInfo = props?.info as { id?: string; title?: string; parentID?: string } | undefined;
+        const sessionID = sessionInfo?.id;
+
+        log("[event] session.created", { sessionID, parentID: sessionInfo?.parentID, title: sessionInfo?.title });
 
         if (!sessionInfo?.parentID) {
           setMainSession(sessionInfo?.id);
+          log("[event] Set main session", { sessionID });
         }
-
-        const sessionID = sessionInfo?.id;
 
         firstMessageVariantGate.markSessionCreated(sessionInfo);
 
@@ -299,8 +309,13 @@ export function createEventHandler(args: {
     if (event.type === "session.deleted") {
       try {
         const sessionInfo = props?.info as { id?: string } | undefined;
+        const sessionID = sessionInfo?.id;
+
+        log("[event] session.deleted", { sessionID, mainSession: getMainSessionID() });
+
         if (sessionInfo?.id === getMainSessionID()) {
           setMainSession(undefined);
+          log("[event] Cleared main session", { sessionID });
         }
 
         if (sessionInfo?.id) {
@@ -316,6 +331,7 @@ export function createEventHandler(args: {
           syncSubagentSessions.delete(sessionInfo.id);
           deleteSessionTools(sessionInfo.id);
           compiler.clear(sessionInfo.id);
+          log("[event] Session state cleared", { sessionID });
 
           // Sandbox removed
           await managers.skillMcpManager.disconnectSession(sessionInfo.id);

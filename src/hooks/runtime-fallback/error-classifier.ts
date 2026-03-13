@@ -1,4 +1,5 @@
 import { DEFAULT_CONFIG, RETRYABLE_ERROR_PATTERNS } from "./constants"
+import { log } from "../../shared/logger"
 
 export function getErrorMessage(error: unknown): string {
   if (!error) return ""
@@ -77,29 +78,37 @@ export function classifyErrorType(error: unknown): string | undefined {
   const message = getErrorMessage(error)
   const errorName = extractErrorName(error)?.toLowerCase()
 
+  log("[runtime-fallback] classifyErrorType", { errorName, message: message.substring(0, 200) })
+
   if (
     errorName?.includes("loadapi") ||
     (/api.?key.?is.?missing/i.test(message) && /environment variable/i.test(message))
   ) {
+    log("[runtime-fallback] Classified as: missing_api_key")
     return "missing_api_key"
   }
 
   if (/api.?key/i.test(message) && /must be a string/i.test(message)) {
+    log("[runtime-fallback] Classified as: invalid_api_key")
     return "invalid_api_key"
   }
 
   if (errorName?.includes("unknownerror") && /model\s+not\s+found/i.test(message)) {
+    log("[runtime-fallback] Classified as: model_not_found")
     return "model_not_found"
   }
 
   if (/requested model.*not supported|model.*not available|invalid model|unknown model/i.test(message)) {
+    log("[runtime-fallback] Classified as: model_not_supported")
     return "model_not_supported"
   }
 
   if (errorName?.includes("rateLimitError") || /rate.?limit|too.?many.?requests|quota.?exceeded/i.test(message)) {
+    log("[runtime-fallback] Classified as: rate_limit")
     return "rate_limit"
   }
 
+  log("[runtime-fallback] Unclassified error")
   return undefined
 }
 
