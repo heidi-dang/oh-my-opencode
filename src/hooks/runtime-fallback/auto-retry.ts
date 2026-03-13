@@ -17,7 +17,7 @@ export function createAutoRetryHelpers(deps: HookDeps) {
 
   const abortSessionRequest = async (sessionID: string, source: string): Promise<void> => {
     try {
-      await ctx.client.session.abort({ path: { id: sessionID } })
+      await ctx.client?.session?.abort({ path: { id: sessionID } })
       log(`[${HOOK_NAME}] Aborted in-flight session request (${source})`, { sessionID })
     } catch (error) {
       log(`[${HOOK_NAME}] Failed to abort in-flight session request (${source})`, {

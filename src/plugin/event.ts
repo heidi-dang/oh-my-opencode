@@ -416,9 +416,9 @@ export function createEventHandler(args: {
                 ) {
                   lastHandledModelErrorMessageID.set(sessionID, assistantMessageID);
 
-                  await pluginContext.client.session.abort({ path: { id: sessionID } }).catch(() => {});
-                  await pluginContext.client.session
-                    .prompt({
+                  await pluginContext.client?.session?.abort({ path: { id: sessionID } }).catch(() => {});
+                  await pluginContext.client?.session
+                    ?.prompt({
                       path: { id: sessionID },
                       body: { parts: [{ type: "text", text: "continue" }] },
                       query: { directory: pluginContext.directory },
@@ -489,9 +489,9 @@ export function createEventHandler(args: {
                 shouldAutoRetrySession(sessionID) &&
                 !hooks.stopContinuationGuard?.isStopped(sessionID)
               ) {
-                await pluginContext.client.session.abort({ path: { id: sessionID } }).catch(() => {});
-                await pluginContext.client.session
-                  .prompt({
+                await pluginContext.client?.session?.abort({ path: { id: sessionID } }).catch(() => {});
+                await pluginContext.client?.session
+                  ?.prompt({
                     path: { id: sessionID },
                     body: { parts: [{ type: "text", text: "continue" }] },
                     query: { directory: pluginContext.directory },
@@ -543,11 +543,11 @@ export function createEventHandler(args: {
               if (setFallback) {
                  log("[event] Unsupported model detected, fallback mode armed for session:", { sessionID, modelLabel })
                  // Switch model and prompt 'continue' to resume with new provider/model
-                 await pluginContext.client.session.prompt({
-                   path: { id: sessionID },
-                   body: { parts: [{ type: "text", text: "continue" }] },
-                   query: { directory: pluginContext.directory }
-                 }).catch(() => {})
+                  await pluginContext.client?.session?.prompt({
+                    path: { id: sessionID },
+                    body: { parts: [{ type: "text", text: "continue" }] },
+                    query: { directory: pluginContext.directory }
+                  }).catch(() => {})
                  return
               }
             }
@@ -563,7 +563,7 @@ export function createEventHandler(args: {
           )
 
           // Abort the stuck session so OpenCode shows a terminal error state
-          await pluginContext.client.session.abort({ path: { id: sessionID } }).catch(() => {})
+          await pluginContext.client?.session?.abort({ path: { id: sessionID } }).catch(() => {})
           return
         }
 
@@ -583,8 +583,8 @@ export function createEventHandler(args: {
             sessionID === getMainSessionID() &&
             !hooks.stopContinuationGuard?.isStopped(sessionID)
           ) {
-            await pluginContext.client.session
-              .prompt({
+            await pluginContext.client?.session
+              ?.prompt({
                 path: { id: sessionID },
                 body: { parts: [{ type: "text", text: "continue" }] },
                 query: { directory: pluginContext.directory },
@@ -619,10 +619,10 @@ export function createEventHandler(args: {
               shouldAutoRetrySession(sessionID) &&
               !hooks.stopContinuationGuard?.isStopped(sessionID)
             ) {
-              await pluginContext.client.session.abort({ path: { id: sessionID } }).catch(() => {});
+              await pluginContext.client?.session?.abort({ path: { id: sessionID } }).catch(() => {});
 
-              await pluginContext.client.session
-                .prompt({
+              await pluginContext.client?.session
+                ?.prompt({
                   path: { id: sessionID },
                   body: { parts: [{ type: "text", text: "continue" }] },
                   query: { directory: pluginContext.directory },

@@ -98,7 +98,7 @@ export async function checkAndInterruptStaleTasks(args: {
         task.concurrencyKey = undefined
       }
 
-      client.session.abort({ path: { id: sessionID } }).catch(() => {})
+      client.session?.abort({ path: { id: sessionID } }).catch(() => {})
       log(`[background-agent] Task ${task.id} interrupted: no progress since start`)
 
       try {
@@ -127,7 +127,7 @@ export async function checkAndInterruptStaleTasks(args: {
       task.concurrencyKey = undefined
     }
 
-    client.session.abort({ path: { id: sessionID } }).catch(() => {})
+    client.session?.abort({ path: { id: sessionID } }).catch(() => {})
     log(`[background-agent] Task ${task.id} interrupted: stale timeout`)
 
     try {

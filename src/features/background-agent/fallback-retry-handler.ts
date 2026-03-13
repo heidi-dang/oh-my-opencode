@@ -81,7 +81,7 @@ export function tryFallbackRetry(args: {
   }
 
   if (task.sessionID) {
-    client.session.abort({ path: { id: task.sessionID } }).catch(() => {})
+    client.session?.abort({ path: { id: task.sessionID } }).catch(() => {})
   }
 
   const idleTimer = idleDeferralTimers.get(task.id)

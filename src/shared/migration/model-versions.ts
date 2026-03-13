@@ -6,7 +6,7 @@
  * Keys are full "provider/model" strings. Only openai and anthropic entries needed.
  */
 export const MODEL_VERSION_MAP: Record<string, string> = {
-  "anthropic/claude-opus-4-5": "anthropic/claude-opus-4-6",
+  "anthropic/claude-opus-4-5": "anthropic/claude-sonnet-4-6",
   "anthropic/claude-sonnet-4-5": "anthropic/claude-sonnet-4-6",
 }
 

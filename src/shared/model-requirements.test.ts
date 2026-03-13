@@ -185,7 +185,7 @@ describe("AGENT_MODEL_REQUIREMENTS", () => {
 
     const primary = heidi.fallbackChain[0]
     expect(primary.providers).toEqual(["github-copilot"])
-    expect(primary.model).toBe("gpt-5-mini")
+    expect(primary.model).toBe("gpt-4o-mini")
     expect(primary.variant).toBe("low")
 
     const secondary = heidi.fallbackChain[1]
@@ -193,8 +193,8 @@ describe("AGENT_MODEL_REQUIREMENTS", () => {
     expect(secondary.variant).toBe("low")
   })
 
-  test("all 11 builtin agents have valid fallbackChain arrays", () => {
-    // #given - list of 11 agent names
+  test("all 12 builtin agents have valid fallbackChain arrays", () => {
+    // #given - list of 12 agent names
     const expectedAgents = [
       "sisyphus",
       "hephaestus",
@@ -207,13 +207,14 @@ describe("AGENT_MODEL_REQUIREMENTS", () => {
       "momus",
       "atlas",
       "heidi",
+      "sisyphus-junior",
     ]
 
     // when - checking AGENT_MODEL_REQUIREMENTS
     const definedAgents = Object.keys(AGENT_MODEL_REQUIREMENTS)
 
     // #then - all agents present with valid fallbackChain
-    expect(definedAgents).toHaveLength(11)
+    expect(definedAgents).toHaveLength(12)
     for (const agent of expectedAgents) {
       const requirement = AGENT_MODEL_REQUIREMENTS[agent]
       expect(requirement).toBeDefined()

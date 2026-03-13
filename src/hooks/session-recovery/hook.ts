@@ -65,9 +65,9 @@ export function createSessionRecoveryHook(ctx: PluginInput, options?: SessionRec
         onAbortCallback(sessionID)
       }
 
-      await ctx.client.session.abort({ path: { id: sessionID } }).catch(() => {})
+      await ctx.client?.session?.abort({ path: { id: sessionID } }).catch(() => {})
 
-      const messagesResp = await ctx.client.session.messages({
+      const messagesResp = await ctx.client?.session?.messages({
         path: { id: sessionID },
         query: { directory: ctx.directory },
       })

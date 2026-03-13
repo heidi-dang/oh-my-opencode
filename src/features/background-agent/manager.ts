@@ -291,7 +291,7 @@ export class BackgroundManager {
 
     const concurrencyKey = this.getConcurrencyKeyFromInput(input)
 
-    const parentSession = await this.client.session.get({
+    const parentSession = await this.client?.session?.get({
       path: { id: input.parentSessionID },
     }).catch((err) => {
       log(`[background-agent] Failed to get parent session: ${err}`)
@@ -300,7 +300,7 @@ export class BackgroundManager {
     const parentDirectory = parentSession?.data?.directory ?? this.directory
     log(`[background-agent] Parent dir: ${parentSession?.data?.directory}, using: ${parentDirectory}`)
 
-    const createResult = await this.client.session.create({
+    const createResult = await this.client?.session?.create({
       body: {
         parentID: input.parentSessionID,
         title: `${input.description} (@${input.agent} subagent)`,
@@ -771,7 +771,7 @@ export class BackgroundManager {
       : undefined
     const resumeVariant = existingTask.model?.variant
 
-    this.client.session.promptAsync({
+    this.client?.session?.promptAsync({
       path: { id: existingTask.sessionID },
       body: {
         agent: existingTask.agent,
@@ -824,7 +824,7 @@ export class BackgroundManager {
 
   private async checkSessionTodos(sessionID: string): Promise<boolean> {
     try {
-      const response = await this.client.session.todo({
+      const response = await this.client?.session?.todo({
         path: { id: sessionID },
       })
       const todos = normalizeSDKResponse(response, [] as Todo[], { preferResponseOnMissingData: true })
@@ -1172,7 +1172,7 @@ export class BackgroundManager {
   private async validateSessionHasOutput(sessionID: string): Promise<boolean> {
     memoryMonitor.logMemory(`validateSessionHasOutput start: ${sessionID}`)
     try {
-      const response = await this.client.session.messages({
+      const response = await this.client?.session?.messages({
         path: { id: sessionID },
       })
 
@@ -1464,7 +1464,7 @@ export class BackgroundManager {
     // Change Aggregation: Fetch child session to get affected files from its metadata
     try {
       if (task.sessionID) {
-        const sessionResp = await this.client.session.get({ path: { id: task.sessionID } })
+        const sessionResp = await this.client?.session?.get({ path: { id: task.sessionID } })
         const sessionData = sessionResp.data as any
         if (sessionData?.metadata?.affectedFiles) {
           task.affectedFiles = sessionData.metadata.affectedFiles
@@ -1564,7 +1564,7 @@ Use \`background_output(task_id="${task.id}")\` to retrieve this result when rea
 
       if (this.enableParentSessionNotifications) {
         try {
-          const messagesResp = await this.client.session.messages({ path: { id: task.parentSessionID } })
+          const messagesResp = await this.client?.session?.messages({ path: { id: task.parentSessionID } })
           const messages = normalizeSDKResponse(messagesResp, [] as Array<{
             info?: {
               agent?: string
@@ -1614,7 +1614,7 @@ Use \`background_output(task_id="${task.id}")\` to retrieve this result when rea
         })
 
         try {
-          await this.client.session.promptAsync({
+          await this.client?.session?.promptAsync({
             path: { id: task.parentSessionID },
             body: {
               noReply: !allComplete,
@@ -1764,7 +1764,7 @@ Use \`background_output(task_id="${task.id}")\` to retrieve this result when rea
     memoryMonitor.logMemory("BackgroundManager polling start")
     this.pruneStaleTasksAndNotifications()
 
-    const statusResult = await this.client.session.status()
+    const statusResult = await this.client?.session?.status()
     const allStatuses = normalizeSDKResponse(statusResult, {} as Record<string, { type: string }>)
 
     await this.checkAndInterruptStaleTasks(allStatuses)

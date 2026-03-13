@@ -46,7 +46,7 @@ export class TmuxPollingManager {
         return
       }
 
-      const statusResult = await this.client.session.status({ path: undefined })
+      const statusResult = await this.client?.session?.status({ path: undefined })
       const allStatuses = normalizeSDKResponse(statusResult, {} as Record<string, { type: string }>)
 
       log("[tmux-session-manager] pollSessions", {
@@ -74,7 +74,7 @@ export class TmuxPollingManager {
 
         if (isIdle && elapsedMs >= MIN_STABILITY_TIME_MS) {
           try {
-            const messagesResult = await this.client.session.messages({ 
+            const messagesResult = await this.client?.session?.messages({ 
               path: { id: sessionId } 
             })
             const currentMsgCount = Array.isArray(messagesResult.data) 
@@ -85,7 +85,7 @@ export class TmuxPollingManager {
               tracked.stableIdlePolls = (tracked.stableIdlePolls ?? 0) + 1
               
               if (tracked.stableIdlePolls >= STABLE_POLLS_REQUIRED) {
-                const recheckResult = await this.client.session.status({ path: undefined })
+                const recheckResult = await this.client?.session?.status({ path: undefined })
                 const recheckStatuses = normalizeSDKResponse(recheckResult, {} as Record<string, { type: string }>)
                 const recheckStatus = recheckStatuses[sessionId]
                 

@@ -279,7 +279,7 @@ export class TmuxSessionManager {
     
     while (Date.now() - startTime < SESSION_READY_TIMEOUT_MS) {
       try {
-        const statusResult = await this.client.session.status({ path: undefined })
+        const statusResult = await this.client?.session?.status({ path: undefined })
         const allStatuses = normalizeSDKResponse(statusResult, {} as Record<string, { type: string }>)
         
         if (allStatuses[sessionId]) {
