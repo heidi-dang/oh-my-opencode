@@ -22,13 +22,8 @@ export function createRuntimeFallbackHook(
   }
 
   let pluginConfig = options?.pluginConfig
-  if (!pluginConfig) {
-    try {
-      pluginConfig = loadPluginConfig(ctx.directory, ctx)
-    } catch {
-      log(`[${HOOK_NAME}] Plugin config not available`)
-    }
-  }
+  // Note: If pluginConfig is not provided, we can't load it synchronously
+  // The hook will use the default config in this case
 
   const deps: HookDeps = {
     ctx,
