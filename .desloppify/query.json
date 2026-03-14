@@ -4,9 +4,9 @@
   "objective_score": 78.1,
   "strict_score": 31.2,
   "verified_strict_score": 78.1,
-  "prev_overall_score": 31.3,
+  "prev_overall_score": 31.2,
   "prev_objective_score": 78.1,
-  "prev_strict_score": 31.3,
+  "prev_strict_score": 31.2,
   "prev_verified_strict_score": 78.1,
   "profile": "full",
   "noise_budget": 10,
@@ -27,14 +27,215 @@
   },
   "hidden_total": 3041,
   "diff": {
-    "new": 11,
-    "auto_resolved": 38,
-    "reopened": 30,
+    "new": 249,
+    "auto_resolved": 461,
+    "reopened": 212,
     "total_current": 3185,
     "suspect_detectors": [
       "review"
     ],
-    "chronic_reopeners": [],
+    "chronic_reopeners": [
+      {
+        "id": "test_coverage::src/tools/background-task/task-result-format.ts::transitive_only",
+        "detector": "test_coverage",
+        "file": "src/tools/background-task/task-result-format.ts",
+        "tier": 3,
+        "confidence": "medium",
+        "summary": "No direct tests (113 LOC, 1 importers) \u2014 covered only via imports from tested modules",
+        "detail": {
+          "kind": "transitive_only",
+          "loc": 113,
+          "importer_count": 1,
+          "loc_weight": 10.63014581273465
+        },
+        "status": "open",
+        "note": "Reopened (\u00d72) \u2014 reappeared in scan (was auto_resolved)",
+        "first_seen": "2026-03-08T14:43:14+00:00",
+        "last_seen": "2026-03-13T19:37:47+00:00",
+        "resolved_at": null,
+        "reopen_count": 2,
+        "lang": "typescript",
+        "zone": "production",
+        "suppressed": false,
+        "suppressed_at": null,
+        "suppression_pattern": null
+      },
+      {
+        "id": "test_coverage::src/shared/active-task-storage.ts::transitive_only",
+        "detector": "test_coverage",
+        "file": "src/shared/active-task-storage.ts",
+        "tier": 3,
+        "confidence": "medium",
+        "summary": "No direct tests (49 LOC, 4 importers) \u2014 covered only via imports from tested modules",
+        "detail": {
+          "kind": "transitive_only",
+          "loc": 49,
+          "importer_count": 4,
+          "loc_weight": 7.0
+        },
+        "status": "open",
+        "note": "Reopened (\u00d72) \u2014 reappeared in scan (was auto_resolved)",
+        "first_seen": "2026-03-08T14:43:14+00:00",
+        "last_seen": "2026-03-13T19:37:47+00:00",
+        "resolved_at": null,
+        "reopen_count": 2,
+        "lang": "typescript",
+        "zone": "production",
+        "suppressed": false,
+        "suppressed_at": null,
+        "suppression_pattern": null
+      },
+      {
+        "id": "test_coverage::src/tools/background-task/time-format.ts::transitive_only",
+        "detector": "test_coverage",
+        "file": "src/tools/background-task/time-format.ts",
+        "tier": 3,
+        "confidence": "medium",
+        "summary": "No direct tests (30 LOC, 3 importers) \u2014 covered only via imports from tested modules",
+        "detail": {
+          "kind": "transitive_only",
+          "loc": 30,
+          "importer_count": 3,
+          "loc_weight": 5.477225575051661
+        },
+        "status": "open",
+        "note": "Reopened (\u00d72) \u2014 reappeared in scan (was auto_resolved)",
+        "first_seen": "2026-03-08T14:43:14+00:00",
+        "last_seen": "2026-03-13T19:37:47+00:00",
+        "resolved_at": null,
+        "reopen_count": 2,
+        "lang": "typescript",
+        "zone": "production",
+        "suppressed": false,
+        "suppressed_at": null,
+        "suppression_pattern": null
+      },
+      {
+        "id": "test_coverage::src/features/background-agent/duration-formatter.ts::transitive_only",
+        "detector": "test_coverage",
+        "file": "src/features/background-agent/duration-formatter.ts",
+        "tier": 3,
+        "confidence": "medium",
+        "summary": "No direct tests (14 LOC, 1 importers) \u2014 covered only via imports from tested modules",
+        "detail": {
+          "kind": "transitive_only",
+          "loc": 14,
+          "importer_count": 1,
+          "loc_weight": 3.7416573867739413
+        },
+        "status": "open",
+        "note": "Reopened (\u00d72) \u2014 reappeared in scan (was auto_resolved)",
+        "first_seen": "2026-03-08T14:43:14+00:00",
+        "last_seen": "2026-03-13T19:37:47+00:00",
+        "resolved_at": null,
+        "reopen_count": 2,
+        "lang": "typescript",
+        "zone": "production",
+        "suppressed": false,
+        "suppressed_at": null,
+        "suppression_pattern": null
+      },
+      {
+        "id": "test_coverage::src/tools/background-task/types.ts::transitive_only",
+        "detector": "test_coverage",
+        "file": "src/tools/background-task/types.ts",
+        "tier": 3,
+        "confidence": "medium",
+        "summary": "No direct tests (72 LOC, 4 importers) \u2014 covered only via imports from tested modules",
+        "detail": {
+          "kind": "transitive_only",
+          "loc": 72,
+          "importer_count": 4,
+          "loc_weight": 8.48528137423857
+        },
+        "status": "open",
+        "note": "Reopened (\u00d72) \u2014 reappeared in scan (was auto_resolved)",
+        "first_seen": "2026-03-08T14:43:14+00:00",
+        "last_seen": "2026-03-13T19:37:47+00:00",
+        "resolved_at": null,
+        "reopen_count": 2,
+        "lang": "typescript",
+        "zone": "production",
+        "suppressed": false,
+        "suppressed_at": null,
+        "suppression_pattern": null
+      },
+      {
+        "id": "test_coverage::src/tools/background-task/full-session-format.ts::transitive_only",
+        "detector": "test_coverage",
+        "file": "src/tools/background-task/full-session-format.ts",
+        "tier": 3,
+        "confidence": "medium",
+        "summary": "No direct tests (148 LOC, 1 importers) \u2014 covered only via imports from tested modules",
+        "detail": {
+          "kind": "transitive_only",
+          "loc": 148,
+          "importer_count": 1,
+          "loc_weight": 12.165525060596439
+        },
+        "status": "open",
+        "note": "Reopened (\u00d72) \u2014 reappeared in scan (was auto_resolved)",
+        "first_seen": "2026-03-08T14:43:14+00:00",
+        "last_seen": "2026-03-13T19:37:47+00:00",
+        "resolved_at": null,
+        "reopen_count": 2,
+        "lang": "typescript",
+        "zone": "production",
+        "suppressed": false,
+        "suppressed_at": null,
+        "suppression_pattern": null
+      },
+      {
+        "id": "test_coverage::src/tools/background-task/session-messages.ts::transitive_only",
+        "detector": "test_coverage",
+        "file": "src/tools/background-task/session-messages.ts",
+        "tier": 3,
+        "confidence": "medium",
+        "summary": "No direct tests (22 LOC, 2 importers) \u2014 covered only via imports from tested modules",
+        "detail": {
+          "kind": "transitive_only",
+          "loc": 22,
+          "importer_count": 2,
+          "loc_weight": 4.69041575982343
+        },
+        "status": "open",
+        "note": "Reopened (\u00d72) \u2014 reappeared in scan (was auto_resolved)",
+        "first_seen": "2026-03-08T14:43:14+00:00",
+        "last_seen": "2026-03-13T19:37:47+00:00",
+        "resolved_at": null,
+        "reopen_count": 2,
+        "lang": "typescript",
+        "zone": "production",
+        "suppressed": false,
+        "suppressed_at": null,
+        "suppression_pattern": null
+      },
+      {
+        "id": "test_coverage::src/tools/background-task/task-status-format.ts::transitive_only",
+        "detector": "test_coverage",
+        "file": "src/tools/background-task/task-status-format.ts",
+        "tier": 3,
+        "confidence": "medium",
+        "summary": "No direct tests (72 LOC, 2 importers) \u2014 covered only via imports from tested modules",
+        "detail": {
+          "kind": "transitive_only",
+          "loc": 72,
+          "importer_count": 2,
+          "loc_weight": 8.48528137423857
+        },
+        "status": "open",
+        "note": "Reopened (\u00d72) \u2014 reappeared in scan (was auto_resolved)",
+        "first_seen": "2026-03-08T14:43:14+00:00",
+        "last_seen": "2026-03-13T19:37:47+00:00",
+        "resolved_at": null,
+        "reopen_count": 2,
+        "lang": "typescript",
+        "zone": "production",
+        "suppressed": false,
+        "suppressed_at": null,
+        "suppression_pattern": null
+      }
+    ],
     "skipped_other_lang": 0,
     "resolved_out_of_scope": 0,
     "ignored": 0,
@@ -43,8 +244,8 @@
     "suppressed_pct": 0.0
   },
   "stats": {
-    "total": 3577,
-    "auto_resolved": 392,
+    "total": 3826,
+    "auto_resolved": 641,
     "false_positive": 0,
     "fixed": 0,
     "open": 3185,
@@ -58,14 +259,14 @@
         "wontfix": 0
       },
       "2": {
-        "auto_resolved": 8,
+        "auto_resolved": 14,
         "false_positive": 0,
         "fixed": 0,
         "open": 1024,
         "wontfix": 0
       },
       "3": {
-        "auto_resolved": 382,
+        "auto_resolved": 625,
         "false_positive": 0,
         "fixed": 0,
         "open": 1317,
@@ -86,7 +287,8 @@
     "global": 3185
   },
   "warnings": [
-    "30 issues reopened \u2014 was a previous fix reverted?"
+    "212 issues reopened \u2014 was a previous fix reverted?",
+    "\u27f3 8 chronic reopeners \u2014 run `desloppify show --chronic` to see them."
   ],
   "dimension_scores": {
     "Code quality": {
@@ -231,9 +433,9 @@
       "detectors": {
         "test_coverage": {
           "potential": 8921,
-          "pass_rate": 0.0059025131688330785,
+          "pass_rate": 0.006650480991600782,
           "failing": 929,
-          "weighted_failures": 8868.34368002084
+          "weighted_failures": 8861.67105907393
         },
         "subjective_review": {
           "potential": 824,
@@ -1041,7 +1243,7 @@
         }
       },
       "warnings": [],
-      "updated_at": "2026-03-13T19:11:09+00:00"
+      "updated_at": "2026-03-13T19:37:47+00:00"
     }
   },
   "zone_distribution": {
@@ -1618,7 +1820,7 @@
       "auto_fixers_available": 3,
       "zone_classification": 3,
       "dry_run_first": 3,
-      "report_scores": 5,
+      "report_scores": 6,
       "feedback_nudge": 3,
       "stagnant_nudge": 23
     }
@@ -1675,7 +1877,7 @@
   "plan": {
     "active": true,
     "focus": null,
-    "total_ordered": 12,
+    "total_ordered": 8,
     "total_skipped": 0,
     "plan_overrides_narrative": true
   }

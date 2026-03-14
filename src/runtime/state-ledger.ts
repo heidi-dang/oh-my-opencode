@@ -123,6 +123,16 @@ export class StateLedger {
         this.entries = []
         this.lastFlowStartTimeMap.clear()
     }
+
+    /**
+     * Clear all ledger entries for a specific session to prevent memory leaks.
+     */
+    public clearSession(sessionID: string): void {
+        this.entries = this.entries.filter(e => e.sessionID !== sessionID)
+        this.lastFlowStartTimeMap.delete(sessionID)
+        // Also clean up any entries that don't have a sessionID if the main session dies?
+        // No, keep global entries, just prune the session-specific ones.
+    }
 }
 
 export const ledger = StateLedger.getInstance()

@@ -23,8 +23,11 @@ import { memoSummarizer } from "../features/memo-summarizer";
 import { knowledgeGraph } from "../shared/knowledge-graph";
 import { shouldRetryError, isUnsupportedModelError } from "../shared/model-error-classifier";
 import { clearSessionModel, setSessionModel } from "../shared/session-model-state";
+import { memoryDB } from "../shared/memory-db";
 import { deleteSessionTools } from "../shared/session-tools-store";
 import { compiler } from "../runtime/plan-compiler";
+import { ledger } from "../runtime/state-ledger";
+import { taskStateMachine } from "../features/controlled-agent-runtime/task-state-machine";
 import { lspManager } from "../tools";
 import { sandboxManager } from "../features/sandbox/sandbox-manager";
 import { createUnstableAgentBabysitter } from "./unstable-agent-babysitter"
@@ -331,6 +334,9 @@ export function createEventHandler(args: {
           syncSubagentSessions.delete(sessionInfo.id);
           deleteSessionTools(sessionInfo.id);
           compiler.clear(sessionInfo.id);
+          ledger.clearSession(sessionInfo.id);
+          taskStateMachine.clearTask(sessionInfo.id);
+          memoryDB.clearSessionContexts(sessionInfo.id);
           log("[event] Session state cleared", { sessionID });
 
           // Sandbox removed

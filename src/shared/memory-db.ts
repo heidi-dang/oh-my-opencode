@@ -542,6 +542,14 @@ export class MemoryDB {
     return result.changes
   }
 
+  /**
+   * Clear all transient contexts associated with a specific session.
+   */
+  public clearSessionContexts(sessionID: string): number {
+    const result = this.db.prepare(`DELETE FROM session_contexts WHERE session_id = ?`).run(sessionID)
+    return result.changes
+  }
+
   public close() {
     this.db.close()
   }
