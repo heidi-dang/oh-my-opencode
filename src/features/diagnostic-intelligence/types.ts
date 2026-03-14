@@ -71,6 +71,11 @@ export type DiagnosticClass =
   | "diagnostic.regex-catastrophic-backtracking"
   | "diagnostic.excessive-fs-reads"
   | "diagnostic.large-bundle-chunk"
+  | "diagnostic.react-unnecessary-rerender"
+  | "diagnostic.expensive-layout-thrashing"
+  | "diagnostic.unoptimized-image-load"
+  | "diagnostic.long-task-detector"
+  | "diagnostic.pty-session-missing"
   // UI/UX (Category 5)
   | "diagnostic.element-overlap"
   | "diagnostic.unresponsive-target"

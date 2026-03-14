@@ -675,6 +675,121 @@ PLAYBOOKS.set("diagnostic.excessive-fs-reads", {
   verification_command: "bun run typecheck",
 })
 
+PLAYBOOKS.set("diagnostic.orphan-tooltips", {
+  class: "diagnostic.orphan-tooltips",
+  strategy_priority: ["state-management-fix"],
+  inspection_steps: [
+    "Identify stale tooltip/popover elements in the DOM.",
+    "Trace their lifecycle to the parent anchor component.",
+  ],
+  anti_patterns: [],
+  decision_tree: [
+    {
+      condition: "Tooltip remains after unmount",
+      strategy: "state-management-fix",
+      rationale: "Ensure the tooltip library's 'destroy' or 'unmount' method is called in the component cleanup hook.",
+    },
+  ],
+  verification_command: "bun run typecheck",
+})
+
+// ────────────────────────────────────────────
+// Runtime: Performance (Category 4) — New Adds
+// ────────────────────────────────────────────
+
+PLAYBOOKS.set("diagnostic.react-unnecessary-rerender", {
+  class: "diagnostic.react-unnecessary-rerender",
+  strategy_priority: ["cache-optimization", "state-management-fix"],
+  inspection_steps: [
+    "Use React DevTools to see which props are changing.",
+    "Check if props are new object references on every render.",
+  ],
+  anti_patterns: [],
+  decision_tree: [
+    {
+      condition: "Props are identical by value but different by reference",
+      strategy: "cache-optimization",
+      rationale: "Wrap in React.memo and use useMemo/useCallback for props.",
+    },
+  ],
+  verification_command: "bun run typecheck",
+})
+
+PLAYBOOKS.set("diagnostic.expensive-layout-thrashing", {
+  class: "diagnostic.expensive-layout-thrashing",
+  strategy_priority: ["layout-fix"],
+  inspection_steps: [
+    "Search for writes to style/className immediately following reads from offsetHeight/clientWidth.",
+  ],
+  anti_patterns: [],
+  decision_tree: [
+    {
+      condition: "Read-write cycle in a loop",
+      strategy: "layout-fix",
+      rationale: "Batch reads first, then batch writes, or use requestAnimationFrame.",
+    },
+  ],
+  verification_command: "bun run typecheck",
+})
+
+PLAYBOOKS.set("diagnostic.unoptimized-image-load", {
+  class: "diagnostic.unoptimized-image-load",
+  strategy_priority: ["layout-fix"],
+  inspection_steps: [
+    "Check image dimensions vs display size.",
+    "Verify presence of 'loading=lazy' and 'decoding=async'.",
+  ],
+  anti_patterns: [],
+  decision_tree: [
+    {
+      condition: "Large raw image used as thumbnail",
+      strategy: "layout-fix",
+      rationale: "Apply loading='lazy' and explicit width/height to avoid CLS.",
+    },
+  ],
+  verification_command: "bun run typecheck",
+})
+
+PLAYBOOKS.set("diagnostic.pty-session-missing", {
+  class: "diagnostic.pty-session-missing",
+  strategy_priority: ["reconnect-strategy", "state-management-fix"],
+  inspection_steps: [
+    "Check if the PTY ID exists in the backend memory map",
+    "Verify the instance directory matches the client request",
+    "Identify if a server restart occurred recently",
+  ],
+  anti_patterns: [
+    "Infinite retry loop on 404",
+    "Maintaining stale session IDs in local storage across server restarts",
+  ],
+  decision_tree: [
+    {
+      condition: "PTY session not found on server (404)",
+      strategy: "reconnect-strategy",
+      rationale: "Allocate a new PTY session and update the client-side state to prevent infinite retry loops.",
+    },
+  ],
+  verification_command: "bun run typecheck",
+});
+
+PLAYBOOKS.set("diagnostic.long-task-detector", {
+  class: "diagnostic.long-task-detector",
+  strategy_priority: ["async-offload", "throttle-debounce"],
+  inspection_steps: [
+    "Identify the JS function blocking the main thread.",
+    "Check for heavy computation or massive DOM updates.",
+  ],
+  anti_patterns: [],
+  decision_tree: [
+    {
+      condition: "Computationally expensive JS",
+      strategy: "async-offload",
+      rationale: "Move logic to a Web Worker or break into chunks using setImmediate.",
+    },
+  ],
+  verification_command: "bun run typecheck",
+})
+
 // ────────────────────────────────────────────
 // UI/UX: Element Overlap
 // ────────────────────────────────────────────

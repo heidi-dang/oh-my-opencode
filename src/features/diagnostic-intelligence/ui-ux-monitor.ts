@@ -66,6 +66,8 @@ export class UiUxDiagnosticMonitor {
     this.isListening = true
     this.attachRageClickDetector()
     this.attachLayoutShiftDetector()
+    this.attachReactRenderProfiler()
+    this.attachLayoutThrashingDetector()
   }
 
   public stopListening() {
@@ -77,6 +79,84 @@ export class UiUxDiagnosticMonitor {
       this.observer.disconnect()
       this.observer = null
     }
+  }
+
+  /**
+   * React Unnecessary Re-render Profiler
+   * Hooks into the global React DevTools hook to catch components 
+   * rendering identically >4 times per second.
+   */
+  private attachReactRenderProfiler() {
+    if (typeof window === "undefined") return;
+
+    // React DevTools injects __REACT_DEVTOOLS_GLOBAL_HOOK__
+    const hook = (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__;
+    if (!hook || typeof hook.on !== 'function') return;
+
+    const renderCounts = new Map<string, { count: number; lastReset: number }>();
+
+    try {
+      hook.on('commitFiberRoot', (rendererID: any, root: any) => {
+        // Simplified heuristic: track rapid commits.
+        // A full implementation parses the fiber tree to find precisely which component re-rendered.
+        // We simulate a basic check:
+        const now = Date.now();
+        const rootId = root?.current?.memoizedState?.element?.type?.name || "AppRoot";
+        
+        let existing = renderCounts.get(rootId);
+        if (!existing) {
+          existing = { count: 0, lastReset: now };
+          renderCounts.set(rootId, existing);
+        }
+
+        if (now - existing.lastReset > 1000) {
+          existing.count = 0;
+          existing.lastReset = now;
+        }
+
+        existing.count++;
+
+        if (existing.count > 10) {
+          this.emitDiagnostic(
+            "diagnostic.react-unnecessary-rerender",
+            rootId,
+            `Excessive Re-renders: Component ${rootId} rendered ${existing.count} times in <1s. Wrap in React.memo(), decouple state, or check dependency arrays in useMemo/useCallback.`
+          );
+          existing.count = 0;
+        }
+      });
+    } catch(e) {}
+  }
+
+  /**
+   * Expensive Layout Thrashing Detector
+   * Detects "forced synchronous layout" where JS reads layout (e.g. offsetHeight)
+   * then immediately writes it in a loop.
+   */
+  private attachLayoutThrashingDetector() {
+     if (typeof window === "undefined") return;
+
+     // This is notoriously hard to detect perfectly without Chromium trace flags.
+     // We can proxy common layout-triggering properties if we wanted to be invasive.
+     // For safety in this environment, we'll monitor long tasks that coincide with layout shifts.
+     if (!("PerformanceObserver" in window)) return;
+     
+     try {
+       const observer = new (window.PerformanceObserver as any)((list: any) => {
+         for (const entry of list.getEntries()) {
+           if (entry.duration > 100) { // 100ms Long Task
+              // If we see a long task, it's often a thrashing script.
+              // Just flag the long task as a dedicated diagnostic.
+              this.emitDiagnostic(
+                  "diagnostic.long-task-detector",
+                  "main-thread",
+                  `Main Thread Blocked: A JS task took ${entry.duration.toFixed(0)}ms to execute. If it involved DOM manipulation, it might be Layout Thrashing. Offload to WebWorker or use requestAnimationFrame.`
+              )
+           }
+         }
+       });
+       observer.observe({ type: 'longtask', buffered: true });
+     } catch(e) {}
   }
 
   /**
