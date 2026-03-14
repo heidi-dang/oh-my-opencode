@@ -75,6 +75,7 @@ export interface BackgroundTask {
 }
 
 export interface LaunchInput {
+  id?: string
   description: string
   prompt: string
   agent: string

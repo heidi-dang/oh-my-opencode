@@ -28,6 +28,7 @@ export function createBackgroundTask(
       description: tool.schema.string().describe("Short task description (shown in status)"),
       prompt: tool.schema.string().describe("Full detailed prompt for the agent"),
       agent: tool.schema.string().describe("Agent type to use (any registered agent)"),
+      id: tool.schema.string().optional().describe("Task ID to reuse for updating an existing task card"),
     },
     async execute(args: BackgroundTaskArgs, toolContext) {
       const ctx = toolContext as ToolContextWithMetadata
@@ -66,6 +67,7 @@ export function createBackgroundTask(
             : undefined
 
         const task = await manager.launch({
+          id: args.id,
           description: args.description,
           prompt: args.prompt,
           agent: args.agent.trim(),
