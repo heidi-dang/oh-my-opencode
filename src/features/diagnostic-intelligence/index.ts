@@ -42,3 +42,9 @@ export {
   recordVerificationPattern,
   recordFixPattern,
 } from "./signature-memory"
+
+export { runtimeInterceptor } from "./runtime-interceptor"
+export { memoryWatchdog } from "./memory-watchdog"
+export { networkInterceptor } from "./network-interceptor"
+export { performanceMonitor } from "./performance-monitor"
+export { uiUxMonitor } from "./ui-ux-monitor"

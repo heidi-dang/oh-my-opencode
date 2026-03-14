@@ -14,6 +14,14 @@ import { initializePerformanceOptimizations } from "./shared/performance-integra
 import { createFirstMessageVariantGate } from "./shared/first-message-variant"
 import { injectServerAuthIntoClient, log, injectYGKAInterceptor } from "./shared"
 import { startTmuxCheck } from "./tools"
+import { runtimeInterceptor } from "./features/diagnostic-intelligence/runtime-interceptor"
+import { memoryWatchdog } from "./features/diagnostic-intelligence/memory-watchdog"
+import { networkInterceptor } from "./features/diagnostic-intelligence/network-interceptor"
+import { performanceMonitor } from "./features/diagnostic-intelligence/performance-monitor"
+import { uiUxMonitor } from "./features/diagnostic-intelligence/ui-ux-monitor"
+import { buildBatchRepairInstructions } from "./features/diagnostic-intelligence/repair-instructions-builder"
+import { getMainSessionID } from "./features/claude-code-session-state"
+import { SafeDiagnosticTriggerWrapper } from "./shared/safe-diagnostic-wrapper"
 
 /**
  * Detect and decode base64-encoded directory paths.
@@ -64,13 +72,115 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
   injectYGKAInterceptor(ctx.client)
   startTmuxCheck()
 
-  // --- GLOBAL ERROR PROTECTION ---
-  process.on("unhandledRejection", (reason, _promise) => {
-    log("[OhMyOpenCodePlugin] UNHANDLED REJECTION:", { reason: String(reason) })
+  // --- GLOBAL ERROR PROTECTION & AUTONOMOUS REPAIR ---
+  runtimeInterceptor.subscribe(async (diagnostic) => {
+    const mainSessionID = getMainSessionID()
+    if (!mainSessionID) return
+    
+    try {
+      const instructions = buildBatchRepairInstructions([diagnostic])
+      const payload = `[RUNTIME CRASH DETECTED]\nThe Node process encountered a fatal exception. DO NOT ignore this. You must fix the root cause.\n\n${instructions}`
+      
+      log("[OhMyOpenCodePlugin] Intercepted crash, notifying agent", { sessionID: mainSessionID, diagnosticClass: diagnostic.class })
+      
+      SafeDiagnosticTriggerWrapper.triggerDiagnostic(ctx, diagnostic.class, "Runtime Crash: Fatal exception")
+      await ctx.client.session.prompt({
+        path: { id: mainSessionID },
+        body: { parts: [{ type: "text", text: payload }] },
+        query: { directory: ctx.directory }
+      }).catch(e => log("[OhMyOpenCodePlugin] Failed to prompt agent with crash", e))
+      SafeDiagnosticTriggerWrapper.triggerDiagnostic(ctx, null)
+    } catch (err) {
+      log("[OhMyOpenCodePlugin] Error in crash subscriber", err)
+    }
   })
 
-  process.on("uncaughtException", (error) => {
-    log("[OhMyOpenCodePlugin] UNCAUGHT EXCEPTION:", { error: error.message, stack: error.stack })
+  memoryWatchdog.subscribe(async (diagnostic) => {
+    const mainSessionID = getMainSessionID()
+    if (!mainSessionID) return
+    
+    try {
+      const instructions = buildBatchRepairInstructions([diagnostic])
+      const payload = `[MEMORY ANOMALY DETECTED]\nActive memory monitoring has flagged a leak or extreme utilization. You must investigate and repair this immediately.\n\n${instructions}`
+      
+      log("[OhMyOpenCodePlugin] Memory anomaly, notifying agent", { sessionID: mainSessionID, diagnosticClass: diagnostic.class })
+      
+      SafeDiagnosticTriggerWrapper.triggerDiagnostic(ctx, diagnostic.class, "Memory Exhaustion Detected")
+      await ctx.client.session.prompt({
+        path: { id: mainSessionID },
+        body: { parts: [{ type: "text", text: payload }] },
+        query: { directory: ctx.directory }
+      }).catch(e => log("[OhMyOpenCodePlugin] Failed to prompt agent with memory leak", e))
+      SafeDiagnosticTriggerWrapper.triggerDiagnostic(ctx, null)
+    } catch (err) {
+      log("[OhMyOpenCodePlugin] Error in memory watchdog subscriber", err)
+    }
+  })
+
+  networkInterceptor.subscribe(async (diagnostic) => {
+    const mainSessionID = getMainSessionID()
+    if (!mainSessionID) return
+    
+    try {
+      const instructions = buildBatchRepairInstructions([diagnostic])
+      const payload = `[NETWORK FAILURE DETECTED]\nA network operation failed. Review the diagnostic and implement the recommended repair strategy.\n\n${instructions}`
+      
+      log("[OhMyOpenCodePlugin] Network failure, notifying agent", { sessionID: mainSessionID, diagnosticClass: diagnostic.class })
+      
+      SafeDiagnosticTriggerWrapper.triggerDiagnostic(ctx, diagnostic.class, "Network Failure/Drop Detected")
+      await ctx.client.session.prompt({
+        path: { id: mainSessionID },
+        body: { parts: [{ type: "text", text: payload }] },
+        query: { directory: ctx.directory }
+      }).catch(e => log("[OhMyOpenCodePlugin] Failed to prompt agent with network failure", e))
+      SafeDiagnosticTriggerWrapper.triggerDiagnostic(ctx, null)
+    } catch (err) {
+      log("[OhMyOpenCodePlugin] Error in network subscriber", err)
+    }
+  })
+
+  performanceMonitor.subscribe(async (diagnostic) => {
+    const mainSessionID = getMainSessionID()
+    if (!mainSessionID) return
+    
+    try {
+      const instructions = buildBatchRepairInstructions([diagnostic])
+      const payload = `[PERFORMANCE DEGRADATION DETECTED]\nA performance bottleneck has been identified. Investigate and optimize the flagged operation.\n\n${instructions}`
+      
+      log("[OhMyOpenCodePlugin] Performance issue, notifying agent", { sessionID: mainSessionID, diagnosticClass: diagnostic.class })
+      
+      SafeDiagnosticTriggerWrapper.triggerDiagnostic(ctx, diagnostic.class, "Performance Degradation Detected")
+      await ctx.client.session.prompt({
+        path: { id: mainSessionID },
+        body: { parts: [{ type: "text", text: payload }] },
+        query: { directory: ctx.directory }
+      }).catch(e => log("[OhMyOpenCodePlugin] Failed to prompt agent with perf issue", e))
+      SafeDiagnosticTriggerWrapper.triggerDiagnostic(ctx, null)
+    } catch (err) {
+      log("[OhMyOpenCodePlugin] Error in performance subscriber", err)
+    }
+  })
+
+  uiUxMonitor.subscribe(async (diagnostic) => {
+    const mainSessionID = getMainSessionID()
+    if (!mainSessionID) return
+    
+    try {
+      const instructions = buildBatchRepairInstructions([diagnostic])
+      const payload = `[UI/UX FUNCTIONAL BUG DETECTED]\nA visual or interaction regression occurred in the UI. Read the diagnostic carefully and implement the CSS/React fix.\n\n${instructions}`
+      
+      log("[OhMyOpenCodePlugin] UI/UX bug intercepted, notifying agent", { sessionID: mainSessionID, diagnosticClass: diagnostic.class })
+      
+      SafeDiagnosticTriggerWrapper.triggerDiagnostic(ctx, diagnostic.class, "Visual/Interaction Bug Detected")
+      await ctx.client.session.prompt({
+        path: { id: mainSessionID },
+        body: { parts: [{ type: "text", text: payload }] },
+        query: { directory: ctx.directory }
+      }).catch(e => log("[OhMyOpenCodePlugin] Failed to prompt agent with UI/UX bug", e))
+      SafeDiagnosticTriggerWrapper.triggerDiagnostic(ctx, null)
+    } catch (err) {
+      log("[OhMyOpenCodePlugin] Error in UI/UX subscriber", err)
+    }
   })
   // -------------------------------
 

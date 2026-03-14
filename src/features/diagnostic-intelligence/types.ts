@@ -13,7 +13,7 @@
 // Diagnostic Classification
 // ────────────────────────────────────────────
 
-export type DiagnosticLanguage = "python" | "typescript" | "unknown"
+export type DiagnosticLanguage = "python" | "typescript" | "runtime" | "network" | "performance" | "ui-ux" | "unknown"
 
 export type DiagnosticSeverity = "error" | "warning" | "info"
 
@@ -22,16 +22,68 @@ export type DiagnosticSeverity = "error" | "warning" | "info"
  * into a single repairable category.
  */
 export type DiagnosticClass =
+  // Static Analysis — Python
   | "python.optional-null-attribute"
   | "python.optional-null-subscript"
   | "python.possibly-unbound"
   | "python.import-error"
   | "python.type-mismatch"
+  // Static Analysis — TypeScript
   | "typescript.possibly-undefined"
   | "typescript.nullable-property-access"
   | "typescript.missing-property"
   | "typescript.type-mismatch"
   | "typescript.import-error"
+  // Runtime Crashes (Category 1)
+  | "diagnostic.unhandled-promise-rejection"
+  | "diagnostic.uncaught-exception"
+  | "diagnostic.null-pointer-dereference"
+  | "diagnostic.tui-render-panic"
+  | "diagnostic.infinite-loop-detector"
+  | "diagnostic.stack-overflow-detector"
+  | "diagnostic.event-emitter-leak"
+  | "diagnostic.web-ui-react-error-boundary"
+  | "diagnostic.worker-thread-crash"
+  | "diagnostic.invalid-json-parse"
+  // Memory (Category 2)
+  | "diagnostic.v8-heap-exhaustion"
+  | "diagnostic.v8-gc-thrashing"
+  | "diagnostic.unbounded-map-detector"
+  | "diagnostic.unbounded-array-detector"
+  | "diagnostic.stale-interval-detector"
+  | "diagnostic.fs-descriptor-leak"
+  | "diagnostic.large-object-retention"
+  // Network (Category 3)
+  | "diagnostic.http-timeout"
+  | "diagnostic.dns-resolution-failure"
+  | "diagnostic.tls-cert-error"
+  | "diagnostic.connection-reset"
+  | "diagnostic.rate-limit-hit"
+  | "diagnostic.websocket-disconnect"
+  | "diagnostic.cors-violation"
+  | "diagnostic.payload-too-large"
+  | "diagnostic.offline-queue-dropout"
+  | "diagnostic.stale-cache"
+  // Performance (Category 4)
+  | "diagnostic.event-loop-block"
+  | "diagnostic.slow-sqlite-query"
+  | "diagnostic.n-plus-one-query"
+  | "diagnostic.regex-catastrophic-backtracking"
+  | "diagnostic.excessive-fs-reads"
+  | "diagnostic.large-bundle-chunk"
+  // UI/UX (Category 5)
+  | "diagnostic.element-overlap"
+  | "diagnostic.unresponsive-target"
+  | "diagnostic.overflow-hidden-content"
+  | "diagnostic.scroll-hijack"
+  | "diagnostic.color-contrast-violation"
+  | "diagnostic.focus-trap-break"
+  | "diagnostic.missing-loading-state"
+  | "diagnostic.input-type-mismatch"
+  | "diagnostic.stale-form-state"
+  | "diagnostic.z-index-war"
+  | "diagnostic.layout-shift-cls"
+  | "diagnostic.orphan-tooltips"
   | "unknown"
 
 /**
@@ -67,6 +119,17 @@ export type RepairStrategy =
   | "conditional-access"
   | "import-fix"
   | "type-annotation-fix"
+  | "runtime-try-catch"
+  | "promise-catch-chain"
+  | "retry-with-backoff"
+  | "circuit-breaker"
+  | "reconnect-strategy"
+  | "throttle-debounce"
+  | "async-offload"
+  | "cache-optimization"
+  | "layout-fix"
+  | "accessibility-fix"
+  | "state-management-fix"
 
 /**
  * A playbook defines how to repair a specific diagnostic class.
