@@ -181,7 +181,7 @@ describe("AGENT_MODEL_REQUIREMENTS", () => {
     // then - mini/haiku-class models are prioritized for speed, with local model fallbacks
     expect(heidi).toBeDefined()
     expect(heidi.requiresAnyModel).toBe(true)
-    expect(heidi.fallbackChain).toHaveLength(9)
+    expect(heidi.fallbackChain).toHaveLength(10)
 
     const primary = heidi.fallbackChain[0]
     expect(primary.providers).toEqual(["github-copilot"])
@@ -190,9 +190,10 @@ describe("AGENT_MODEL_REQUIREMENTS", () => {
 
     // Check that local model fallbacks are included
     const localModelFallbacks = heidi.fallbackChain.slice(5)
-    expect(localModelFallbacks).toHaveLength(4)
-    expect(localModelFallbacks[0].providers).toEqual(["openai-compatible"])
+    expect(localModelFallbacks).toHaveLength(5)
+    expect(localModelFallbacks[0].providers).toEqual(["ollama", "openai-compatible"])
     expect(localModelFallbacks[0].model).toBe("llama3.2:latest")
+    expect(localModelFallbacks[4].model).toBe("qwen3:8b")
 
     const secondary = heidi.fallbackChain[1]
     expect(secondary.model).toBe("gpt-4o-mini")

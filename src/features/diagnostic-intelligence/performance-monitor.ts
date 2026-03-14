@@ -193,7 +193,18 @@ export class PerformanceMonitor {
     this.batchTracker.delete(batchId)
   }
 
+  private lastEmitted = new Map<string, number>()
+
   private emitDiagnostic(diagnosticClass: DiagnosticClass, symbol: string, message: string) {
+    const key = `${diagnosticClass}:${symbol}`
+    const now = Date.now()
+    const lastTime = this.lastEmitted.get(key) || 0
+
+    if (now - lastTime < 30000) {
+      return // Throttled
+    }
+    this.lastEmitted.set(key, now)
+
     const diagnostic: ClassifiedDiagnostic = {
       class: diagnosticClass,
       language: "performance",

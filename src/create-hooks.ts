@@ -10,7 +10,11 @@ import { createCoreHooks } from "./plugin/hooks/create-core-hooks"
 import { createContinuationHooks } from "./plugin/hooks/create-continuation-hooks"
 import { createSkillHooks } from "./plugin/hooks/create-skill-hooks"
 
-export type CreatedHooks = ReturnType<typeof createHooks>
+import type { CoreHooks } from "./plugin/hooks/create-core-hooks"
+import type { ContinuationHooks } from "./plugin/hooks/create-continuation-hooks"
+import type { SkillHooks } from "./plugin/hooks/create-skill-hooks"
+
+export type CreatedHooks = CoreHooks & ContinuationHooks & SkillHooks
 
 export function createHooks(args: {
   ctx: PluginContext
@@ -20,10 +24,15 @@ export function createHooks(args: {
   runStateWatchdogManager: RunStateWatchdogManager
   isHookEnabled: (hookName: HookName) => boolean
   safeHookEnabled: boolean
-  firstMessageVariantGate: any
+  firstMessageVariantGate: {
+    shouldOverride: (sessionID: string) => boolean
+    markApplied: (sessionID: string) => void
+    markSessionCreated: (sessionInfo: { id?: string; title?: string; parentID?: string } | undefined) => void
+    clear: (sessionID: string) => void
+  }
   mergedSkills: LoadedSkill[]
   availableSkills: AvailableSkill[]
-}) {
+}): CreatedHooks {
   const {
     ctx,
     pluginConfig,

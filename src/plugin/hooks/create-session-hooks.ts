@@ -41,7 +41,7 @@ import {
   normalizeSDKResponse,
 } from "../../shared"
 import { contextCollector } from "../../features/context-injector"
-import { safeCreateHook } from "../../shared/safe-create-hook"
+import { safeCreateHook, safeCreateHookAsync } from "../../shared/safe-create-hook"
 import { sessionExists } from "../../tools"
 
 export type SessionHooks = {
@@ -89,6 +89,8 @@ export function createSessionHooks(args: {
   const { ctx, pluginConfig, modelCacheState, runStateWatchdogManager, isHookEnabled, safeHookEnabled } = args
   const safeHook = <T>(hookName: HookName, factory: () => T): T | null =>
     safeCreateHook(hookName, factory, { enabled: safeHookEnabled })
+  const safeHookAsync = <T>(hookName: HookName, factory: () => Promise<T>): Promise<T | null> =>
+    safeCreateHookAsync(hookName, factory, { enabled: safeHookEnabled })
 
   const contextWindowMonitor = isHookEnabled("context-window-monitor")
     ? safeHook("context-window-monitor", () =>

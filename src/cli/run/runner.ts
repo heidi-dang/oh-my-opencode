@@ -44,7 +44,7 @@ export async function run(options: RunOptions): Promise<number> {
     : createTimestampedStdoutController()
   timestampOutput?.enable()
 
-  const pluginConfig = loadPluginConfig(directory, { command: "run" })
+  const pluginConfig = await loadPluginConfig(directory, { command: "run" })
   const resolvedAgent = resolveRunAgent(options, pluginConfig)
   const abortController = new AbortController()
 

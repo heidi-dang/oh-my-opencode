@@ -71,7 +71,7 @@ function buildDynamicHeidiPrompt(ctx?: HeidiContext): string {
     const availableAgentsSection = buildHeidiAvailableAgentsSection(availableAgents);
 
     // Check if using a local model
-    const isUsingLocalModel = ctx?.model?.includes("openai-compatible/");
+    const isUsingLocalModel = ctx?.model?.includes("openai-compatible/") || ctx?.model?.includes("ollama/");
     const localModelSection = isUsingLocalModel ? `
 <local_model_usage>
 You are running on a local model via OpenAI-compatible interface (e.g., Ollama). 

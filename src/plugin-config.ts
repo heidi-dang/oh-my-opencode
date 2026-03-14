@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import { promises as fsPromises } from "fs";
 import * as path from "path";
 import { OhMyOpenCodeConfigSchema, type OhMyOpenCodeConfig } from "./config";
 import {
@@ -12,7 +13,7 @@ import {
 } from "./shared";
 
 export function parseConfigPartially(
-  rawConfig: Record<string, unknown>
+  rawConfig: Record<string, unknown>,
 ): OhMyOpenCodeConfig | null {
   const fullResult = OhMyOpenCodeConfigSchema.safeParse(rawConfig);
   if (fullResult.success) {
@@ -23,7 +24,9 @@ export function parseConfigPartially(
   const invalidSections: string[] = [];
 
   for (const key of Object.keys(rawConfig)) {
-    const sectionResult = OhMyOpenCodeConfigSchema.safeParse({ [key]: rawConfig[key] });
+    const sectionResult = OhMyOpenCodeConfigSchema.safeParse({
+      [key]: rawConfig[key],
+    });
     if (sectionResult.success) {
       const parsed = sectionResult.data as Record<string, unknown>;
       if (parsed[key] !== undefined) {
@@ -47,13 +50,13 @@ export function parseConfigPartially(
   return partialConfig as OhMyOpenCodeConfig;
 }
 
-export function loadConfigFromPath(
+export async function loadConfigFromPath(
   configPath: string,
-  _ctx: unknown
-): OhMyOpenCodeConfig | null {
+  _ctx: unknown,
+): Promise<OhMyOpenCodeConfig | null> {
   try {
     if (fs.existsSync(configPath)) {
-      const content = fs.readFileSync(configPath, "utf-8");
+      const content = await fsPromises.readFile(configPath, "utf8");
       const rawConfig = parseJsonc<Record<string, unknown>>(content);
 
       migrateConfigFile(configPath, rawConfig);
@@ -76,7 +79,9 @@ export function loadConfigFromPath(
 
       const partialResult = parseConfigPartially(rawConfig);
       if (partialResult) {
-        log(`Partial config loaded from ${configPath}`, { agents: partialResult.agents });
+        log(`Partial config loaded from ${configPath}`, {
+          agents: partialResult.agents,
+        });
         return partialResult;
       }
 
@@ -92,7 +97,7 @@ export function loadConfigFromPath(
 
 export function mergeConfigs(
   base: OhMyOpenCodeConfig,
-  override: OhMyOpenCodeConfig
+  override: OhMyOpenCodeConfig,
 ): OhMyOpenCodeConfig {
   return {
     ...base,
@@ -133,18 +138,16 @@ export function mergeConfigs(
   };
 }
 
-export function loadPluginConfig(
+export async function loadPluginConfig(
   directory: string,
-  ctx: unknown
-): OhMyOpenCodeConfig {
+  ctx: unknown,
+): Promise<OhMyOpenCodeConfig> {
   // User-level config path - prefer .jsonc over .json
   const configDir = getOpenCodeConfigDir({ binary: "opencode" });
   const userBasePath = path.join(configDir, "oh-my-opencode");
   const userDetected = detectConfigFile(userBasePath);
   const userConfigPath =
-    userDetected.format !== "none"
-      ? userDetected.path
-      : userBasePath + ".json";
+    userDetected.format !== "none" ? userDetected.path : userBasePath + ".json";
 
   // Project-level config path - prefer .jsonc over .json
   const projectBasePath = path.join(directory, ".opencode", "oh-my-opencode");
@@ -156,10 +159,10 @@ export function loadPluginConfig(
 
   // Load user config first (base)
   let config: OhMyOpenCodeConfig =
-    loadConfigFromPath(userConfigPath, ctx) ?? {};
+    (await loadConfigFromPath(userConfigPath, ctx)) ?? {};
 
   // Override with project config
-  const projectConfig = loadConfigFromPath(projectConfigPath, ctx);
+  const projectConfig = await loadConfigFromPath(projectConfigPath, ctx);
   if (projectConfig) {
     config = mergeConfigs(config, projectConfig);
   }

@@ -9,7 +9,7 @@ import { ledger } from "../../runtime/state-ledger"
  * Enforces Completion Authority: Only 'complete_task' can declare the task finished.
  */
 
-const SUSPICIOUS_PHRASES = [
+const STRONG_SUSPICIOUS_PHRASES = [
     { phrase: "pr created", tool: "git_safe" },
     { phrase: "pull request created", tool: "git_safe" },
     { phrase: "pr opened", tool: "git_safe" },
@@ -24,10 +24,13 @@ const SUSPICIOUS_PHRASES = [
     { phrase: "task complete", tool: "complete_task" },
     { phrase: "work finished", tool: "complete_task" },
     { phrase: "todos cleared", tool: "complete_task" },
+];
+
+const WEAK_SUSPICIOUS_PHRASES = [
     { phrase: "done.", tool: "complete_task" },
     { phrase: "fixed.", tool: "complete_task" },
     { phrase: "resolved.", tool: "complete_task" }
-]
+];
 
 export function createRuntimeEnforcementHook(_ctx: PluginInput) {
     return {
@@ -61,7 +64,8 @@ export function createRuntimeEnforcementHook(_ctx: PluginInput) {
                             for (const part of msg.parts) {
                                 if (part.type === "text" && typeof part.text === "string") {
                                     const lowerText = part.text.toLowerCase()
-                                    const hasSuspiciousClaim = SUSPICIOUS_PHRASES.some(sp => lowerText.includes(sp.phrase))
+                                    const allPhrases = [...STRONG_SUSPICIOUS_PHRASES, ...WEAK_SUSPICIOUS_PHRASES];
+                                    const hasSuspiciousClaim = allPhrases.some(sp => lowerText.includes(sp.phrase))
                                     if (hasSuspiciousClaim || lowerText.includes("success") || lowerText.includes("completed")) {
                                         if (isVerificationFailure) {
                                             part.text = `[REDACTED: Attempted but unverified]\n\nI attempted to perform the action, but system state verification could not confirm the outcome. Success is not yet guaranteed.`
@@ -132,38 +136,51 @@ export function createRuntimeEnforcementHook(_ctx: PluginInput) {
 
             if (!combinedText || combinedText.includes("[runtime authorization]")) return
 
-            for (const check of SUSPICIOUS_PHRASES) {
-                if (combinedText.includes(check.phrase)) {
-                    let actuallyExecuted = false;
+            const isAutonomousDiagnostic = combinedText.includes("autonomous diagnostic") || combinedText.includes("[performance degradation detected]");
 
-                    if (lastAssistant.parts.some((p: any) => (p.type === "tool" || p.type === "toolInvocation") && p.toolName === check.tool)) {
-                        actuallyExecuted = true;
-                    } else {
-                        for (let i = output.messages.length - 1; i >= 0; i--) {
-                            const msg = output.messages[i];
-                            if (msg.info.role === "user" && msg.parts.some((p: any) => p.type === "text" && !p.text?.toString().startsWith("[tool result]"))) {
-                                break;
-                            }
-                            if (msg.info.role === "assistant" && msg.parts.some((p: any) => (p.type === "tool" || p.type === "toolInvocation") && p.toolName === check.tool)) {
-                                actuallyExecuted = true;
-                                break;
+            const checkPhrases = (phrases: { phrase: string; tool: string }[], isStrong: boolean) => {
+                for (const check of phrases) {
+                    if (combinedText.includes(check.phrase)) {
+                        // Context Guard: If it's a weak phrase and not at the end of the message, or it's an autonomous diagnostic, bypass
+                        if (!isStrong) {
+                            if (isAutonomousDiagnostic) continue;
+                            const index = combinedText.lastIndexOf(check.phrase);
+                            const remaining = combinedText.substring(index + check.phrase.length).trim();
+                            if (remaining.length > 20) continue; // Likely part of a larger explanation, not a completion claim
+                        }
+
+                        let actuallyExecuted = false;
+                        if (lastAssistant.parts.some((p: any) => (p.type === "tool" || p.type === "toolInvocation") && p.toolName === check.tool)) {
+                            actuallyExecuted = true;
+                        } else {
+                            for (let i = output.messages.length - 1; i >= 0; i--) {
+                                const msg = output.messages[i];
+                                if (msg.info.role === "user" && msg.parts.some((p: any) => p.type === "text" && !p.text?.toString().startsWith("[tool result]"))) {
+                                    break;
+                                }
+                                if (msg.info.role === "assistant" && msg.parts.some((p: any) => (p.type === "tool" || p.type === "toolInvocation") && p.toolName === check.tool)) {
+                                    actuallyExecuted = true;
+                                    break;
+                                }
                             }
                         }
-                    }
 
-                    if (!actuallyExecuted) {
-                        // Soft failure instead of throwing
-                        for (const part of lastAssistant.parts) {
-                            if (part.type === "text" && typeof part.text === "string") {
-                                if (part.text.toLowerCase().includes(check.phrase)) {
-                                    part.text = `[REDACTED: False completion claim (${check.phrase})]\n\nI described changes as completed, but the corresponding tool (${check.tool}) was not executed in the current completion flow. My claim has been intercepted.`
-                                    criticalError = new Error(`[Runtime Enforcement Guard] State claim REJECTED: '${check.phrase}' requires ${check.tool} in the current completion flow.`)
+                        if (!actuallyExecuted) {
+                            for (const part of lastAssistant.parts) {
+                                if (part.type === "text" && typeof part.text === "string") {
+                                    if (part.text.toLowerCase().includes(check.phrase)) {
+                                        part.text = `[REDACTED: False completion claim (${check.phrase})]\n\nI described changes as completed, but the corresponding tool (${check.tool}) was not executed in the current completion flow. My claim has been intercepted.`
+                                        criticalError = new Error(`[Runtime Enforcement Guard] State claim REJECTED: '${check.phrase}' requires ${check.tool} in the current completion flow.`)
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
+            };
+
+            checkPhrases(STRONG_SUSPICIOUS_PHRASES, true);
+            checkPhrases(WEAK_SUSPICIOUS_PHRASES, false);
 
             if (criticalError) {
                 ;(output as { __criticalTransformError?: Error }).__criticalTransformError = criticalError
