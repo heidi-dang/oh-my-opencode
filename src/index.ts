@@ -244,6 +244,16 @@ const OhMyOpenCodePlugin: Plugin = async (ctx) => {
     managers.runStateWatchdogManager.stop()
   }
 
+  process.on("uncaughtException", (error) => {
+    log(`[OhMyOpenCodePlugin] Uncaught exception:`, error)
+    gracefulShutdown("uncaughtException")
+  })
+
+  process.on("unhandledRejection", (reason) => {
+    log(`[OhMyOpenCodePlugin] Unhandled rejection:`, reason)
+    gracefulShutdown("unhandledRejection")
+  })
+
   process.on("SIGTERM", () => gracefulShutdown("SIGTERM"))
   process.on("SIGINT", () => gracefulShutdown("SIGINT"))
   process.on("SIGHUP", () => gracefulShutdown("SIGHUP"))
