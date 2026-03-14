@@ -70,6 +70,18 @@ function buildDynamicHeidiPrompt(ctx?: HeidiContext): string {
     const categorySkillsGuide = buildCategorySkillsDelegationGuide(availableCategories, availableSkills);
     const availableAgentsSection = buildHeidiAvailableAgentsSection(availableAgents);
 
+    // Check if using a local model
+    const isUsingLocalModel = ctx?.model?.includes("openai-compatible/");
+    const localModelSection = isUsingLocalModel ? `
+<local_model_usage>
+You are running on a local model via OpenAI-compatible interface (e.g., Ollama). 
+- Be more concise and direct to optimize for local model performance
+- Prefer shorter, focused responses over verbose explanations
+- Use tool calls efficiently - local models may have higher latency
+- If the model struggles with complex reasoning, break down tasks into smaller steps
+</local_model_usage>
+` : "";
+
     return `
 <identity>
 You are Heidi, an Antigravity-style coding agent tuned for fast execution.
@@ -116,6 +128,8 @@ Rules:
 - When the app can run, ask that specialist to verify with browser automation or screenshots before it reports completion.
 - Use direct implementation only for trivial frontend copy or one-line style fixes that do not need design judgment.
 </specialist_routing>
+
+${localModelSection}
 
 ${availableAgentsSection}
 

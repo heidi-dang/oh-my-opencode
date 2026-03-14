@@ -178,23 +178,29 @@ describe("AGENT_MODEL_REQUIREMENTS", () => {
     const heidi = AGENT_MODEL_REQUIREMENTS["heidi"]
 
     // when - accessing Heidi requirement
-    // then - mini/haiku-class models are prioritized for speed
+    // then - mini/haiku-class models are prioritized for speed, with local model fallbacks
     expect(heidi).toBeDefined()
     expect(heidi.requiresAnyModel).toBe(true)
-    expect(heidi.fallbackChain).toHaveLength(5)
+    expect(heidi.fallbackChain).toHaveLength(9)
 
     const primary = heidi.fallbackChain[0]
     expect(primary.providers).toEqual(["github-copilot"])
     expect(primary.model).toBe("gpt-4o-mini")
     expect(primary.variant).toBe("low")
 
+    // Check that local model fallbacks are included
+    const localModelFallbacks = heidi.fallbackChain.slice(5)
+    expect(localModelFallbacks).toHaveLength(4)
+    expect(localModelFallbacks[0].providers).toEqual(["openai-compatible"])
+    expect(localModelFallbacks[0].model).toBe("llama3.2:latest")
+
     const secondary = heidi.fallbackChain[1]
     expect(secondary.model).toBe("gpt-4o-mini")
     expect(secondary.variant).toBe("low")
   })
 
-  test("all 12 builtin agents have valid fallbackChain arrays", () => {
-    // #given - list of 12 agent names
+  test("all 13 builtin agents have valid fallbackChain arrays", () => {
+    // #given - list of 13 agent names
     const expectedAgents = [
       "sisyphus",
       "hephaestus",
@@ -214,7 +220,7 @@ describe("AGENT_MODEL_REQUIREMENTS", () => {
     const definedAgents = Object.keys(AGENT_MODEL_REQUIREMENTS)
 
     // #then - all agents present with valid fallbackChain
-    expect(definedAgents).toHaveLength(12)
+    expect(definedAgents).toHaveLength(13)
     for (const agent of expectedAgents) {
       const requirement = AGENT_MODEL_REQUIREMENTS[agent]
       expect(requirement).toBeDefined()
