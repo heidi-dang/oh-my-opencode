@@ -79,6 +79,11 @@ export class NetworkDiagnosticInterceptor {
           }
         }
 
+        // Catch PTY 404s specifically
+        if (response.status === 404 && url.includes("/pty/")) {
+          self.emitDiagnostic("diagnostic.pty-session-missing", url, `PTY session missing (HTTP 404): ${url}`)
+        }
+
         return response
       } catch (error: unknown) {
         const err = error instanceof Error ? error : new Error(String(error))
